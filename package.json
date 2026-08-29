@@ -14,7 +14,8 @@
     "generate:fixtures": "tsx scripts/generate-fixtures.ts",
     "scorecard": "tsx scripts/scorecard.ts",
     "render:documents": "tsx scripts/render-documents.ts",
-    "extraction:report": "tsx scripts/extraction-report.ts"
+    "extraction:report": "tsx scripts/extraction-report.ts",
+    "grounding:report": "tsx scripts/grounding-report.ts"
   },
   "dependencies": {
     "@google/genai": "^2.19.0",

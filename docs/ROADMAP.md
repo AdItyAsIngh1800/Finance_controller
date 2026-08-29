@@ -14,7 +14,7 @@
 | P1 | Domain model & types | 1 | 🟢 Complete |
 | P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
-| P4 | Application foundation | 3 | ⚪ Not started |
+| P4 | Application foundation | 3 | 🟡 Schema + RLS verified; OAuth and deploy pending |
 | P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
 | P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
 | P7 | Stage 3 — grounded Q&A | 5 | ⚪ Not started |
