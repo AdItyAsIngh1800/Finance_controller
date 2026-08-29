@@ -41,6 +41,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# playwright mcp scratch output
+.playwright-mcp/
+
 # supabase cli local state (per Supabase's own recommended gitignore)
 supabase/.temp/
 supabase/.branches/

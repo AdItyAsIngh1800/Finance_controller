@@ -7,6 +7,7 @@
  * show it rather than hiding it behind a redundant application-level filter.
  */
 
+import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { isDomain } from '@/core/taxonomy';
@@ -58,17 +59,17 @@ export default async function DatasetsPage() {
 
   return (
     <main className="mx-auto w-full max-w-4xl px-6 py-10">
-      <header className="flex items-baseline justify-between gap-4 border-b border-neutral-200 pb-4 dark:border-neutral-800">
+      <header className="flex items-baseline justify-between gap-4 border-b border-rule-strong pb-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Datasets</h1>
-          <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+          <p className="mt-1 text-sm text-ink-muted">
             Signed in as {user?.email ?? 'unknown'}
           </p>
         </div>
         <form action="/auth/signout" method="post">
           <button
             type="submit"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm transition hover:bg-neutral-50 dark:border-neutral-700 dark:hover:bg-neutral-800"
+            className="rounded-md border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk"
           >
             Sign out
           </button>
@@ -77,7 +78,7 @@ export default async function DatasetsPage() {
 
       <form
         action={createDataset}
-        className="mt-6 flex flex-wrap items-end gap-3 rounded-md border border-neutral-200 p-4 dark:border-neutral-800"
+        className="mt-6 flex flex-wrap items-end gap-3 rounded-md border border-rule p-4"
       >
         <label className="flex flex-col gap-1 text-sm">
           <span className="font-medium">Name</span>
@@ -85,7 +86,7 @@ export default async function DatasetsPage() {
             name="name"
             required
             placeholder="August settlements"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-900"
+            className="rounded-md border border-rule bg-paper px-3 py-1.5"
           />
         </label>
         <label className="flex flex-col gap-1 text-sm">
@@ -93,7 +94,7 @@ export default async function DatasetsPage() {
           <select
             name="domain"
             defaultValue="settlement"
-            className="rounded-md border border-neutral-300 px-3 py-1.5 dark:border-neutral-700 dark:bg-neutral-900"
+            className="rounded-md border border-rule bg-paper px-3 py-1.5"
           >
             <option value="settlement">Settlement</option>
             <option value="bank">Bank</option>
@@ -101,7 +102,7 @@ export default async function DatasetsPage() {
         </label>
         <button
           type="submit"
-          className="rounded-md bg-neutral-900 px-4 py-1.5 text-sm font-medium text-white transition hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-300"
+          className="rounded-md bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90"
         >
           Create dataset
         </button>
@@ -110,14 +111,14 @@ export default async function DatasetsPage() {
       {error !== null && (
         <p
           role="alert"
-          className="mt-6 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+          className="mt-6 rounded-md border border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
         >
           Could not load datasets: {error.message}
         </p>
       )}
 
       {error === null && datasets.length === 0 && (
-        <p className="mt-10 text-sm text-neutral-600 dark:text-neutral-400">
+        <p className="mt-10 text-sm text-ink-muted">
           No datasets yet. Create one above to upload a settlement report or bank statement
           alongside your ledger.
         </p>
@@ -126,7 +127,7 @@ export default async function DatasetsPage() {
       {datasets.length > 0 && (
         <table className="mt-6 w-full border-collapse text-sm">
           <thead>
-            <tr className="border-b border-neutral-200 text-left dark:border-neutral-800">
+            <tr className="border-b border-rule-strong text-left">
               <th scope="col" className="py-2 pr-4 font-medium">
                 Name
               </th>
@@ -143,11 +144,15 @@ export default async function DatasetsPage() {
           </thead>
           <tbody>
             {datasets.map((dataset) => (
-              <tr key={dataset.id} className="border-b border-neutral-100 dark:border-neutral-900">
-                <td className="py-2 pr-4">{dataset.name}</td>
+              <tr key={dataset.id} className="border-b border-rule">
+                <td className="py-2 pr-4">
+                  <Link href={`/datasets/${dataset.id}`} className="underline-offset-2 hover:underline">
+                    {dataset.name}
+                  </Link>
+                </td>
                 <td className="py-2 pr-4">{dataset.domain}</td>
                 <td className="py-2 pr-4 font-mono tabular-nums">{dataset.currency}</td>
-                <td className="py-2 font-mono tabular-nums text-neutral-600 dark:text-neutral-400">
+                <td className="py-2 font-mono tabular-nums text-ink-muted">
                   {dataset.created_at.slice(0, 10)}
                 </td>
               </tr>
