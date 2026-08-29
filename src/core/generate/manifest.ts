@@ -99,6 +99,29 @@ export interface PlantCounts {
   readonly feeVariance: number;
 }
 
+/**
+ * How many clean pairs get reference variance rather than a discrepancy.
+ *
+ * These are **not** discrepancies: the records still correspond, the amounts
+ * still agree, and they remain clean pairs in the manifest. They simply cannot
+ * be matched on an exact reference, so they force the engine down to a weaker
+ * tier. Without them, tier 1 claims every pair and the amount/date and fuzzy
+ * tiers are never exercised by the ground-truth suite.
+ */
+export interface VarianceCounts {
+  /**
+   * Pairs where the ledger records an internal voucher number instead of the
+   * external reference. No reference agreement at all, so matching must fall to
+   * amount and date.
+   */
+  readonly voucherRef: number;
+  /**
+   * Pairs where the ledger reference carries a single-character transcription
+   * error. Close enough for fuzzy matching, not close enough for exact.
+   */
+  readonly typoRef: number;
+}
+
 /** Options controlling dataset generation. */
 export interface GenerateOptions {
   /** Seed for the deterministic generator. */
@@ -109,4 +132,6 @@ export interface GenerateOptions {
   readonly plant: PlantCounts;
   /** First transaction date; subsequent records fall within a six-week window. */
   readonly startDate: string;
+  /** How many clean pairs receive reference variance. */
+  readonly variance: VarianceCounts;
 }

@@ -19,7 +19,13 @@ import { basisPointsOf, subMinor, sumMinor, toMinor, type Minor } from '../money
 import { normalizeRef } from '../refs';
 import type { CleanPair, GeneratedDataset, GenerateOptions, PlantedDiscrepancy } from './manifest';
 import type { FeeLine, NormalizedRecord, SettlementDetail } from '../types';
-import { at, createIndexAllocator, plantGenericDiscrepancies, type WorkingPair } from './plant';
+import {
+  applyReferenceVariance,
+  at,
+  createIndexAllocator,
+  plantGenericDiscrepancies,
+  type WorkingPair,
+} from './plant';
 import { createRng } from './random';
 
 /**
@@ -53,6 +59,10 @@ export const DEFAULT_SETTLEMENT_OPTIONS: GenerateOptions = {
     duplicateSuspected: 2,
     partialPayment: 1,
     feeVariance: 1,
+  },
+  variance: {
+    voucherRef: 8,
+    typoRef: 6,
   },
 };
 
@@ -204,7 +214,13 @@ export function generateSettlementDataset(
     ),
   );
 
-  // --- 4. Settlement-only: arithmetic that does not balance ---------------
+  // --- 4. Reference variance on clean pairs -------------------------------
+  // Not discrepancies: these pairs still correspond and still agree on amount.
+  // They exist so the amount/date and fuzzy tiers are actually exercised rather
+  // than merely implemented.
+  applyReferenceVariance(pairs, options.variance, nextIndex);
+
+  // --- 5. Settlement-only: arithmetic that does not balance ---------------
   for (let n = 0; n < plant.feeVariance; n += 1) {
     const pair = at(pairs, nextIndex());
     const source = at(pair.sourceRecords, 0);
@@ -228,7 +244,7 @@ export function generateSettlementDataset(
     });
   }
 
-  // --- 5. Flatten and record ground truth ---------------------------------
+  // --- 6. Flatten and record ground truth ---------------------------------
   const source: NormalizedRecord[] = [];
   const ledger: NormalizedRecord[] = [];
   const cleanPairs: CleanPair[] = [];

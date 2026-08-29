@@ -21,7 +21,13 @@ import { toMinor } from '../money';
 import { normalizeRef } from '../refs';
 import type { BankDetail, NormalizedRecord } from '../types';
 import type { CleanPair, GeneratedDataset, GenerateOptions } from './manifest';
-import { at, createIndexAllocator, plantGenericDiscrepancies, type WorkingPair } from './plant';
+import {
+  applyReferenceVariance,
+  at,
+  createIndexAllocator,
+  plantGenericDiscrepancies,
+  type WorkingPair,
+} from './plant';
 import { createRng } from './random';
 
 /** Counterparties appearing in generated narrations. */
@@ -54,6 +60,10 @@ export const DEFAULT_BANK_OPTIONS: GenerateOptions = {
     duplicateSuspected: 2,
     partialPayment: 1,
     feeVariance: 0,
+  },
+  variance: {
+    voucherRef: 8,
+    typoRef: 6,
   },
 };
 
@@ -127,7 +137,10 @@ export function generateBankDataset(
   const nextIndex = createIndexAllocator(rng, pairCount);
   const planted = plantGenericDiscrepancies(pairs, rng, plant, nextIndex);
 
-  // --- 3. Flatten and record ground truth ---------------------------------
+  // --- 3. Reference variance on clean pairs -------------------------------
+  applyReferenceVariance(pairs, options.variance, nextIndex);
+
+  // --- 4. Flatten and record ground truth ---------------------------------
   const source: NormalizedRecord[] = [];
   const ledger: NormalizedRecord[] = [];
   const cleanPairs: CleanPair[] = [];

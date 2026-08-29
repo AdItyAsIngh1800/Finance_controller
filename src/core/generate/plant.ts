@@ -18,7 +18,7 @@ import { addDays } from '../dates';
 import { subMinor, sumMinor, toMinor } from '../money';
 import { normalizeRef } from '../refs';
 import type { NormalizedRecord } from '../types';
-import type { PlantCounts, PlantedDiscrepancy } from './manifest';
+import type { PlantCounts, PlantedDiscrepancy, VarianceCounts } from './manifest';
 import type { Rng } from './random';
 
 /**
@@ -234,4 +234,84 @@ export function plantGenericDiscrepancies(
   }
 
   return planted;
+}
+
+/**
+ * Applies reference variance to clean pairs, forcing weaker matching tiers.
+ *
+ * The pairs remain **clean**: both sides still correspond and their amounts
+ * still agree, so no exception should result. What changes is only how the
+ * engine has to find them. Without this, tier 1 claims every pair on an exact
+ * reference and the amount/date and fuzzy tiers go entirely unexercised by the
+ * ground-truth suite — leaving half the matching logic validated by nothing.
+ *
+ * Both transformations preserve reference *uniqueness*. A collision would give
+ * two ledger entries the same reference and produce a genuine ambiguity, which
+ * would surface as a `DUPLICATE_SUSPECTED` the manifest never planted — a false
+ * exception manufactured by the fixture rather than found by the engine.
+ *
+ * @param pairs - Clean pairs to vary.
+ * @param counts - How many pairs to give each kind of variance.
+ * @param nextIndex - Allocator yielding distinct, unclaimed pair indices.
+ */
+export function applyReferenceVariance(
+  pairs: WorkingPair[],
+  counts: VarianceCounts,
+  nextIndex: () => number,
+): void {
+  // A ledger that files against its own voucher number: no reference overlap at
+  // all, so the engine must match on amount and date instead.
+  for (let n = 0; n < counts.voucherRef; n += 1) {
+    const pair = at(pairs, nextIndex());
+    const ledger = at(pair.ledgerRecords, 0);
+    const voucherRef = `VCH-${String(90_000 + n)}`;
+    pair.ledgerRecords = [
+      {
+        ...ledger,
+        externalRef: voucherRef,
+        normalizedRef: normalizeRef(voucherRef),
+        description: `${ledger.description} (voucher ${voucherRef})`,
+      },
+    ];
+  }
+
+  // An entry re-keyed by hand from a printed statement, which introduces two
+  // things at once: a character transcription error, and a small rounding
+  // difference.
+  //
+  // Both are needed to reach the fuzzy tier. The typo alone defeats exact
+  // reference matching, but the amount-and-date tier would then claim the pair
+  // before fuzzy matching ever saw it — correct engine behaviour, and the
+  // reason this fixture must deny that tier too. The rounding difference sits
+  // below the tolerance floor, so it is absorbed rather than reported.
+  for (let n = 0; n < counts.typoRef; n += 1) {
+    const pair = at(pairs, nextIndex());
+    const ledger = at(pair.ledgerRecords, 0);
+
+    // The letter O keyed as a zero. Chosen over corrupting a digit because it
+    // leaves the numeric part untouched, which is what keeps the reference
+    // unique — a collision would manufacture an ambiguity the manifest never
+    // planted.
+    const typedRef = ledger.externalRef.replace(/O/, '0').replace(/^U/, 'V');
+    if (typedRef === ledger.externalRef) continue;
+
+    const ROUNDING_DRIFT = toMinor(50n); // ₹0.50, under the ₹1.00 tolerance floor
+    const adjusted = sumMinor([ledger.amountMinor, ROUNDING_DRIFT]);
+    // Keep the settlement payload coherent with the adjusted amount, so the
+    // fixture never carries an internal inconsistency of its own.
+    const detail =
+      ledger.detail.kind === 'settlement'
+        ? { ...ledger.detail, netMinor: adjusted }
+        : ledger.detail;
+
+    pair.ledgerRecords = [
+      {
+        ...ledger,
+        externalRef: typedRef,
+        normalizedRef: normalizeRef(typedRef),
+        amountMinor: adjusted,
+        detail,
+      },
+    ];
+  }
 }
