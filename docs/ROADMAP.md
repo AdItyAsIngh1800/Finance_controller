@@ -13,7 +13,7 @@
 | P0 | Documentation set | 1 | 🟢 Complete |
 | P1 | Domain model & types | 1 | 🟢 Complete |
 | P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
-| P3 | Reconciliation engine | 2 | ⚪ Not started |
+| P3 | Reconciliation engine | 2 | 🟢 Complete |
 | P4 | Application foundation | 3 | ⚪ Not started |
 | P5 | Pipeline wiring & results UI | 4 | ⚪ Not started |
 | P6 | Stage 1 — extraction | 5 | ⚪ Not started |
