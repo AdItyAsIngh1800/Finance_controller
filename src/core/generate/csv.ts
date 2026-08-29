@@ -101,6 +101,13 @@ export function settlementToCsv(records: readonly NormalizedRecord[]): string {
  * amount. The adapter is responsible for folding these back into a sign, which
  * is exactly the conversion it will have to perform on real exports.
  *
+ * The `reference` column is written from `externalRef` and nowhere else. An
+ * earlier version wrote it from a duplicate held in the detail payload, which
+ * went stale the moment reference variance rewrote one and not the other — and
+ * the round-trip then silently restored the original reference, letting the
+ * exact-reference tier reclaim pairs that should have fallen through to a
+ * weaker one.
+ *
  * @param records - Bank-domain records from one side.
  * @returns CSV text.
  */
@@ -126,7 +133,7 @@ export function bankToCsv(records: readonly NormalizedRecord[]): string {
       record.id,
       record.date,
       detail.narration,
-      detail.utr ?? record.externalRef,
+      record.externalRef,
       isDebit ? magnitude : '',
       isDebit ? '' : magnitude,
       detail.balanceMinor === undefined ? '' : toDecimalString(detail.balanceMinor),

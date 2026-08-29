@@ -241,10 +241,14 @@ and not the other — so the duplicate was removed rather than kept in sync.
 {
   "narration":     "NEFT/ACME RETAIL/UTR123456",
   "direction":     "credit",        // credit | debit
-  "balance_minor": 4820000,
-  "utr":           "UTR123456"
+  "balance_minor": 4820000
 }
 ```
+As with the settlement payload, the transaction reference is **not** duplicated
+here — it lives on the record as `external_ref`. Both domains previously carried
+a second copy, and in both cases it drifted out of step with the first the moment
+a mutation rewrote one and not the other.
+
 Sign convention is normalized into `amount_minor` by the adapter (credits positive, debits negative) so the engine never reasons about direction.
 
 ---

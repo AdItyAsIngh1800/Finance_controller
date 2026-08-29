@@ -117,8 +117,6 @@ export interface BankDetail {
   readonly direction: 'credit' | 'debit';
   /** Running account balance after this line, where the statement provides it. */
   readonly balanceMinor?: Minor;
-  /** Unique Transaction Reference, where present. */
-  readonly utr?: string;
 }
 
 /**

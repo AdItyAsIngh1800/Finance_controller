@@ -100,7 +100,6 @@ export function generateBankDataset(
       narration,
       direction: isCredit ? 'credit' : 'debit',
       balanceMinor: toMinor(BigInt(rng.int(1_000_000, 9_000_000))),
-      utr,
     };
 
     const common = {
