@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    /*
+     * ES2022 (not the create-next-app default of ES2017) is required: the entire
+     * money path uses `bigint` literals (e.g. `100n`), which are a syntax error
+     * below ES2020. See docs/DATA_MODEL.md §1.
+     */
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    /*
+     * The reconciliation engine indexes arrays heavily while pairing records.
+     * `noUncheckedIndexedAccess` forces those lookups to be treated as possibly
+     * undefined, which turns a class of off-by-one matching bug into a compile
+     * error rather than a wrong reconciliation result.
+     */
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts",
+    "**/*.mts"
+  ],
+  "exclude": ["node_modules"]
+}
