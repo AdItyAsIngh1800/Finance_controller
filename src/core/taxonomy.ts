@@ -226,6 +226,16 @@ export function isExceptionType(value: unknown): value is ExceptionType {
 }
 
 /**
+ * Type guard for {@link RecordSide}.
+ *
+ * @param value - An unknown value.
+ * @returns `true` if the value names a side of a reconciliation.
+ */
+export function isRecordSide(value: unknown): value is RecordSide {
+  return typeof value === 'string' && (RECORD_SIDES as readonly string[]).includes(value);
+}
+
+/**
  * Type guard for {@link Domain}.
  *
  * @param value - An unknown value.
