@@ -9,6 +9,7 @@
 
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
+import { SeedDemo } from '@/components/seed-demo';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { isDomain } from '@/core/taxonomy';
 
@@ -118,10 +119,13 @@ export default async function DatasetsPage() {
       )}
 
       {error === null && datasets.length === 0 && (
-        <p className="mt-10 text-sm text-ink-muted">
-          No datasets yet. Create one above to upload a settlement report or bank statement
-          alongside your ledger.
-        </p>
+        <div className="mt-10">
+          <p className="text-sm text-ink-muted">
+            No datasets yet. Create one above to upload a settlement report or bank statement
+            alongside your ledger — or start from prepared data.
+          </p>
+          <SeedDemo />
+        </div>
       )}
 
       {datasets.length > 0 && (
