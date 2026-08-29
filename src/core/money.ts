@@ -193,6 +193,29 @@ export function formatMinor(
   return accounting ? `${symbol}(${wholeText}.${fractionText})` : `-${body}`;
 }
 
+/**
+ * Renders a minor-unit amount as a plain decimal string.
+ *
+ * Unlike {@link formatMinor}, this emits no currency symbol and no thousands
+ * separators — `"1250.50"`, `"-412.00"` — which is what belongs in a CSV or any
+ * other machine-readable output. Round-trips exactly through {@link parseMinor}.
+ *
+ * @param value - The amount to render.
+ * @returns A fixed-precision decimal string.
+ *
+ * @example
+ * toDecimalString(125050n as Minor);  // '1250.50'
+ * toDecimalString(-41200n as Minor);  // '-412.00'
+ */
+export function toDecimalString(value: Minor): string {
+  const negative = value < 0n;
+  const magnitude = negative ? -value : value;
+  const divisor = 10n ** BigInt(CURRENCY_SCALE);
+  const whole = magnitude / divisor;
+  const fraction = (magnitude % divisor).toString().padStart(CURRENCY_SCALE, '0');
+  return `${negative ? '-' : ''}${whole}.${fraction}`;
+}
+
 /** Adds two amounts. */
 export function addMinor(a: Minor, b: Minor): Minor {
   return (a + b) as Minor;

@@ -141,6 +141,37 @@ export const SEVERITY_RANK: Readonly<Record<Severity, number>> = {
 } as const;
 
 /**
+ * Whether an exception leaves its records unmatched, or merely annotates a
+ * match that was still made.
+ *
+ * - `blocking` — the engine could not confidently pair the records, so they
+ *   remain unmatched and do not count toward the match rate.
+ * - `advisory` — the records *were* paired, and the exception records something
+ *   noteworthy about how. They still count as matched.
+ *
+ * This follows directly from the severity semantics: `TIMING_DIFFERENCE` and
+ * `PARTIAL_PAYMENT` are `low` severity precisely because the money is fully
+ * accounted for, which is only coherent if the records did in fact pair up. A
+ * payout that arrived two days late is reconciled *and* worth flagging.
+ *
+ * `FEE_VARIANCE` is advisory for a different reason: it is an arithmetic check
+ * internal to a single settlement record, independent of whether that record
+ * found a counterpart.
+ */
+export const EXCEPTION_DISPOSITION: Readonly<
+  Record<ExceptionType, 'blocking' | 'advisory'>
+> = {
+  UNMATCHED_SOURCE: 'blocking',
+  UNMATCHED_LEDGER: 'blocking',
+  AMOUNT_MISMATCH: 'blocking',
+  DUPLICATE_SUSPECTED: 'blocking',
+  TIMING_DIFFERENCE: 'advisory',
+  PARTIAL_PAYMENT: 'advisory',
+  FEE_VARIANCE: 'advisory',
+  LOW_CONFIDENCE_EXTRACTION: 'advisory',
+} as const;
+
+/**
  * Exception types that only apply to a specific domain.
  *
  * `FEE_VARIANCE` depends on the gross/fees/refunds/chargebacks identity, which
