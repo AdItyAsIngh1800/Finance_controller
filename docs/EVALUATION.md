@@ -278,6 +278,11 @@ Stated here in full rather than discovered by a judge. This section is also rend
 - **No learning from corrections.** A user fixing the same false positive weekly gets no benefit; the engine is stateless by design.
 
 ### Extraction
+- **Document extraction reads settlement statements only.** A bank statement has
+  no gross/fees/net breakdown for the schema to describe, so bank documents are
+  refused at upload rather than read with a settlement schema — which would
+  produce plausible-looking wrong fields in the one place this system promises
+  not to guess. Bank data is ingested as CSV, where the columns are unambiguous.
 - **Handwriting is unreliable** and not claimed to work.
 - **Unusual layouts degrade quality** — validated against a narrow set of generated templates.
 - **Confidence is model-reported**, not independently verified. Calibration is measured, but a confidently wrong extraction remains possible; the gate mitigates, it does not eliminate.

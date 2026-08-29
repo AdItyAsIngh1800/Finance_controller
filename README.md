@@ -42,7 +42,7 @@ The honest caveat, stated up front: **this system has never seen a real bank sta
 ## Features
 
 - Google sign-in with per-user isolation enforced by **database-level Row-Level Security**, not just a login screen
-- CSV ingestion plus PDF/image extraction with confidence gating and a human review queue
+- CSV ingestion for both domains, plus PDF/image extraction for settlement statements — with confidence gating and a human review queue
 - Deterministic tiered matching — exact reference → amount+date → fuzzy reference → bounded partial-payment sets
 - Fixed, published exception taxonomy; every finding carries a plain-English reason and the numbers behind it
 - Two domains — **settlement** (processor payouts, primary) and **bank** (statement vs GL) — against one shared engine
