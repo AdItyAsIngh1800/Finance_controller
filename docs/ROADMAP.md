@@ -18,7 +18,7 @@
 | P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
 | P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
 | P7 | Stage 3 — grounded Q&A | 5 | 🟡 Built; grounding verified, UI unverified |
-| P8 | Bank domain adapter | 6 | ⚪ Not started |
+| P8 | Bank domain adapter | 6 | 🟢 Complete — engine source untouched |
 | P9 | Evaluation, polish, deploy | 6 | ⚪ Not started |
 
 ⚪ Not started · 🟡 In progress · 🟢 Complete · 🔴 Blocked
@@ -99,7 +99,7 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 | R-5 | Agent states an ungrounded figure | Low | **Critical** | Grounding constraint + call-trace display + manual §3.5 checks | Any demo figure not traceable to a row |
 | R-6 | Float creeps into the money path | Medium | High | `bigint` at the type level; P3 tests assert exact integers | Any test failing on a rounding delta |
 | R-7 | RLS policy present but ineffective | Medium | **Critical** | Verified by *attempting* a cross-user read, never by reading the policy | Second account returns any row |
-| R-8 | Adapter abstraction leaks | Low | Medium | P8's gate is a diff not touching `engine.ts`; fix in types, never patch in adapter | P8 requires an engine edit |
+| R-8 | ~~Adapter abstraction leaks~~ **retired** | — | — | **Did not occur.** P8 added the bank domain with zero changes to `engine.ts` or `tiers.ts`, both last modified in P3. The two fixes it did require were in the types and the CSV writer — exactly where the design said they belonged | — |
 | R-9 | Scope pressure with nothing cut | High | Medium | P8 is the only movable phase; Day 7 buffer absorbs one slip, not two | Any phase ending a full day late |
 
 **R-5 and R-7 are the two critical-impact risks**, and both are failures that *look like success*: an agent that answers fluently but ungroundedly, and a policy that exists but does not block. Both are therefore verified by adversarial test — asking a question whose answer is not in the data, and attempting a read that must fail — rather than by inspection.

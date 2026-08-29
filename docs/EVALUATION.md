@@ -156,6 +156,9 @@ Manual by design: the failure being tested for is a model asserting something pl
 **Matches by tier:** `EXACT_REF` 226 · `EXACT_AMOUNT_DATE` 8 · `FUZZY_REF` 6 · `PARTIAL_SET` 1
 
 ### 5.2 Engine — bank domain
+
+*Re-measured 30 August 2026 after the bank adapter landed. Figures below are from the CSV ingestion path, not in-memory records — a test asserts the two agree.*
+
 | Exception type | Planted | Reported | Correct | Precision | Recall |
 |---|---|---|---|---|---|
 | `UNMATCHED_SOURCE` | 3 | 3 | 3 | 1.00 | 1.00 |
@@ -166,6 +169,14 @@ Manual by design: the failure being tested for is a model asserting something pl
 | `PARTIAL_PAYMENT` | 1 | 1 | 1 | 1.00 | 1.00 |
 
 **Match rate:** 96.4% (243/252) · **False matches: 0** · `FEE_VARIANCE` correctly never raised.
+
+**Matches by tier:** `EXACT_REF` 226 · `EXACT_AMOUNT_DATE` 8 · `FUZZY_REF` 6 · `PARTIAL_SET` 1
+
+**The adapter claim, tested rather than asserted.** Adding this domain required
+**zero changes to engine source** — `engine.ts` and `tiers.ts` were last modified
+in Phase 3 and were not touched again. The bank domain's debit/credit convention
+is folded into the sign of `amount_minor` at the adapter boundary, so the engine
+compares signed integers and has no branch for direction anywhere.
 
 **Reading these figures honestly.** Perfect scores here measure whether the
 engine implements its own logic correctly against data generated from the same
