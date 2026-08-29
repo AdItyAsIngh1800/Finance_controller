@@ -81,23 +81,67 @@ npm run dev                    # http://localhost:3000
 | `GEMINI_API_KEY` | **server** | All Gemini calls originate server-side |
 | `GEMINI_MODEL_ID` | server | Model ID as config — provider naming drifts |
 
-Google OAuth also needs configuring in the Supabase dashboard, with the redirect URL registered for **both** localhost and the production domain.
+### Google sign-in
+
+Configured once, in two places:
+
+1. **Google Cloud Console** — create an OAuth 2.0 Client ID (Web application) and
+   add `https://<project-ref>.supabase.co/auth/v1/callback` as an authorised
+   redirect URI.
+2. **Supabase → Authentication → Providers → Google** — paste the client ID and
+   secret and enable it. Then under **URL Configuration**, add both
+   `http://localhost:3000/**` and `https://<your-vercel-domain>/**` to the
+   redirect allow-list.
+
+Registering only localhost is the classic failure: sign-in works throughout
+development and breaks the moment it is deployed.
+
+---
+
+## Deployment
+
+Vercel, from the GitHub repository.
+
+1. Import the repo at [vercel.com/new](https://vercel.com/new). Next.js is
+   detected automatically; no build configuration is required.
+2. Set four environment variables — the same values as `.env.local`:
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`,
+   `GEMINI_API_KEY`, `GEMINI_MODEL_ID`.
+3. Add the deployed domain to Supabase's redirect allow-list (see above) and to
+   the Google OAuth client's authorised origins.
+4. Sign in **on the deployed URL**, not just locally, and confirm the redirect
+   completes.
+
+No database migration step is needed at deploy time — the schema is already
+applied. `fixtures/` is gitignored and never deployed; the evaluation page and
+the demo seeder both generate their data in process, so neither depends on files
+existing on the server.
 
 ### Commands
 
 ```bash
 npm run dev                # development server
-npm test                   # engine scored against ground truth
-npm run generate:fixtures  # regenerate synthetic data
+npm test                   # unit + ground-truth suite
+npm run typecheck          # tsc --noEmit
 npm run build              # production build
+
+npm run generate:fixtures  # regenerate synthetic data + ground-truth manifests
+npm run scorecard          # per-type precision/recall and false matches
+npm run render:documents   # render test statements + a degraded scan
+npm run extraction:report  # extraction accuracy and confidence calibration
+npm run grounding:report   # adversarial grounding check on the Q&A agent
 ```
+
+The last four are the honest checks. `npm test` going green cannot distinguish
+"recall 1.00 because everything was found" from "recall 1.00 because nothing was
+planted" — the reports print the underlying counts.
 
 ---
 
 ## Demo script
 
 1. **Sign in** with Google.
-2. **Open the seeded settlement dataset** — 250 record pairs with planted discrepancies.
+2. **Click "Load a demo dataset"** — 250 record pairs with known discrepancies planted, seeded and reconciled in one action, so the walkthrough starts at results rather than an upload dialog.
 3. **Show the review queue** — a degraded scan with two sub-threshold fields, blocked from the ledger. *This is where the product refuses to trust the model.*
 4. **Run reconciliation** — match rate, tier breakdown, visible matching parameters.
 5. **Open a `FEE_VARIANCE` exception** — both sides side by side, differing line marked.

@@ -19,7 +19,7 @@
 | P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
 | P7 | Stage 3 — grounded Q&A | 5 | 🟡 Built; grounding verified, UI unverified |
 | P8 | Bank domain adapter | 6 | 🟢 Complete — engine source untouched |
-| P9 | Evaluation, polish, deploy | 6 | ⚪ Not started |
+| P9 | Evaluation, polish, deploy | 6 | 🟡 Evaluation page + demo seeding built; deploy pending |
 
 ⚪ Not started · 🟡 In progress · 🟢 Complete · 🔴 Blocked
 
