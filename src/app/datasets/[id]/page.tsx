@@ -68,6 +68,7 @@ export default async function DatasetPage({
       <div className="mt-8">
         <DatasetWorkbench
           datasetId={record.id}
+          domain={record.domain === 'bank' ? 'bank' : 'settlement'}
           sourceCount={sourceCount ?? 0}
           ledgerCount={ledgerCount ?? 0}
         />

@@ -317,6 +317,22 @@ export async function promoteExtraction(
   if (readError !== null) throw new Error(`Could not read the extraction: ${readError.message}`);
   if (extraction === null) throw new Error('Extraction not found.');
 
+  // The detail payload built below is a SettlementDetail. Checked here as well
+  // as at the endpoint because this function is the only path into the ledger,
+  // and a guard on the sole entrance is worth more than one on the doorbell.
+  const { data: dataset } = await client
+    .from('datasets')
+    .select('domain')
+    .eq('id', datasetId)
+    .maybeSingle();
+  if (dataset === null) throw new Error('Dataset not found.');
+  if ((dataset as { domain: string }).domain !== 'settlement') {
+    throw new Error(
+      'Extractions can only be promoted into a settlement dataset. ' +
+        'Bank records are ingested as CSV.',
+    );
+  }
+
   const reference = (confirmed.reference ?? '').trim();
   if (reference.length === 0) throw new Error('A reference is required.');
 

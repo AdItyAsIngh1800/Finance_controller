@@ -33,13 +33,20 @@ const IDLE: SideState = { status: 'idle' };
 
 export function DatasetWorkbench({
   datasetId,
+  domain,
   sourceCount,
   ledgerCount,
 }: {
   readonly datasetId: string;
+  /** Determines whether documents can be read, or only CSV accepted. */
+  readonly domain: 'settlement' | 'bank';
   readonly sourceCount: number;
   readonly ledgerCount: number;
 }) {
+  // Only settlement statements can be read as documents. Rather than accept a
+  // PDF and reject it after upload, the control does not offer one — a file
+  // picker that lists a type the server will refuse is a small lie.
+  const acceptsDocuments = domain === 'settlement';
   const router = useRouter();
   const [source, setSource] = useState<SideState>(IDLE);
   const [ledger, setLedger] = useState<SideState>(IDLE);
@@ -137,15 +144,17 @@ export function DatasetWorkbench({
     <div>
       <div className="grid gap-4 md:grid-cols-2">
         <UploadPanel
-          title="What the processor says"
-          hint="CSV export, or a PDF or scan to be read"
+          title={domain === 'bank' ? 'What the bank says' : 'What the processor says'}
+          hint={acceptsDocuments ? 'CSV export, or a PDF or scan to be read' : 'CSV export'}
+          acceptsDocuments={acceptsDocuments}
           count={sourceCount}
           state={source}
           onFile={(file) => void upload('source', file)}
         />
         <UploadPanel
           title="What your books say"
-          hint="CSV export, or a PDF or scan to be read"
+          hint={acceptsDocuments ? 'CSV export, or a PDF or scan to be read' : 'CSV export'}
+          acceptsDocuments={acceptsDocuments}
           count={ledgerCount}
           state={ledger}
           onFile={(file) => void upload('ledger', file)}
@@ -192,12 +201,14 @@ export function DatasetWorkbench({
 function UploadPanel({
   title,
   hint,
+  acceptsDocuments,
   count,
   state,
   onFile,
 }: {
   readonly title: string;
   readonly hint: string;
+  readonly acceptsDocuments: boolean;
   readonly count: number;
   readonly state: SideState;
   readonly onFile: (file: File) => void;
@@ -211,7 +222,7 @@ function UploadPanel({
         <span className="sr-only">Choose a CSV file for {title}</span>
         <input
           type="file"
-          accept=".csv,text/csv,application/pdf,image/*"
+          accept={acceptsDocuments ? '.csv,text/csv,application/pdf,image/*' : '.csv,text/csv'}
           disabled={state.status === 'uploading'}
           onChange={(event) => {
             const file = event.target.files?.[0];

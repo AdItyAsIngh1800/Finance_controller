@@ -61,10 +61,29 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const client = await createClient();
   const { data: dataset } = await client
     .from('datasets')
-    .select('id')
+    .select('id, domain')
     .eq('id', datasetId)
     .maybeSingle();
   if (dataset === null) return NextResponse.json({ error: 'Dataset not found.' }, { status: 404 });
+
+  // Document extraction reads settlement statements only. The schema, the
+  // prompt, and the promotion path all describe a gross/fees/net breakdown that
+  // a bank statement does not have.
+  //
+  // Refusing is deliberate rather than a placeholder. Reading a bank statement
+  // with a settlement schema would produce fields that look plausible and are
+  // wrong — silently, and in the one place this system promises not to guess.
+  // Bank data is ingested as CSV, where the columns are unambiguous.
+  if ((dataset as { domain: string }).domain !== 'settlement') {
+    return NextResponse.json(
+      {
+        error:
+          'Document extraction currently reads settlement statements only. ' +
+          'Upload a CSV for a bank dataset.',
+      },
+      { status: 422 },
+    );
+  }
 
   // Objects live under the owner's id, which is what the storage policy keys on.
   const storagePath = `${user.id}/${datasetId}/${randomUUID()}-${file.name}`;
