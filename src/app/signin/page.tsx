@@ -49,7 +49,7 @@ function SignInForm() {
   return (
     <div className="w-full max-w-sm">
       <h1 className="text-2xl font-semibold tracking-tight">AI Finance Controller</h1>
-      <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="mt-2 text-sm text-ink-muted">
         Reconciles processor and bank records against your ledger, and explains every
         discrepancy it finds.
       </p>
@@ -58,7 +58,7 @@ function SignInForm() {
         type="button"
         onClick={signIn}
         disabled={pending}
-        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium text-neutral-900 transition hover:bg-neutral-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-neutral-900 disabled:cursor-not-allowed disabled:opacity-60 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
+        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-rule bg-paper px-4 py-2.5 text-sm font-medium transition hover:bg-paper-sunk disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
           <path
@@ -81,7 +81,7 @@ function SignInForm() {
       {error !== null && (
         <p
           role="alert"
-          className="mt-4 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-200"
+          className="mt-4 rounded-md border border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
         >
           Could not start sign-in: {error}
         </p>
