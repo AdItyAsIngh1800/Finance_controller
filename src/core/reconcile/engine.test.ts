@@ -88,6 +88,31 @@ describe('settlement reconciliation', () => {
       result.stats.matchesByTier.FUZZY_REF,
     );
   });
+
+  it('exercises every matching tier', () => {
+    // A regression guard, not a behavioural assertion. The suite once passed
+    // with two of the four tiers never executing, because the fixtures always
+    // agreed on references and tier 1 claimed everything. Green tests over
+    // untested code are worse than no tests, so the coverage is pinned here.
+    for (const [tier, count] of Object.entries(result.stats.matchesByTier)) {
+      expect(count, `tier ${tier} claimed no matches`).toBeGreaterThan(0);
+    }
+  });
+
+  it('absorbs a sub-tolerance rounding difference without reporting it', () => {
+    // The re-keyed pairs differ by ₹0.50, below the ₹1.00 tolerance floor.
+    // Reporting those would be a false exception.
+    const fuzzyMatches = result.matches.filter((match) => match.tier === 'FUZZY_REF');
+    expect(fuzzyMatches.length).toBeGreaterThan(0);
+    for (const match of fuzzyMatches) {
+      const flagged = result.exceptions.some(
+        (exception) =>
+          exception.type === 'AMOUNT_MISMATCH' &&
+          match.sourceRecordIds.some((id) => exception.sourceRecordIds.includes(id)),
+      );
+      expect(flagged).toBe(false);
+    }
+  });
 });
 
 describe('bank reconciliation', () => {
