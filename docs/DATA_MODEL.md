@@ -223,13 +223,17 @@ Indexes: `(dataset_id, normalized_ref)`, `(dataset_id, amount_minor)`, `(dataset
   "refunds_minor":       8000,
   "chargebacks_minor":      0,
   "net_minor":         113250,   // must equal gross − fees − refunds − chargebacks
-  "order_ref":     "ORD-4471",
   "fee_lines": [
     { "label": "Platform commission", "amount_minor": 2500 },
     { "label": "Payment gateway",     "amount_minor": 1250 }
   ]
 }
 ```
+The order reference is deliberately **not** duplicated here: it already lives on
+the record as `external_ref`, and a second copy is a field that can drift out of
+step with the first. It did exactly that during Phase 5 — a mutation rewrote one
+and not the other — so the duplicate was removed rather than kept in sync.
+
 `fee_lines` is what turns *"the payout was ₹412 short"* into *"₹250 platform commission plus ₹162 gateway fee"*. Without the itemisation the agent can only restate the gap; with it, the agent can explain it.
 
 ### Bank (`source_records.detail`)

@@ -98,8 +98,6 @@ export interface SettlementDetail {
   readonly chargebacksMinor: Minor;
   /** Amount actually paid out. */
   readonly netMinor: Minor;
-  /** Originating order reference, where distinct from the payout reference. */
-  readonly orderRef?: string;
   /** Itemised breakdown of {@link feesMinor}. */
   readonly feeLines: readonly FeeLine[];
 }

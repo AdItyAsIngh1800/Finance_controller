@@ -76,14 +76,12 @@ export const DEFAULT_SETTLEMENT_OPTIONS: GenerateOptions = {
  * @param grossMinor - Total sale value before deductions.
  * @param refundsMinor - Refunds netted out of the payout.
  * @param chargebacksMinor - Chargebacks netted out of the payout.
- * @param orderRef - The originating order reference.
  * @returns A balanced settlement detail payload.
  */
 function buildDetail(
   grossMinor: Minor,
   refundsMinor: Minor,
   chargebacksMinor: Minor,
-  orderRef: string,
 ): SettlementDetail {
   const commission = basisPointsOf(grossMinor, COMMISSION_BPS);
   const gateway = basisPointsOf(grossMinor, GATEWAY_BPS);
@@ -104,8 +102,43 @@ function buildDetail(
     refundsMinor,
     chargebacksMinor,
     netMinor,
-    orderRef,
     feeLines,
+  };
+}
+
+/**
+ * Restores the settlement identity after a mutation changed a record's amount.
+ *
+ * Several mutations rewrite `amountMinor` — an instalment carries its own share
+ * rather than the parent payout, a re-keyed entry drifts by a rounding
+ * difference — while `detail` still describes the original figure. Left alone,
+ * the record is internally inconsistent, and serializing it to CSV and reading
+ * it back would break `net = gross − fees − refunds − chargebacks` and raise a
+ * `FEE_VARIANCE` nobody planted.
+ *
+ * The difference is absorbed into `grossMinor` rather than `refundsMinor`,
+ * because a downward drift would otherwise produce a negative refund — an
+ * arithmetically valid but meaningless figure for a reviewer to read.
+ *
+ * Records whose amount was never touched pass through unchanged, which is what
+ * keeps the deliberately-planted `FEE_VARIANCE` broken.
+ *
+ * @param record - A record that may have drifted.
+ * @returns The record with `detail` consistent with its amount.
+ */
+function harmoniseSettlementDetail(record: NormalizedRecord): NormalizedRecord {
+  if (record.detail.kind !== 'settlement') return record;
+  const detail = record.detail;
+  if (detail.netMinor === record.amountMinor) return record;
+
+  const drift = subMinor(detail.netMinor, record.amountMinor);
+  return {
+    ...record,
+    detail: {
+      ...detail,
+      grossMinor: subMinor(detail.grossMinor, drift),
+      netMinor: record.amountMinor,
+    },
   };
 }
 
@@ -138,7 +171,6 @@ export function generateSettlementDataset(
       toMinor(BigInt(rng.int(20_000, 500_000))),
       toMinor(0n),
       toMinor(0n),
-      orderRef,
     );
     const common = {
       externalRef: orderRef,
@@ -181,10 +213,10 @@ export function generateSettlementDataset(
     const ledger = at(pair.ledgerRecords, 0);
     const grossMinor = toMinor(125_000n); // ₹1,250.00
     const refundsMinor = toMinor(41_200n); // ₹412.00, netted out by the processor
-    const withRefund = buildDetail(grossMinor, refundsMinor, toMinor(0n), SHOWCASE_ORDER_REF);
+    const withRefund = buildDetail(grossMinor, refundsMinor, toMinor(0n));
     // The ledger recorded the sale but never the refund, so it still expects the
     // full post-fee amount — leaving the two sides exactly ₹412.00 apart.
-    const withoutRefund = buildDetail(grossMinor, toMinor(0n), toMinor(0n), SHOWCASE_ORDER_REF);
+    const withoutRefund = buildDetail(grossMinor, toMinor(0n), toMinor(0n));
 
     pair.sourceRecords = [{ ...source, amountMinor: withRefund.netMinor, detail: withRefund }];
     pair.ledgerRecords = [{ ...ledger, amountMinor: withoutRefund.netMinor, detail: withoutRefund }];
@@ -250,8 +282,8 @@ export function generateSettlementDataset(
   const cleanPairs: CleanPair[] = [];
 
   for (const pair of pairs) {
-    source.push(...pair.sourceRecords);
-    ledger.push(...pair.ledgerRecords);
+    source.push(...pair.sourceRecords.map(harmoniseSettlementDetail));
+    ledger.push(...pair.ledgerRecords.map(harmoniseSettlementDetail));
     if (pair.clean) {
       cleanPairs.push({
         sourceRecordId: at(pair.sourceRecords, 0).id,
