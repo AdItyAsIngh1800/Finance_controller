@@ -44,6 +44,7 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
     Object.fromEntries(item.fields.map((field) => [field.name, field.value])),
   );
   const [saving, setSaving] = useState(false);
+  const [discarding, setDiscarding] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const belowThreshold = item.fields.filter((field) => field.confidence < item.threshold);
@@ -70,6 +71,30 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
     router.refresh();
   };
 
+  /**
+   * Discards this extraction.
+   *
+   * No record is written. Without this a document the model could not read
+   * usefully sits in the queue permanently, blocking reconciliation with no way
+   * to clear it.
+   */
+  const discard = async (): Promise<void> => {
+    setDiscarding(true);
+    setError(null);
+    const response = await fetch('/api/extract/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ extractionId: item.extractionId }),
+    });
+    if (!response.ok) {
+      const payload = (await response.json()) as { error?: string };
+      setError(payload.error ?? 'Could not discard this extraction.');
+      setDiscarding(false);
+      return;
+    }
+    router.refresh();
+  };
+
   if (item.status === 'failed') {
     return (
       <article className="border border-rule bg-paper p-5">
@@ -78,6 +103,19 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
         {/* Stated explicitly: the most useful thing a reader can know after a
             failure is that nothing was silently written. */}
         <p className="mt-3 text-sm">Your ledger was not modified.</p>
+        <button
+          type="button"
+          onClick={() => void discard()}
+          disabled={discarding}
+          className="mt-4 rounded-sm border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk disabled:opacity-50"
+        >
+          {discarding ? 'Discarding…' : 'Discard this document'}
+        </button>
+        {error !== null && (
+          <p role="alert" className="mt-3 text-sm text-unaccounted">
+            {error}
+          </p>
+        )}
       </article>
     );
   }
@@ -156,14 +194,22 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
           </p>
         )}
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={() => void confirm()}
-            disabled={saving}
+            disabled={saving || discarding}
             className="rounded-sm bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
           >
             {saving ? 'Saving…' : 'Confirm and add to ledger'}
+          </button>
+          <button
+            type="button"
+            onClick={() => void discard()}
+            disabled={saving || discarding}
+            className="rounded-sm border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk disabled:opacity-40"
+          >
+            {discarding ? 'Discarding…' : 'Discard'}
           </button>
           {item.modelId !== null && (
             <span className="font-mono text-[11px] text-ink-faint">read by {item.modelId}</span>
