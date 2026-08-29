@@ -15,7 +15,7 @@
 | P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
 | P4 | Application foundation | 3 | ⚪ Not started |
-| P5 | Pipeline wiring & results UI | 4 | ⚪ Not started |
+| P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
 | P6 | Stage 1 — extraction | 5 | ⚪ Not started |
 | P7 | Stage 3 — grounded Q&A | 5 | ⚪ Not started |
 | P8 | Bank domain adapter | 6 | ⚪ Not started |
