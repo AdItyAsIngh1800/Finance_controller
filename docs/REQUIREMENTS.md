@@ -52,9 +52,9 @@ Every requirement below is written to be independently verifiable. `VERIFICATION
 | FR-4.4 | Fields below the confidence threshold (0.85) are marked `needs_review` and **do not** enter the ledger | P0 | Feed a degraded scan; assert it is quarantined |
 | FR-4.5 | A review screen shows the source document beside extracted fields, highlighting low-confidence values | P0 | UI walkthrough |
 | FR-4.6 | A human can correct or confirm a field; only then is the record promoted | P0 | Confirm one, correct one |
+| FR-4.7 | Extraction failure (unreadable file, API error) surfaces a clear error and leaves the ledger untouched | P0 | Upload a non-document file |
 | FR-4.8 | A human can discard an extraction without promoting it, including one that failed to read | P0 | Discard one of each; confirm the queue clears and no record is written |
 | FR-4.9 | Documents are accepted only for domains whose schema can describe them | P0 | Upload a PDF to a bank dataset; must be refused with a reason |
-| FR-4.7 | Extraction failure (unreadable file, API error) surfaces a clear error and leaves the ledger untouched | P0 | Upload a non-document file |
 
 > FR-4.4 is the single most important functional requirement in this document. It is the product's claim about AI trust, expressed as behaviour.
 
