@@ -13,6 +13,8 @@
  * @module
  */
 
+import { distance } from 'fastest-levenshtein';
+
 /**
  * Reduces a reference to its comparable form.
  *
@@ -36,4 +38,34 @@
  */
 export function normalizeRef(raw: string): string {
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+/**
+ * Scores how similar two normalized references are, in `[0, 1]`.
+ *
+ * Uses normalized Levenshtein distance: `1 - distance / length of the longer
+ * string`. Identical references score `1`; entirely different ones approach `0`.
+ *
+ * This is the only external dependency the core takes, and it is a pure
+ * function over strings — no I/O, no state — so it does not compromise the rule
+ * that `src/core/` stays free of clients and frameworks. It is preferred over a
+ * hand-rolled implementation because an edit-distance routine is easy to get
+ * subtly wrong at the boundaries, and a wrong distance here means a wrong match.
+ *
+ * @param a - First normalized reference.
+ * @param b - Second normalized reference.
+ * @returns Similarity in `[0, 1]`. Two empty strings score `0` rather than `1`,
+ *   because a missing reference must never be treated as evidence of a match.
+ *
+ * @example
+ * refSimilarity('ORD4471', 'ORD4471');  // 1
+ * refSimilarity('ORD4471', 'ORD4472');  // ~0.857
+ */
+export function refSimilarity(a: string, b: string): number {
+  // An absent reference is not evidence. Scoring two blanks as a perfect match
+  // would pair every reference-less record with every other.
+  if (a.length === 0 || b.length === 0) return 0;
+  if (a === b) return 1;
+  const longest = Math.max(a.length, b.length);
+  return 1 - distance(a, b) / longest;
 }

@@ -230,6 +230,24 @@ export interface ReconParams {
    * @see docs/EVALUATION.md §6 — known limitations
    */
   readonly maxPartialSetSize: number;
+  /**
+   * Maximum day difference between a ledger entry and a source record for that
+   * record to be considered part of a partial set.
+   *
+   * Applied only to the date-window fallback; reference-prefix candidates are
+   * accepted regardless of how far apart in time they fall.
+   */
+  readonly partialSetWindowDays: number;
+  /**
+   * Largest candidate pool the partial-set search will enumerate over.
+   *
+   * Subset-sum is exponential in the pool size, so this bound is what keeps the
+   * tier inside the performance budget. A ledger entry whose date-window pool
+   * exceeds this is skipped rather than searched.
+   *
+   * @see docs/EVALUATION.md §6 — known limitations
+   */
+  readonly maxPartialCandidates: number;
 }
 
 /** Everything the engine needs to reconcile one dataset. */
