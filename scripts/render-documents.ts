@@ -102,21 +102,28 @@ function renderWithChrome(chrome: string, htmlPath: string, stem: string): void 
  * sensor noise from a phone camera.
  */
 async function degrade(sourcePng: string, destination: string): Promise<void> {
+  // Geometry first, so the noise overlay can be generated at the resulting
+  // size. Compositing a layer larger than its base is rejected outright.
+  const reshaped = await sharp(sourcePng)
+    .resize({ width: 620 })                  // scanned at low resolution
+    .rotate(1.6, { background: '#ffffff' })  // fed in slightly crooked
+    .toBuffer();
+
+  const { width = 620, height = 880 } = await sharp(reshaped).metadata();
+
   const noise = Buffer.from(
-    `<svg width="1000" height="1400" xmlns="http://www.w3.org/2000/svg">
+    `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
        <filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3"/></filter>
-       <rect width="1000" height="1400" filter="url(#n)" opacity="0.22"/>
+       <rect width="${width}" height="${height}" filter="url(#n)" opacity="0.22"/>
      </svg>`,
   );
 
-  await sharp(sourcePng)
-    .resize({ width: 620 })            // scanned at low resolution
-    .rotate(1.6, { background: '#ffffff' }) // fed in slightly crooked
-    .modulate({ brightness: 1.18 })    // washed-out toner
-    .linear(0.72, 26)                  // reduced contrast
-    .blur(1.5)                         // soft focus
-    .composite([{ input: noise, blend: 'multiply' }])
-    .jpeg({ quality: 38 })             // heavy compression artefacts
+  await sharp(reshaped)
+    .modulate({ brightness: 1.18 })          // washed-out toner
+    .linear(0.72, 26)                        // reduced contrast
+    .blur(1.5)                               // soft focus
+    .composite([{ input: noise, blend: 'multiply' }])  // sensor noise
+    .jpeg({ quality: 38 })                   // heavy compression artefacts
     .toFile(destination);
 }
 

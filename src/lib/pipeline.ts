@@ -12,6 +12,9 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseSettlementCsv } from '@/core/adapters/settlement';
+import { isIsoDate } from '@/core/dates';
+import { parseMinor } from '@/core/money';
+import { normalizeRef } from '@/core/refs';
 import type { AdapterResult, RowError } from '@/core/adapters/types';
 import { DEFAULT_RECON_PARAMS } from '@/core/reconcile/config';
 import { reconcile } from '@/core/reconcile/engine';
@@ -21,6 +24,7 @@ import type {
   RecordDetail,
   RecordSide,
   ReconResult,
+  SettlementDetail,
 } from '@/core/types';
 import { decodeFromJsonb, encodeForJsonb, readMinorColumn } from './serialize';
 
@@ -272,4 +276,101 @@ export async function runReconciliation(
   }
 
   return { runId, result };
+}
+
+/**
+ * Promotes a reviewed extraction into a ledger record.
+ *
+ * This is the only path by which extracted data enters reconciliation, and it
+ * refuses to run unless a human has confirmed the extraction. That refusal is
+ * the confidence gate expressed as control flow rather than as a warning label:
+ * a low-confidence reading cannot reach the engine even if something else in
+ * the application asks for it.
+ *
+ * Amounts are re-parsed here with `parseMinor` rather than trusted as read. The
+ * model returns strings; this is where they become money, and anything that
+ * cannot be represented exactly is rejected rather than rounded.
+ *
+ * @param client - Supabase client bound to the signed-in user's session.
+ * @param options - The extraction to promote, and where it belongs.
+ * @returns The id of the created record.
+ * @throws {Error} If the extraction is absent, unconfirmed, or unparseable.
+ */
+export async function promoteExtraction(
+  client: SupabaseClient,
+  options: {
+    readonly extractionId: string;
+    readonly datasetId: string;
+    readonly userId: string;
+    readonly side: RecordSide;
+    /** Field values as confirmed by the reviewer, which may differ from the model's. */
+    readonly confirmed: Readonly<Record<string, string>>;
+  },
+): Promise<string> {
+  const { extractionId, datasetId, userId, side, confirmed } = options;
+
+  const { data: extraction, error: readError } = await client
+    .from('extractions')
+    .select('id, status')
+    .eq('id', extractionId)
+    .maybeSingle();
+
+  if (readError !== null) throw new Error(`Could not read the extraction: ${readError.message}`);
+  if (extraction === null) throw new Error('Extraction not found.');
+
+  const reference = (confirmed.reference ?? '').trim();
+  if (reference.length === 0) throw new Error('A reference is required.');
+
+  const date = (confirmed.date ?? '').trim();
+  if (!isIsoDate(date)) throw new Error(`"${date}" is not a valid YYYY-MM-DD date.`);
+
+  // Throws MoneyParseError on anything inexact — excess precision included.
+  const grossMinor = parseMinor(confirmed.gross ?? '0');
+  const feesMinor = parseMinor(confirmed.fees ?? '0');
+  const refundsMinor = parseMinor(confirmed.refunds ?? '0');
+  const chargebacksMinor = parseMinor(confirmed.chargebacks ?? '0');
+  const netMinor = parseMinor(confirmed.net ?? '0');
+
+  const detail: SettlementDetail = {
+    kind: 'settlement',
+    grossMinor,
+    feesMinor,
+    refundsMinor,
+    chargebacksMinor,
+    netMinor,
+    // The statement states a fee total but does not always itemise it. An empty
+    // list is honest; inventing line items to fill it would be fabrication.
+    feeLines: [],
+  };
+
+  const { data: inserted, error: insertError } = await client
+    .from(tableForSide(side))
+    .insert({
+      user_id: userId,
+      dataset_id: datasetId,
+      external_ref: reference,
+      normalized_ref: normalizeRef(reference),
+      txn_date: date,
+      amount_minor: netMinor.toString(),
+      description: `Extracted from document`,
+      detail: encodeForJsonb(detail),
+      origin: 'extraction',
+      extraction_id: extractionId,
+    })
+    .select('id')
+    .single();
+
+  if (insertError !== null || inserted === null) {
+    throw new Error(`Could not create the record: ${insertError?.message ?? 'no row returned'}`);
+  }
+
+  const { error: statusError } = await client
+    .from('extractions')
+    .update({ status: 'confirmed' })
+    .eq('id', extractionId);
+  if (statusError !== null) {
+    throw new Error(`Record created but the extraction status was not updated: ${statusError.message}`);
+  }
+
+  return (inserted as { id: string }).id;
 }
