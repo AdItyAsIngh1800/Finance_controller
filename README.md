@@ -67,7 +67,7 @@ The reconciliation engine is **plain TypeScript with no AI, no framework, and on
 git clone <repo-url> && cd razorpay_finance_controller
 npm install
 cp .env.example .env.local     # fill in the values below
-npm run db:migrate             # apply schema + RLS policies
+supabase db push               # apply schema + RLS policies
 npm run generate:fixtures      # synthetic data + ground-truth manifest
 npm run dev                    # http://localhost:3000
 ```
@@ -77,8 +77,7 @@ npm run dev                    # http://localhost:3000
 | Variable | Scope | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | client | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client | Anon key — safe to expose **only because RLS is enabled** |
-| `SUPABASE_SERVICE_ROLE_KEY` | **server** | Bypasses RLS; never sent to the client |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client | Publishable key — safe to expose **only because RLS is enabled** |
 | `GEMINI_API_KEY` | **server** | All Gemini calls originate server-side |
 | `GEMINI_MODEL_ID` | server | Model ID as config — provider naming drifts |
 

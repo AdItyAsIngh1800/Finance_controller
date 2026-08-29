@@ -37,7 +37,7 @@ The stronger reason is domain-specific: this project's core correctness risk is 
 
 ## 2. Framework — Next.js (App Router)
 
-**Why.** Frontend and backend in one deployable unit. API routes host ingestion, reconciliation, extraction, and the agent endpoint without standing up a separate server. Server Components keep the Supabase service role and Gemini key server-side by construction rather than by discipline.
+**Why.** Frontend and backend in one deployable unit. API routes host ingestion, reconciliation, extraction, and the agent endpoint without standing up a separate server. Server Components keep the Gemini key server-side by construction rather than by discipline.
 
 **Rejected:** Vite + separate Express backend — two deploy targets, CORS, duplicated auth handling. Remix — comparable capability, no advantage here, and worse Vercel integration.
 
@@ -99,7 +99,7 @@ Supabase also collapses three services into one signup — database, object stor
 
 **Google OAuth as the sign-in method.** No SMTP configuration, no email templates, no password reset flow to build — and judges get one-click access instead of an account-creation chore.
 
-**RLS is the actual requirement.** Google sign-in gates the UI. Without RLS, anyone holding the anon key still reads every row. The policies are the security control; the login screen is the front door. See `DATA_MODEL.md` §6.
+**RLS is the actual requirement.** Google sign-in gates the UI. Without RLS, anyone holding the publishable key still reads every row. The policies are the security control; the login screen is the front door. See `DATA_MODEL.md` §6.
 
 ---
 
