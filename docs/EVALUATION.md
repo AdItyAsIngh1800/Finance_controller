@@ -175,13 +175,34 @@ false matches; the 1.00 recall reflects cleanly-typed planted discrepancies,
 which real ones are not.
 
 ### 5.3 Extraction
-| Field | Docs | Correct | Accuracy | Mean confidence |
-|---|---|---|---|---|
-| Reference | — | — | — | — |
-| Date | — | — | — | — |
-| Amount | — | — | — | — |
 
-**Calibration:** error rate below 0.85 confidence — · above — · **Degraded-document gate:** —
+*Measured 29 August 2026 via `npm run extraction:report`, against `gemini-3.6-flash`. Five rendered statements plus one deliberately degraded scan of the same document.*
+
+| Document | Quality | Reference | Date | Net | Min confidence | Outcome |
+|---|---|---|---|---|---|---|
+| ORD-4471 | clean | ✓ | ✓ | ✓ | 0.98 | confirmed |
+| ORD-4401 | clean | ✓ | ✓ | ✓ | 1.00 | confirmed |
+| ORD-4402 | clean | ✓ | ✓ | ✓ | 0.99 | confirmed |
+| ORD-4403 | clean | ✓ | ✓ | ✓ | 1.00 | confirmed |
+| ORD-4404 | clean | ✓ | ✓ | ✓ | 0.98 | confirmed |
+| ORD-4471 | **degraded** | ✗ | ✗ | ✗ | **0.40** | **needs_review** |
+
+**Field accuracy:** 100% (15/15) clean · 0% (0/3) degraded
+**Mean confidence:** 0.99 clean · 0.40 degraded · **threshold 0.85**
+**Degraded-document gate: every degraded document was quarantined.**
+
+**Why the second row matters more than the first.** 100% accuracy on clean
+documents is a pleasant result but a weak claim — it says the model can read
+legible text. The degraded row is the one that validates the design: the model
+got *every* figure wrong **and reported 0.40 confidence**, so the record was
+blocked from the ledger rather than entering reconciliation as a set of
+plausible-looking wrong numbers.
+
+That is the property the whole of Stage 1 depends on. A model that were 95%
+accurate with flat confidence would be *less* useful here than one that is
+imperfect and reliably flags its own failures, because only the latter can be
+gated. Confidence being informative was an open question until measured; it is
+no longer an assumption.
 
 ### 5.4 Grounding
 | Question | Grounded? | Figures traceable? |

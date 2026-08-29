@@ -16,7 +16,7 @@
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
 | P4 | Application foundation | 3 | ⚪ Not started |
 | P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
-| P6 | Stage 1 — extraction | 5 | ⚪ Not started |
+| P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
 | P7 | Stage 3 — grounded Q&A | 5 | ⚪ Not started |
 | P8 | Bank domain adapter | 6 | ⚪ Not started |
 | P9 | Evaluation, polish, deploy | 6 | ⚪ Not started |
@@ -92,7 +92,8 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 | # | Risk | Likelihood | Impact | Mitigation | Trigger |
 |---|---|---|---|---|---|
 | R-1 | **Day 5 double-booking** — two AI integrations in one day | High | High | P6 before P7; P8 is movable to Day 7 to buy back P7 time | P6 unfinished by Day 5 midday |
-| R-2 | Gemini model ID drift | Medium | Medium | Model ID in env var, not a literal; confirm in AI Studio on Day 5 | 404 on first call |
+| R-2 | Gemini model ID drift | Medium | Medium | Model ID in env var, not a literal; confirm against the live model list before use | 404 on first call |
+| R-2a | **Model unavailable under load — observed 29 Aug** | **High** | **High** | `gemini-3.7-flash` returned 503 then timed out repeatedly; switched to `gemini-3.6-flash`. **A fallback chain was considered and declined**, so an overload on 3.6 during the demo has nothing to catch it. Mitigation if it recurs: seeded demo data (§P9) does not require live extraction | Extraction slow or failing on the day |
 | R-3 | OAuth redirect misconfigured in production | Medium | High | Deploy Day 3 and test sign-in on the live domain immediately | Sign-in works locally, fails deployed |
 | R-4 | Extraction quality on degraded scans | Medium | Low | Confidence gate makes this degrade into review items, not wrong numbers — a safe failure that is itself demoable | Field accuracy below 90% |
 | R-5 | Agent states an ungrounded figure | Low | **Critical** | Grounding constraint + call-trace display + manual §3.5 checks | Any demo figure not traceable to a row |
