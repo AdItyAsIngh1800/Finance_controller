@@ -83,6 +83,15 @@ This vocabulary is shared verbatim by the engine, the database, the UI, and the 
 | `FEE_VARIANCE` | `net ≠ gross − fees − refunds − chargebacks` | high | settlement |
 | `LOW_CONFIDENCE_EXTRACTION` | Model confidence below threshold; quarantined before the ledger | medium | both |
 
+**Blocking vs advisory.** An exception either leaves its records unmatched
+(`blocking`) or annotates a match that was still made (`advisory`). This follows
+from the severity semantics rather than being an independent choice: a payout
+flagged `low` because "the money is accounted for" is only coherent if the
+records actually paired up. `TIMING_DIFFERENCE`, `PARTIAL_PAYMENT`,
+`FEE_VARIANCE`, and `LOW_CONFIDENCE_EXTRACTION` are advisory and still count
+toward the match rate; the other four are blocking and do not. The mapping is
+`EXCEPTION_DISPOSITION` in `src/core/taxonomy.ts`.
+
 **On severity.** `TIMING_DIFFERENCE` and `PARTIAL_PAYMENT` are `low` because they are *explained* discrepancies — the money is accounted for, it simply moved on a different day or in several pieces. `UNMATCHED_*`, `AMOUNT_MISMATCH`, and `FEE_VARIANCE` are `high` because money is unaccounted for. Severity drives queue ordering, so this distinction is what makes the queue useful rather than merely long.
 
 ### 3.5 `extraction_status`

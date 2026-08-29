@@ -99,7 +99,7 @@ The screen where the product's central claim becomes visible. Split view:
 │  [ PDF / image         │ │ Date         2026-08-14    ████ 96% │
 │    preview,            │ │ Gross        ₹1,250.00     ████ 99% │
 │    zoomable ]          │ │ Fees         ₹37.50        ██▒▒ 62% │ ← flagged
-│                        │ │ Net          ₹1,132.50     ███▒ 71% │ ← flagged
+│                        │ │ Net          ₹1,212.50     ███▒ 71% │ ← flagged
 │                        │ │                                      │
 │                        │ │ 2 fields below 85% confidence.       │
 │                        │ │ This record is blocked from the      │
@@ -150,20 +150,21 @@ Matched by tier                 TIMING_DIFFERENCE     5  Low
 ```
 Filter: [ All types ▾ ] [ All severities ▾ ]              14 exceptions
 
-▸ High   AMOUNT_MISMATCH    ORD-4471   ₹1,132.50 vs ₹1,544.50   (₹412.00)
-▾ High   FEE_VARIANCE       ORD-3390   net does not reconcile
+▸ High   UNMATCHED_SOURCE   ORD-4502   no ledger counterpart
+▾ High   AMOUNT_MISMATCH    ORD-4471   ₹800.50 vs ₹1,212.50    (₹412.00)
     ┌────────────────────────────────────────────────────────────┐
     │ Stated reason                                              │
-    │ Net payout is ₹412.00 lower than gross minus stated fees.  │
+    │ The processor netted a ₹412.00 refund out of this payout   │
+    │ that the ledger never recorded.                            │
     │                                                            │
     │ Evidence            Source          Ledger                 │
     │   Gross           ₹1,250.00       ₹1,250.00                │
     │   Fees               ₹37.50          ₹37.50                │
     │   Refunds           ₹412.00           ₹0.00   ← difference │
-    │   Net             ₹1,132.50       ₹1,544.50                │
+    │   Net               ₹800.50       ₹1,212.50                │
     │                                                            │
     │ Suggested action                                           │
-    │ Confirm whether refund RF-882 was recorded in the ledger.  │
+    │ Confirm whether the refund was recorded in the ledger.     │
     │                                          [ Ask about this ]│
     └────────────────────────────────────────────────────────────┘
 ▸ Low    TIMING_DIFFERENCE  ORD-2210   settled 2 days after sale
@@ -192,14 +193,14 @@ Side panel, so the queue stays visible while asking.
 │ ⚙ getExceptionDetail(exceptionId: "exc_18")    │
 │                                                │
 │ The ₹412.00 gap is a refund. The processor     │
-│ netted refund RF-882 (₹412.00) out of the      │
-│ payout, but the ledger records no matching     │
-│ refund entry.                                  │
+│ netted a ₹412.00 refund out of the payout,     │
+│ but the ledger records no matching refund      │
+│ entry.                                         │
 │                                                │
 │   Gross      ₹1,250.00                         │
 │   Fees          ₹37.50                         │
 │   Refunds      ₹412.00  ← not in ledger        │
-│   Net        ₹1,132.50                         │
+│   Net          ₹800.50  (ledger: ₹1,212.50)    │
 │                                                │
 │ [ Ask a follow-up… ]                           │
 └────────────────────────────────────────────────┘
@@ -220,7 +221,7 @@ Side panel, so the queue stays visible while asking.
 Publicly reachable without sign-in — it exposes no user data and saves a judge an account.
 
 ```
-Engine accuracy vs. ground truth        Ground truth: 250 pairs, 14 planted
+Engine accuracy vs. ground truth        Ground truth: 250 pairs, 16 planted
 
 Exception type          Planted  Found  Precision  Recall
 UNMATCHED_SOURCE              3      3      1.00    1.00

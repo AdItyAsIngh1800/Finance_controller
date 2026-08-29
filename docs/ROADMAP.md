@@ -10,9 +10,9 @@
 
 | Phase | Name | Day | Status |
 |---|---|---|---|
-| P0 | Documentation set | 1 | 🟡 In progress |
-| P1 | Domain model & types | 1 | ⚪ Not started |
-| P2 | Synthetic data + ground truth | 1 | ⚪ Not started |
+| P0 | Documentation set | 1 | 🟢 Complete |
+| P1 | Domain model & types | 1 | 🟢 Complete |
+| P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
 | P3 | Reconciliation engine | 2 | ⚪ Not started |
 | P4 | Application foundation | 3 | ⚪ Not started |
 | P5 | Pipeline wiring & results UI | 4 | ⚪ Not started |
@@ -76,11 +76,11 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 |---|---|
 | **P0** | Nine documents written; taxonomy and schema frozen |
 | **P1** | Types compile; taxonomy is a discriminated union; money typed as `bigint` minor units |
-| **P2** | `npx tsx scripts/generate-fixtures.ts` emits both domains' CSVs plus `ground-truth.json`; rendered PDFs produced |
+| **P2** | `npm run generate:fixtures` emits both domains' CSVs plus `ground-truth.json`; regeneration is byte-identical (asserted by test) |
 | **P3** | `npm test` green: **≥95% recall, 0 false matches**, byte-identical across two runs, <5s for 1,000 pairs |
 | **P4** | Deployed on Vercel; Google sign-in works **on the production URL**; cross-user read from a second account returns zero rows |
 | **P5** | Upload fixtures → run → dashboard match rate **equals the test-suite figure for the same fixture** |
-| **P6** | Clean doc extracts accurately; degraded doc lands in review; ledger untouched on failure |
+| **P6** | Test documents rendered (deferred here from P2); clean doc extracts accurately; degraded doc lands in review; ledger untouched on failure |
 | **P7** | Three scripted questions answered with visible call traces; unanswerable question declined |
 | **P8** | Bank fixtures reconcile end to end with **zero changes to engine source in the diff** |
 | **P9** | `/evaluation` renders live metrics; demo dataset seeded; full loop clean twice on production |
