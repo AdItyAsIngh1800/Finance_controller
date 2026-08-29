@@ -40,13 +40,32 @@ So the claim under test is not *"the system produces output."* It is:
 | `PARTIAL_PAYMENT` | Split one source record into three summing to the ledger entry |
 | `FEE_VARIANCE` | Break the `net = gross − fees − refunds − chargebacks` identity |
 
-3. Emit `fixtures/<domain>/{source.csv, ledger.csv, ground-truth.json}`.
+3. Apply **reference variance** to a further set of pairs. These are *not*
+   discrepancies — the records still correspond and their amounts still agree,
+   so they remain clean pairs and no exception is expected. They exist to deny
+   the engine an exact-reference match and force it onto a weaker tier:
+
+| Variance | Mutation | Tier exercised |
+|---|---|---|
+| Voucher reference | Ledger files against its own voucher number, sharing no reference with the source | `EXACT_AMOUNT_DATE` |
+| Re-keyed entry | Character transcription error (`O` keyed as `0`) plus a ₹0.50 rounding drift, below the tolerance floor | `FUZZY_REF` |
+
+   Both preserve reference uniqueness. A collision would give two ledger entries
+   the same reference and manufacture an ambiguity the manifest never planted.
+
+   Without this step the exact-reference tier claims every pair, and two of the
+   four matching tiers go entirely unexercised — a gap that produced a fully
+   green suite over half-untested matching logic before it was caught.
+
+4. Emit `fixtures/<domain>/{source.csv, ledger.csv, ground-truth.json}`.
 
 `ground-truth.json` records, per planted item: the record IDs involved, the expected `exception_type`, and the expected magnitude. **Every pair not named in the manifest is known-clean** — which is what makes false-match measurement possible at all.
 
 ### 2.2 Rendered documents for Stage 1
 
-A subset of fixture records is rendered to PDF/image (HTML → PDF). Because these derive from generated data, **the correct extraction is known field by field**, allowing extraction accuracy to be measured rather than asserted.
+*Deferred to Phase 6, where the extraction code that consumes these documents is built — the rendering approach depends on what the model actually needs.*
+
+A subset of fixture records will be rendered to PDF/image. Because these derive from generated data, **the correct extraction is known field by field**, allowing extraction accuracy to be measured rather than asserted.
 
 Degraded variants — reduced resolution, skew, noise — are produced from the same records to test **whether low quality produces low confidence**, which is the property the confidence gate depends on.
 
@@ -57,7 +76,7 @@ Stated plainly, because the method's weakness matters as much as its results:
 - **The generator encodes the same assumptions as the engine.** Both were written by one person in one week. Real data breaks assumptions neither anticipated.
 - **Planted discrepancies are cleanly typed.** Real discrepancies are frequently two problems at once — a partial payment that is *also* late *also* recorded under a mistyped reference.
 - **Rendered PDFs are cleaner than real scans.** No coffee stains, no phone-camera perspective, no unusual vendor template.
-- **Reference formats are consistent** in a way real processor exports are not.
+- **Reference variance is narrow.** Two transcription patterns are simulated (a voucher substitution and a single-character typo); real exports vary in far more ways, including truncation, embedded metadata, and inconsistent padding.
 
 **This measures whether the engine implements its own logic correctly. It does not prove the logic survives contact with reality.** Those are different claims and are not conflated anywhere in this project.
 
@@ -117,23 +136,43 @@ Manual by design: the failure being tested for is a model asserting something pl
 
 ## 5. Results
 
-*Populated at Phase 3 (engine) and Phase 9 (extraction, grounding). The `/evaluation` page renders §5.1 live from a real run rather than from these tables.*
+*Engine results below are measured. Extraction (§5.3) and grounding (§5.4) are populated in Phase 9. The `/evaluation` page renders §5.1 live from a real run rather than from these tables.*
+
+*Measured 29 August 2026 via `npm run scorecard`. 250 base pairs per domain.*
 
 ### 5.1 Engine — settlement domain
-| Exception type | Planted | Found | Correct | Precision | Recall |
+| Exception type | Planted | Reported | Correct | Precision | Recall |
 |---|---|---|---|---|---|
-| `UNMATCHED_SOURCE` | — | — | — | — | — |
-| `UNMATCHED_LEDGER` | — | — | — | — | — |
-| `AMOUNT_MISMATCH` | — | — | — | — | — |
-| `TIMING_DIFFERENCE` | — | — | — | — | — |
-| `DUPLICATE_SUSPECTED` | — | — | — | — | — |
-| `PARTIAL_PAYMENT` | — | — | — | — | — |
-| `FEE_VARIANCE` | — | — | — | — | — |
+| `UNMATCHED_SOURCE` | 3 | 3 | 3 | 1.00 | 1.00 |
+| `UNMATCHED_LEDGER` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `AMOUNT_MISMATCH` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `TIMING_DIFFERENCE` | 5 | 5 | 5 | 1.00 | 1.00 |
+| `DUPLICATE_SUSPECTED` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `PARTIAL_PAYMENT` | 1 | 1 | 1 | 1.00 | 1.00 |
+| `FEE_VARIANCE` | 1 | 1 | 1 | 1.00 | 1.00 |
 
-**Match rate:** — · **False matches:** — · **Determinism:** — · **Runtime (1,000 pairs):** —
+**Match rate:** 96.4% (243/252) · **False matches: 0** · **Determinism:** byte-identical across runs · **Runtime (1,000 pairs):** <5s
+
+**Matches by tier:** `EXACT_REF` 226 · `EXACT_AMOUNT_DATE` 8 · `FUZZY_REF` 6 · `PARTIAL_SET` 1
 
 ### 5.2 Engine — bank domain
-*Same table structure, minus `FEE_VARIANCE` (settlement-only).*
+| Exception type | Planted | Reported | Correct | Precision | Recall |
+|---|---|---|---|---|---|
+| `UNMATCHED_SOURCE` | 3 | 3 | 3 | 1.00 | 1.00 |
+| `UNMATCHED_LEDGER` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `AMOUNT_MISMATCH` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `TIMING_DIFFERENCE` | 5 | 5 | 5 | 1.00 | 1.00 |
+| `DUPLICATE_SUSPECTED` | 2 | 2 | 2 | 1.00 | 1.00 |
+| `PARTIAL_PAYMENT` | 1 | 1 | 1 | 1.00 | 1.00 |
+
+**Match rate:** 96.4% (243/252) · **False matches: 0** · `FEE_VARIANCE` correctly never raised.
+
+**Reading these figures honestly.** Perfect scores here measure whether the
+engine implements its own logic correctly against data generated from the same
+assumptions — not whether it survives real settlement files. §2.3 and §6 state
+what that does and does not establish. The figure worth weighting is the zero
+false matches; the 1.00 recall reflects cleanly-typed planted discrepancies,
+which real ones are not.
 
 ### 5.3 Extraction
 | Field | Docs | Correct | Accuracy | Mean confidence |
