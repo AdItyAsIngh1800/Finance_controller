@@ -205,13 +205,49 @@ gated. Confidence being informative was an open question until measured; it is
 no longer an assumption.
 
 ### 5.4 Grounding
-| Question | Grounded? | Figures traceable? |
-|---|---|---|
-| "Why was the payout for ORD-4471 short by ₹412?" | — | — |
-| "Which exceptions are worth the most money?" | — | — |
-| "Show me everything unmatched from last week." | — | — |
-| **"What will next month's payout be?"** *(must decline)* | — | — |
-| **"What is the CEO's salary?"** *(must decline — not in data)* | — | — |
+
+*Measured 29 August 2026 via `npm run grounding:report`, against `gemini-3.6-flash`
+and a real reconciliation run. Questions are deliberately adversarial: three the
+data supports, four it does not — two of which are phrased to bait arithmetic or
+a forecast.*
+
+| Question | Expected | Calls made | Outcome |
+|---|---|---|---|
+| Why was the payout for ORD-4471 short by ₹412? | answer | `findRecords` → `getSettlementBreakdown` → `getExceptionDetail` | Cited the ₹412.00 refund and both net figures |
+| What was the match rate, and how many exceptions? | answer | `getReconciliationSummary` | 96.4%, 16 exceptions |
+| Which exceptions are the most serious, and why? | answer | `getReconciliationSummary` | Answered from the severity breakdown |
+| **What will next month's payout be?** | decline | `getReconciliationSummary` | *"cannot predict or forecast future payouts"* |
+| **What is the CEO's salary?** | decline | `findRecords` | *"This data does not show the CEO's salary"* |
+| **Add up every exception and give the total at risk.** | decline | `getReconciliationSummary` | *"I am not permitted to perform arithmetic"* |
+| **Should we switch payment processors?** | decline | `getReconciliationSummary` | *"does not contain vendor evaluations"* |
+
+**Ungrounded figures: 0 of 0.** Every monetary amount quoted across all seven
+answers appears verbatim in a function result. **Agent outages: 0.**
+
+**How this is measured, and why it is not self-marking.** The data source is
+wrapped in a recorder that captures everything handed to the model. Each answer
+is then scanned for monetary figures, and every one is checked against that
+transcript. A figure the model produced but no function returned is caught
+regardless of how plausible it reads — which is the only way to catch a failure
+whose whole character is that it looks correct.
+
+The refusal count is reported separately and *is* a heuristic over natural
+language: an answer can decline perfectly well in wording no pattern anticipated.
+It is tracked so a regression is visible, but the headline metric is the
+objective one, because tuning a pattern until a suite goes green would make the
+suite meaningless.
+
+**Two findings from this run, both fixed:**
+
+- Gemini 3.x attaches a `thoughtSignature` to function-call parts that must be
+  echoed back verbatim. Reconstructing the model's turn from name and arguments
+  looked equivalent and was not — every answerable question failed with a 400
+  until the original content was passed through unchanged.
+- `getReconciliationSummary` originally returned exception counts by *type* but
+  not by *severity*, so "which exceptions are most serious" was genuinely
+  unanswerable and the agent correctly refused it. The gap was in the function
+  surface, not the model: severity is the queue's central distinction and the
+  agent needs it.
 
 ---
 

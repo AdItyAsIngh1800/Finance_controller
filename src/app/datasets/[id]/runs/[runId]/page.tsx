@@ -11,6 +11,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AskPanel } from '@/components/ask-panel';
 import { ExceptionList, type ExceptionView } from '@/components/exception-list';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
 import { formatMinor, toMinor } from '@/core/money';
@@ -234,6 +235,8 @@ export default async function RunPage({
       </div>
 
       <ExceptionList exceptions={exceptions} />
+
+      <AskPanel runId={runId} />
     </main>
   );
 }

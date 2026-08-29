@@ -17,7 +17,7 @@
 | P4 | Application foundation | 3 | 🟡 Schema + RLS verified; OAuth and deploy pending |
 | P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
 | P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
-| P7 | Stage 3 — grounded Q&A | 5 | ⚪ Not started |
+| P7 | Stage 3 — grounded Q&A | 5 | 🟡 Built; grounding verified, UI unverified |
 | P8 | Bank domain adapter | 6 | ⚪ Not started |
 | P9 | Evaluation, polish, deploy | 6 | ⚪ Not started |
 
