@@ -1,26 +1,95 @@
 @import "tailwindcss";
 
+/*
+ * Ledger paper and ink.
+ *
+ * The palette is built around one rule: red means money is unaccounted for,
+ * and nothing else is ever red. A controller scanning this interface should be
+ * able to trust that the colour carries that specific meaning rather than
+ * general "attention". Severity always pairs colour with a text label, so the
+ * encoding never depends on colour alone.
+ *
+ * Deliberately a single light theme — see docs/DESIGN.md §7.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces: a paper white with a trace of warmth, as ledger stock has. */
+  --paper: #fbfbf9;
+  --paper-sunk: #f4f4f0;
+  --ink: #16171a;
+  --ink-muted: #6b6c70;
+  --ink-faint: #9a9b9e;
+
+  /* Hairlines. Two weights: a rule between rows, a heavier one between blocks. */
+  --rule: #e2e2dc;
+  --rule-strong: #c9c9c2;
+
+  /* Money unaccounted for. Used for high severity and nothing else. */
+  --unaccounted: #a32a22;
+  --unaccounted-wash: #fbf1f0;
+
+  /* Awaiting a human decision. */
+  --undecided: #8a6d1f;
+  --undecided-wash: #faf5e8;
+
+  /* Explained — the money is accounted for, it simply moved differently. */
+  --explained: #6b6c70;
+  --explained-wash: #f2f2ee;
+
+  /* "In the black": the matched proportion of the reconciliation bar. */
+  --settled: #2f5d3a;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-paper: var(--paper);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-unaccounted: var(--unaccounted);
+  --color-unaccounted-wash: var(--unaccounted-wash);
+  --color-undecided: var(--undecided);
+  --color-undecided-wash: var(--undecided-wash);
+  --color-explained: var(--explained);
+  --color-explained-wash: var(--explained-wash);
+  --color-settled: var(--settled);
+  --font-sans: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  /* Tabular figures everywhere by default: column-aligned digits are how a
+     finance user scans a table for anomalies, and proportional digits defeat
+     that scan entirely. */
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * The double rule.
+ *
+ * In double-entry bookkeeping a single rule marks a subtotal and a double rule
+ * marks a closing figure. Used here under the match rate, which is exactly
+ * that — the closing figure of the reconciliation.
+ */
+.rule-closing {
+  border-bottom: 3px double var(--rule-strong);
+}
+
+/* Keyboard focus stays visible everywhere, at the quality floor. */
+:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,28 +1,30 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import './globals.css';
 
 /**
  * Root layout.
  *
- * Two font families are loaded deliberately: a proportional sans for interface
- * chrome, and a monospace with tabular figures for every monetary and reference
- * value. Column-aligned digits are how a finance user scans a reconciliation
- * table for anomalies, so the monospace face is load-bearing rather than
- * decorative.
+ * IBM Plex, in two roles. Plex was drawn for IBM's engineering and data
+ * contexts, which is the register this tool operates in — an instrument rather
+ * than a brand. Plex Mono carries every monetary and reference value: column-
+ * aligned digits are how a finance user scans a reconciliation table for
+ * anomalies, so the monospace face is load-bearing rather than decorative.
  *
  * @see docs/DESIGN.md §2 — visual language
  */
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const plexSans = IBM_Plex_Sans({
+  variable: '--font-plex-sans',
   subsets: ['latin'],
+  weight: ['400', '500', '600'],
 });
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const plexMono = IBM_Plex_Mono({
+  variable: '--font-plex-mono',
   subsets: ['latin'],
+  weight: ['400', '500'],
 });
 
 export const metadata: Metadata = {
@@ -47,7 +49,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
