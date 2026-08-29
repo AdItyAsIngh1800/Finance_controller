@@ -44,12 +44,23 @@ export function DatasetWorkbench({
   const [source, setSource] = useState<SideState>(IDLE);
   const [ledger, setLedger] = useState<SideState>(IDLE);
   const [running, setRunning] = useState(false);
+  const [needsReview, setNeedsReview] = useState(false);
   const [runError, setRunError] = useState<string | null>(null);
 
   const setFor = (side: 'source' | 'ledger', state: SideState): void =>
     (side === 'source' ? setSource : setLedger)(state);
 
-  /** Uploads one side, replacing whatever was there. */
+  /**
+   * Is this a document to be read, rather than a table to be parsed?
+   *
+   * Routing on content type rather than asking the user to pick means they can
+   * drop whatever they have — a CSV export or a scanned advice — and the right
+   * thing happens.
+   */
+  const isDocument = (file: File): boolean =>
+    file.type === 'application/pdf' || file.type.startsWith('image/');
+
+  /** Uploads one side: a CSV replaces it outright, a document goes for reading. */
   const upload = async (side: 'source' | 'ledger', file: File): Promise<void> => {
     setFor(side, { status: 'uploading' });
     const body = new FormData();
@@ -57,9 +68,15 @@ export function DatasetWorkbench({
     body.set('side', side);
     body.set('file', file);
 
-    const response = await fetch('/api/ingest', { method: 'POST', body });
+    const document = isDocument(file);
+    const response = await fetch(document ? '/api/extract' : '/api/ingest', {
+      method: 'POST',
+      body,
+    });
     const payload = (await response.json()) as {
       inserted?: number;
+      status?: string;
+      lowConfidenceFields?: string[];
       error?: string;
       rows?: RowError[];
     };
@@ -70,6 +87,24 @@ export function DatasetWorkbench({
         message: payload.error ?? 'Upload failed.',
         ...(payload.rows === undefined ? {} : { rows: payload.rows }),
       });
+      return;
+    }
+
+    if (document) {
+      // An extraction never lands in the ledger directly. Say so plainly, and
+      // point at the screen where it can be released.
+      const flagged = payload.lowConfidenceFields ?? [];
+      setFor(side, {
+        status: 'done',
+        message:
+          payload.status === 'failed'
+            ? 'Could not be read. Your ledger was not modified.'
+            : flagged.length > 0
+              ? `Read, but ${flagged.length} field${flagged.length === 1 ? '' : 's'} need review before it enters the ledger.`
+              : 'Read cleanly. Confirm it in review to add it to the ledger.',
+      });
+      setNeedsReview(true);
+      router.refresh();
       return;
     }
 
@@ -103,19 +138,28 @@ export function DatasetWorkbench({
       <div className="grid gap-4 md:grid-cols-2">
         <UploadPanel
           title="What the processor says"
-          hint="Settlement report or bank statement"
+          hint="CSV export, or a PDF or scan to be read"
           count={sourceCount}
           state={source}
           onFile={(file) => void upload('source', file)}
         />
         <UploadPanel
           title="What your books say"
-          hint="Ledger or revenue export"
+          hint="CSV export, or a PDF or scan to be read"
           count={ledgerCount}
           state={ledger}
           onFile={(file) => void upload('ledger', file)}
         />
       </div>
+
+      {needsReview && (
+        <p className="mt-5 flex flex-wrap items-center gap-3 border-l-2 border-undecided bg-undecided-wash px-3 py-2 text-sm">
+          A document is waiting to be reviewed before it can enter the ledger.
+          <a href={`/datasets/${datasetId}/review`} className="underline underline-offset-2">
+            Review it
+          </a>
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center gap-4">
         <button
@@ -167,7 +211,7 @@ function UploadPanel({
         <span className="sr-only">Choose a CSV file for {title}</span>
         <input
           type="file"
-          accept=".csv,text/csv"
+          accept=".csv,text/csv,application/pdf,image/*"
           disabled={state.status === 'uploading'}
           onChange={(event) => {
             const file = event.target.files?.[0];
