@@ -11,6 +11,7 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { parseBankCsv } from '@/core/adapters/bank';
 import { parseSettlementCsv } from '@/core/adapters/settlement';
 import { isIsoDate } from '@/core/dates';
 import { parseMinor } from '@/core/money';
@@ -46,9 +47,7 @@ function parseForDomain(domain: Domain, text: string, side: RecordSide): Adapter
     case 'settlement':
       return parseSettlementCsv(text, side);
     case 'bank':
-      // Arrives in Phase 8. Failing loudly beats returning zero records, which
-      // would look like a successful upload of an empty file.
-      throw new Error('Bank CSV ingestion is not implemented yet.');
+      return parseBankCsv(text, side);
   }
 }
 
