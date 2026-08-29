@@ -146,9 +146,12 @@ Supabase also collapses three services into one signup — database, object stor
 | Variable | Scope | Purpose |
 |---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | client | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | client | Anon key — safe to expose **only because RLS is enabled** |
-| `SUPABASE_SERVICE_ROLE_KEY` | **server only** | Server-side operations; bypasses RLS, never sent to the client |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | client | Publishable key — safe to expose **only because RLS is enabled** |
 | `GEMINI_API_KEY` | **server only** | All Gemini calls originate from API routes |
 | `GEMINI_MODEL_ID` | server | Model ID as an env var, not a literal — provider naming drifts |
 
-The anon key being publicly shipped is safe **only** while RLS holds. That is the dependency between §6 and §7, and it is the reason RLS is a P0 requirement rather than a hardening task.
+**There is deliberately no service-role key in this project.** That key bypasses RLS entirely, so a single careless import into a client component would expose every user's rows — the exact failure risk R-7 describes. Every query the app makes is on behalf of a signed-in user, so the publishable key plus their session is sufficient. Not having the key in the repo or in Vercel's environment makes the mistake impossible rather than merely discouraged.
+
+The cost of that choice is real and worth stating: the Phase 9 demo dataset must be seeded through the application while signed in, rather than by an admin script.
+
+The publishable key being shipped to the browser is safe **only** while RLS holds. That is the dependency between §6 and §7, and it is why RLS is a P0 requirement rather than a hardening task.
