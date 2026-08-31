@@ -93,7 +93,7 @@ Every requirement below is written to be independently verifiable. `VERIFICATION
 | FR-7.4 | Every answer displays which functions were called and with what arguments | P0 | UI shows call trace |
 | FR-7.5 | When the data cannot answer the question, the agent says so explicitly rather than speculating | P0 | Ask a deliberately unanswerable question |
 | FR-7.6 | The agent never states a monetary figure that did not originate in a function result | P0 | Cross-check demo answers against DB rows |
-| FR-7.7 | Multi-turn follow-up retains context of the prior question | P1 | Two-turn exchange |
+| FR-7.7 | Multi-turn follow-up retains context of the prior question | P1 | Two-turn exchange; `npm run grounding:report` asserts the follow-up neither loses context nor invents a figure |
 
 > FR-7.5 and FR-7.6 are the reason this stage is allowed to use AI at all. If either fails, the grounding claim collapses.
 

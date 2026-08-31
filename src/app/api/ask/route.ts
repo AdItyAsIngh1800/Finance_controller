@@ -17,7 +17,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getCurrentUser();
   if (user === null) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
 
-  let body: { runId?: unknown; question?: unknown };
+  let body: { runId?: unknown; question?: unknown; history?: unknown };
   try {
     body = (await request.json()) as typeof body;
   } catch {
@@ -33,6 +33,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'A question is required.' }, { status: 400 });
   }
 
+  // History arrives from the client, so it is treated as input rather than
+  // trusted: each entry is coerced to two strings and the list is capped. It
+  // only ever becomes conversational context, never a source of figures — those
+  // must still come from a function result.
+  const history = Array.isArray(body.history)
+    ? body.history
+        .slice(-12)
+        .map((entry) => {
+          const item = entry as { question?: unknown; answer?: unknown };
+          return {
+            question: String(item.question ?? '').slice(0, 2000),
+            answer: String(item.answer ?? '').slice(0, 4000),
+          };
+        })
+        .filter((entry) => entry.question.length > 0 && entry.answer.length > 0)
+    : [];
+
   const client = await createClient();
   // RLS scopes this: a run belonging to someone else simply is not found.
   const { data: run } = await client
@@ -45,6 +62,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const answer = await askAboutRun(
     createSupabaseDataSource(client, runId, (run as { dataset_id: string }).dataset_id),
     question,
+    history,
   );
 
   return NextResponse.json(answer);

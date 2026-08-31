@@ -52,7 +52,17 @@ export function AskPanel({ runId }: { readonly runId: string }) {
     const response = await fetch('/api/ask', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ runId, question: asked }),
+      // Prior turns go with the question, so a follow-up like "and the fees?"
+      // has something to refer to. Only text is sent; the call traces stay local
+      // to the display.
+      body: JSON.stringify({
+        runId,
+        question: asked,
+        history: exchanges.map((exchange) => ({
+          question: exchange.question,
+          answer: exchange.answer,
+        })),
+      }),
     });
     // The endpoint returns an AgentAnswer, whose prose field is `text`. Typing
     // this response explicitly rather than as Partial<Exchange> is deliberate:

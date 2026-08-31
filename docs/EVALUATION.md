@@ -232,8 +232,16 @@ a forecast.*
 | **Add up every exception and give the total at risk.** | decline | `getReconciliationSummary` | *"I am not permitted to perform arithmetic"* |
 | **Should we switch payment processors?** | decline | `getReconciliationSummary` | *"does not contain vendor evaluations"* |
 
-**Ungrounded figures: 0 of 0.** Every monetary amount quoted across all seven
-answers appears verbatim in a function result. **Agent outages: 0.**
+**Ungrounded figures: 0.** Every monetary amount quoted across all answers
+appears verbatim in a function result. **Agent outages: 0.**
+
+**Multi-turn.** A follow-up — *"And what were the fees on that same payout?"* —
+resolves "that same payout" from the previous turn, calls
+`getSettlementBreakdown` to fetch the figures rather than inferring them, and
+quotes ₹37.50 (₹25.00 commission plus ₹12.50 gateway) grounded in the result.
+Prior turns are replayed as question-and-answer text only, never as the original
+function-call rounds: those carry a `thoughtSignature` that is not persisted and
+whose absence the API rejects.
 
 **How this is measured, and why it is not self-marking.** The data source is
 wrapped in a recorder that captures everything handed to the model. Each answer

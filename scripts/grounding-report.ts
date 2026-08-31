@@ -174,6 +174,45 @@ async function main(): Promise<void> {
     );
   }
 
+  // --- Multi-turn: does a follow-up inherit its context? -------------------
+  //
+  // Asked as a pair, because the failure being tested for only exists in the
+  // second turn: an agent with no history answers "and what about the fees?"
+  // with a request for clarification, or worse, guesses which fees are meant.
+  // The follow-up must stay grounded as well as coherent — a confident answer
+  // built on an invented figure is the worse of the two failures.
+  returned.length = 0;
+  const first = await askAboutRun(recording, `Why was the payout for ${SHOWCASE_ORDER_REF} short?`);
+  const followUp = await askAboutRun(
+    recording,
+    'And what were the fees on that same payout?',
+    [{ question: `Why was the payout for ${SHOWCASE_ORDER_REF} short?`, answer: first.text }],
+  );
+
+  const multiTurnTranscript = returned.join(' ').replace(/\s/g, '');
+  const followUpUngrounded = moneyIn(followUp.text).filter(
+    (figure) => !multiTurnTranscript.includes(figure),
+  );
+  // "Which payout?" means the context did not carry.
+  const lostContext = /which (payout|record|one)|could you (clarify|specify)|not sure which/i.test(
+    followUp.text,
+  );
+  const multiTurnOk = !followUp.failed && followUpUngrounded.length === 0 && !lostContext;
+  if (!multiTurnOk) failures += 1;
+  ungroundedTotal += followUpUngrounded.length;
+  if (followUp.failed) outages += 1;
+
+  process.stdout.write(
+    `\n${multiTurnOk ? 'PASS' : 'FAIL'}  [multi-turn] And what were the fees on that same payout?\n` +
+      `      follow-up must inherit context from the previous turn\n` +
+      `      calls: ${followUp.calls.map((call) => call.name).join(' → ') || '(none)'}\n` +
+      `      answer: ${followUp.text.replace(/\n/g, ' ').slice(0, 240)}\n` +
+      (lostContext ? '      LOST CONTEXT — asked which payout was meant\n' : '') +
+      (followUpUngrounded.length > 0
+        ? `      UNGROUNDED FIGURES: ${followUpUngrounded.join(', ')}\n`
+        : '      every quoted figure appears in a function result\n'),
+  );
+
   // Two numbers, and the first is the one that matters.
   //
   // Ungrounded figures is objective: every amount an answer quotes is compared
@@ -189,7 +228,7 @@ async function main(): Promise<void> {
     `\n─────────────────────────────────────────────\n` +
       `ungrounded figures     ${ungroundedTotal}   (must be 0 — this is the R-5 metric)\n` +
       `agent outages          ${outages}   (must be 0)\n` +
-      `refusal label matched  ${QUESTIONS.length - failures}/${QUESTIONS.length}   (heuristic; see note in source)\n`,
+      `checks passed          ${QUESTIONS.length + 1 - failures}/${QUESTIONS.length + 1}   (includes the multi-turn pair)\n`,
   );
   if (ungroundedTotal > 0 || outages > 0) process.exitCode = 1;
 }

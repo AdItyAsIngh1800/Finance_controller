@@ -37,6 +37,29 @@ import { createGeminiClient, geminiModelId } from './gemini';
  */
 const MAX_ROUNDS = 4;
 
+/**
+ * One completed exchange, replayed to give a follow-up its context.
+ *
+ * Only the question and the final answer are carried, never the function-call
+ * rounds that produced it. Replaying those would mean reproducing the
+ * `thoughtSignature` Gemini attaches to each `functionCall` part, which is not
+ * persisted client-side and whose absence the API rejects outright. Plain text
+ * turns carry no signature, so this sidesteps the problem rather than working
+ * around it.
+ */
+export interface PriorExchange {
+  readonly question: string;
+  readonly answer: string;
+}
+
+/**
+ * How many prior exchanges are replayed.
+ *
+ * Bounded so a long conversation cannot grow the request without limit. Recent
+ * turns are what a follow-up refers to; older ones rarely are.
+ */
+const MAX_HISTORY = 6;
+
 /** One function the agent called, as shown to the reader. */
 export interface AgentCall {
   readonly name: string;
@@ -84,6 +107,12 @@ Say so plainly, in one or two sentences, and state what the data does cover. Do 
 apologise, do not speculate, and do not offer a guess hedged as a possibility. A clear
 "this data does not show that" is a correct and useful answer.
 
+FOLLOW-UP QUESTIONS
+Earlier turns in this conversation are shown to you. You may refer to a figure you
+already reported, because it came from a function result at the time. Anything the
+conversation has not already established must be fetched with a function call —
+never carried over by assumption from what seems to follow.
+
 STYLE
 Answer in plain English for a finance controller. Quote figures exactly as the
 functions returned them, including the currency symbol. Be brief — two or three
@@ -95,6 +124,7 @@ to the reader separately.`;
  *
  * @param source - Read-only access to the run's results.
  * @param question - The user's question.
+ * @param history - Prior exchanges in this conversation, oldest first.
  * @returns The answer and the calls that produced it. Never throws for a model
  *   failure; an explanatory answer is returned instead so the interface degrades
  *   rather than breaking.
@@ -102,12 +132,22 @@ to the reader separately.`;
 export async function askAboutRun(
   source: ReconDataSource,
   question: string,
+  history: readonly PriorExchange[] = [],
 ): Promise<AgentAnswer> {
   const calls: AgentCall[] = [];
 
   try {
     const client = createGeminiClient();
-    const contents: Content[] = [{ role: 'user', parts: [{ text: question }] }];
+
+    // Prior turns first, so "and what about the fees?" has something to attach
+    // to. Without this the panel shows a conversation while the model sees each
+    // question in isolation — a follow-up placeholder the code does not honour.
+    const contents: Content[] = [];
+    for (const exchange of history.slice(-MAX_HISTORY)) {
+      contents.push({ role: 'user', parts: [{ text: exchange.question }] });
+      contents.push({ role: 'model', parts: [{ text: exchange.answer }] });
+    }
+    contents.push({ role: 'user', parts: [{ text: question }] });
 
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
       const response = await client.models.generateContent({
