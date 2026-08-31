@@ -54,13 +54,24 @@ export function AskPanel({ runId }: { readonly runId: string }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ runId, question: asked }),
     });
-    const payload = (await response.json()) as Partial<Exchange> & { error?: string };
+    // The endpoint returns an AgentAnswer, whose prose field is `text`. Typing
+    // this response explicitly rather than as Partial<Exchange> is deliberate:
+    // the two shapes differ by exactly one field name, and reading the wrong one
+    // fails silently — the trace renders, the answer does not, and nothing
+    // errors.
+    const payload = (await response.json()) as {
+      text?: string;
+      calls?: AgentCall[];
+      declined?: boolean;
+      failed?: boolean;
+      error?: string;
+    };
 
     setExchanges((current) => [
       ...current,
       {
         question: asked,
-        answer: payload.answer ?? payload.error ?? 'No answer was returned.',
+        answer: payload.text ?? payload.error ?? 'No answer was returned.',
         calls: payload.calls ?? [],
         declined: payload.declined ?? false,
         failed: payload.failed ?? !response.ok,
