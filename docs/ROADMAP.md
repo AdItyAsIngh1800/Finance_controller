@@ -16,7 +16,7 @@
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
 | P4 | Application foundation | 3 | 🟡 Auth + RLS verified end to end; deploy pending |
 | P5 | Pipeline wiring & results UI | 4 | 🟢 Complete — dashboard matches the test-suite figure |
-| P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
+| P6 | Stage 1 — extraction | 5 | 🟢 Complete — both paths verified in the running app |
 | P7 | Stage 3 — grounded Q&A | 5 | 🟢 Complete — verified against the live data source |
 | P8 | Bank domain adapter | 6 | 🟢 Complete — engine source untouched |
 | P9 | Evaluation, polish, deploy | 6 | 🟡 Evaluation page + demo seeding built; deploy pending |
@@ -95,7 +95,7 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 | R-2 | Gemini model ID drift | Medium | Medium | Model ID in env var, not a literal; confirm against the live model list before use | 404 on first call |
 | R-2a | **Model unavailable under load — observed 29 Aug** | **High** | **High** | `gemini-3.7-flash` returned 503 then timed out repeatedly; switched to `gemini-3.6-flash`. **A fallback chain was considered and declined**, so an overload on 3.6 during the demo has nothing to catch it. Mitigation if it recurs: seeded demo data (§P9) does not require live extraction | Extraction slow or failing on the day |
 | R-3 | OAuth redirect misconfigured in production | Medium | High | Deploy Day 3 and test sign-in on the live domain immediately | Sign-in works locally, fails deployed |
-| R-4 | Extraction quality on degraded scans | Medium | Low | Confidence gate makes this degrade into review items, not wrong numbers — a safe failure that is itself demoable | Field accuracy below 90% |
+| R-4 | ~~Extraction quality on degraded scans~~ **retired** | — | — | **Verified 31 Aug in the running app.** A degraded scan produced 6 of 7 fields below threshold and was blocked from the ledger; discarding it wrote no record. A clean document read at 0.95 and was promoted automatically. The gate degrades into review items exactly as designed | — |
 | R-5 | Agent states an ungrounded figure | Low | **Critical** | Grounding constraint + call-trace display + manual §3.5 checks | Any demo figure not traceable to a row |
 | R-6 | Float creeps into the money path | Medium | High | `bigint` at the type level; P3 tests assert exact integers | Any test failing on a rounding delta |
 | R-7 | ~~RLS policy present but ineffective~~ **retired** | — | — | **Verified 31 Aug with two real accounts.** Account B read 0 rows from all five of account A's tables; B's insert attributed to A was refused (`42501`); B's insert as itself succeeded (`201`) — the third check matters, since a policy that blocked everything would pass the first two | — |
