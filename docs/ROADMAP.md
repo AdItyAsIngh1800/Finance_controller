@@ -14,10 +14,10 @@
 | P1 | Domain model & types | 1 | 🟢 Complete |
 | P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
-| P4 | Application foundation | 3 | 🟡 Schema + RLS verified; OAuth and deploy pending |
-| P5 | Pipeline wiring & results UI | 4 | 🟡 Built, unverified (blocked on OAuth) |
+| P4 | Application foundation | 3 | 🟡 Auth + RLS verified end to end; deploy pending |
+| P5 | Pipeline wiring & results UI | 4 | 🟢 Complete — dashboard matches the test-suite figure |
 | P6 | Stage 1 — extraction | 5 | 🟡 Built; gate verified, review UI unverified |
-| P7 | Stage 3 — grounded Q&A | 5 | 🟡 Built; grounding verified, UI unverified |
+| P7 | Stage 3 — grounded Q&A | 5 | 🟢 Complete — verified against the live data source |
 | P8 | Bank domain adapter | 6 | 🟢 Complete — engine source untouched |
 | P9 | Evaluation, polish, deploy | 6 | 🟡 Evaluation page + demo seeding built; deploy pending |
 
@@ -98,7 +98,7 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 | R-4 | Extraction quality on degraded scans | Medium | Low | Confidence gate makes this degrade into review items, not wrong numbers — a safe failure that is itself demoable | Field accuracy below 90% |
 | R-5 | Agent states an ungrounded figure | Low | **Critical** | Grounding constraint + call-trace display + manual §3.5 checks | Any demo figure not traceable to a row |
 | R-6 | Float creeps into the money path | Medium | High | `bigint` at the type level; P3 tests assert exact integers | Any test failing on a rounding delta |
-| R-7 | RLS policy present but ineffective | Medium | **Critical** | Verified by *attempting* a cross-user read, never by reading the policy | Second account returns any row |
+| R-7 | ~~RLS policy present but ineffective~~ **retired** | — | — | **Verified 31 Aug with two real accounts.** Account B read 0 rows from all five of account A's tables; B's insert attributed to A was refused (`42501`); B's insert as itself succeeded (`201`) — the third check matters, since a policy that blocked everything would pass the first two | — |
 | R-8 | ~~Adapter abstraction leaks~~ **retired** | — | — | **Did not occur.** P8 added the bank domain with zero changes to `engine.ts` or `tiers.ts`, both last modified in P3. The two fixes it did require were in the types and the CSV writer — exactly where the design said they belonged | — |
 | R-9 | Scope pressure with nothing cut | High | Medium | P8 is the only movable phase; Day 7 buffer absorbs one slip, not two | Any phase ending a full day late |
 
