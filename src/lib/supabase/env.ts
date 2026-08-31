@@ -1,23 +1,36 @@
 /**
  * Validated Supabase environment configuration.
  *
- * Reading these through a checked accessor rather than inlining
- * `process.env.X!` means a missing variable fails at startup with a message
- * naming the variable, instead of surfacing later as an opaque "Invalid API
- * key" from the Supabase client.
+ * **Each variable is read by static member access, never by computed index.**
+ * That is not a style preference. Next.js makes `NEXT_PUBLIC_*` values
+ * available in the browser by textually substituting occurrences of
+ * `process.env.NEXT_PUBLIC_FOO` at build time; a dynamic lookup like
+ * `process.env[name]` is invisible to that transform, so the value is inlined
+ * nowhere and resolves to `undefined` in the browser while continuing to work
+ * perfectly on the server.
+ *
+ * That asymmetry is what makes the mistake expensive: server-rendered pages,
+ * route handlers, and anything tested with `curl` all behave correctly, and the
+ * failure appears only when a Client Component tries to construct a Supabase
+ * client. It did exactly that here, and went unnoticed from Phase 4 until the
+ * first real sign-in attempt.
+ *
+ * Reading through a checked accessor also means a missing variable fails with a
+ * message naming it, rather than surfacing later as an opaque "Invalid API key"
+ * from the Supabase client.
  *
  * @module
  */
 
 /**
- * Reads a required environment variable.
+ * Returns a required environment value, or explains what is missing.
  *
- * @param name - The variable to read.
- * @returns Its value.
- * @throws {Error} If unset or empty, naming the variable and where to set it.
+ * @param name - The variable's name, for the error message only.
+ * @param value - The value, read by the caller via static member access.
+ * @returns The value.
+ * @throws {Error} If unset or empty.
  */
-function required(name: string): string {
-  const value = process.env[name];
+function requireValue(name: string, value: string | undefined): string {
   if (value === undefined || value.trim().length === 0) {
     throw new Error(
       `Missing required environment variable ${name}. ` +
@@ -33,7 +46,7 @@ function required(name: string): string {
  * Safe to expose: it identifies the project but grants nothing on its own.
  */
 export function supabaseUrl(): string {
-  return required('NEXT_PUBLIC_SUPABASE_URL');
+  return requireValue('NEXT_PUBLIC_SUPABASE_URL', process.env.NEXT_PUBLIC_SUPABASE_URL);
 }
 
 /**
@@ -46,5 +59,8 @@ export function supabaseUrl(): string {
  * @see supabase/migrations — the policies this safety depends on
  */
 export function supabasePublishableKey(): string {
-  return required('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY');
+  return requireValue(
+    'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  );
 }

@@ -19,6 +19,10 @@ import { GoogleGenAI } from '@google/genai';
  * confusing 404 into a value that simply works.
  */
 function required(name: string): string {
+  // A computed index is safe here and only here: these are server-only values
+  // with no `NEXT_PUBLIC_` prefix, read in a real Node `process.env`. The same
+  // pattern silently breaks in the browser, where Next inlines only statically
+  // written `process.env.NEXT_PUBLIC_X` references — see src/lib/supabase/env.ts.
   const raw = process.env[name];
   if (raw === undefined || raw.trim().length === 0) {
     throw new Error(
