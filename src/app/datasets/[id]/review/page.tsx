@@ -123,7 +123,7 @@ export default async function ReviewPage({
         <div className="mt-12 border-t border-rule-strong py-16 text-center">
           <p className="text-sm font-medium">Nothing waiting.</p>
           <p className="mt-1 text-sm text-ink-muted">
-            Every uploaded document has been read and confirmed.
+            Every uploaded document has been dealt with — added to the ledger, or discarded.
           </p>
           <Link
             href={`/datasets/${id}`}

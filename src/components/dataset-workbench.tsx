@@ -108,9 +108,9 @@ export function DatasetWorkbench({
             ? 'Could not be read. Your ledger was not modified.'
             : flagged.length > 0
               ? `Read, but ${flagged.length} field${flagged.length === 1 ? '' : 's'} need review before it enters the ledger.`
-              : 'Read cleanly. Confirm it in review to add it to the ledger.',
+              : 'Read cleanly and added to the ledger.',
       });
-      setNeedsReview(true);
+      if (payload.status !== 'confirmed') setNeedsReview(true);
       router.refresh();
       return;
     }
@@ -219,7 +219,9 @@ function UploadPanel({
       <p className="mt-0.5 text-xs text-ink-muted">{hint}</p>
 
       <label className="mt-4 block">
-        <span className="sr-only">Choose a CSV file for {title}</span>
+        <span className="sr-only">
+          Choose a {acceptsDocuments ? 'CSV, PDF or image' : 'CSV'} file for {title}
+        </span>
         <input
           type="file"
           accept={acceptsDocuments ? '.csv,text/csv,application/pdf,image/*' : '.csv,text/csv'}

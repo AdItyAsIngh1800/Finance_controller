@@ -13,6 +13,7 @@ import { randomUUID } from 'node:crypto';
 import { NextResponse, type NextRequest } from 'next/server';
 import { extractSettlementDocument } from '@/ai/extract';
 import { isRecordSide } from '@/core/taxonomy';
+import { promoteExtraction } from '@/lib/pipeline';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** Ceiling on an uploaded document. */
@@ -140,13 +141,61 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
+  const extractionId = (extraction as { id: string }).id;
+
+  // An extraction that cleared the confidence gate is promoted immediately.
+  //
+  // The human gate exists for *uncertain* readings, not for every reading —
+  // docs/ARCHITECTURE.md §5 routes `confirmed` straight to a record and only
+  // `needs_review` through a person. Without this the document is read, marked
+  // confirmed, and then silently dropped: it never reaches the ledger, and it
+  // never appears in the review queue either, because that queue lists only
+  // items still awaiting a decision.
+  let promotedRecordId: string | null = null;
+  if (outcome.status === 'confirmed') {
+    const confirmed = Object.fromEntries(
+      Object.entries(outcome.fields).map(([name, field]) => [name, field?.value ?? '']),
+    );
+    try {
+      promotedRecordId = await promoteExtraction(client, {
+        extractionId,
+        datasetId,
+        userId: user.id,
+        side,
+        confirmed,
+      });
+    } catch (cause) {
+      // Confident but unusable — an amount with excess precision, an impossible
+      // date. Route it to a human rather than discarding it: the reading may be
+      // correct and merely need a correction the parser cannot make itself.
+      await client
+        .from('extractions')
+        .update({
+          status: 'needs_review',
+          error: cause instanceof Error ? cause.message : String(cause),
+        })
+        .eq('id', extractionId);
+
+      return NextResponse.json({
+        documentId,
+        extractionId,
+        status: 'needs_review',
+        fields: outcome.fields,
+        minConfidence: outcome.minConfidence,
+        lowConfidenceFields: outcome.lowConfidenceFields,
+        error: cause instanceof Error ? cause.message : String(cause),
+      });
+    }
+  }
+
   return NextResponse.json({
     documentId,
-    extractionId: (extraction as { id: string }).id,
+    extractionId,
     status: outcome.status,
     fields: outcome.fields,
     minConfidence: outcome.minConfidence,
     lowConfidenceFields: outcome.lowConfidenceFields,
+    ...(promotedRecordId === null ? {} : { recordId: promotedRecordId }),
     ...(outcome.error === undefined ? {} : { error: outcome.error }),
   });
 }
