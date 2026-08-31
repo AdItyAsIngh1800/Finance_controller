@@ -41,7 +41,7 @@ The honest caveat, stated up front: **this system has never seen a real bank sta
 
 ## Features
 
-- Google sign-in with per-user isolation enforced by **database-level Row-Level Security**, not just a login screen
+- Google or email sign-in, with per-user isolation enforced by **database-level Row-Level Security**, not just a login screen
 - CSV ingestion for both domains, plus PDF/image extraction for settlement statements — with confidence gating and a human review queue
 - Deterministic tiered matching — exact reference → amount+date → fuzzy reference → bounded partial-payment sets
 - Fixed, published exception taxonomy; every finding carries a plain-English reason and the numbers behind it
@@ -81,7 +81,18 @@ npm run dev                    # http://localhost:3000
 | `GEMINI_API_KEY` | **server** | All Gemini calls originate server-side |
 | `GEMINI_MODEL_ID` | server | Model ID as config — provider naming drifts |
 
-### Google sign-in
+### Sign-in
+
+Two paths, both Supabase sessions:
+
+- **Email and password** — works with no configuration beyond one toggle. In
+  **Supabase → Authentication → Sign In / Providers → Email**, turn **off**
+  "Confirm email". It is on by default, and while on, sign-up waits for a
+  confirmation link that Supabase's built-in sender delivers only to project
+  members.
+- **Google** — one click, but needs the setup below.
+
+#### Google OAuth
 
 Configured once, in two places:
 
@@ -140,7 +151,7 @@ planted" — the reports print the underlying counts.
 
 ## Demo script
 
-1. **Sign in** with Google.
+1. **Sign in** — with Google, or with an email and password.
 2. **Click "Load a demo dataset"** — 250 record pairs with known discrepancies planted, seeded and reconciled in one action, so the walkthrough starts at results rather than an upload dialog.
 3. **Show the review queue** — a degraded scan with two sub-threshold fields, blocked from the ledger. *This is where the product refuses to trust the model.*
 4. **Run reconciliation** — match rate, tier breakdown, visible matching parameters.

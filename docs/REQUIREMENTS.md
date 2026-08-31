@@ -16,6 +16,7 @@ Every requirement below is written to be independently verifiable. `VERIFICATION
 | ID | Requirement | Priority | Verified by |
 |---|---|---|---|
 | FR-1.1 | A user can sign in with a Google account | P0 | Manual sign-in on deployed URL |
+| FR-1.1a | A user can create an account and sign in with email and password | P0 | Create two accounts; sign in as each |
 | FR-1.2 | Unauthenticated requests to application routes redirect to sign-in | P0 | Request a protected route with no session |
 | FR-1.3 | A user can sign out, invalidating the session | P1 | Sign out, then attempt a protected route |
 | FR-1.4 | A user can read **only** their own datasets, records, runs, and exceptions | P0 | Second account attempts cross-user read via SQL editor; must return zero rows |

@@ -61,9 +61,15 @@ That low/high split is the queue's most useful property: a timing difference and
 ## 4. Screen Specifications
 
 ### S-1 · Sign in
-Product name, one-line description, single **Continue with Google** button. No email/password field — there is no email/password path.
 
-*States:* idle · redirecting · error (auth failed, with retry).
+Product name, one-line description, then two paths separated by a rule:
+
+- **Continue with Google** — the primary path, one click, no credentials to invent.
+- **Email and password** — so the application is usable without a Google account, and so more than one account can be created on demand. The row-level-security isolation test needs two distinct accounts, and this is how they are made.
+
+Both produce an ordinary Supabase session, so middleware, RLS and `getCurrentUser()` behave identically regardless of which was used.
+
+*States:* idle · redirecting (Google) · working (credentials) · notice (account created, confirmation pending) · error (with the provider's own message, not a generic one).
 
 ---
 

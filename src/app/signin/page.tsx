@@ -3,62 +3,118 @@
 /**
  * Sign-in screen (docs/DESIGN.md §S-1).
  *
- * Google OAuth is the only path. There is deliberately no email/password form:
- * no SMTP to configure, no password reset flow to build, and one click for a
- * reviewer who should not have to invent credentials to look at a demo.
+ * Two paths. Google OAuth is the primary one — one click, no credentials to
+ * invent. Email and password exists alongside it so the application can be
+ * used without a Google account, and so more than one account can be created
+ * on demand, which is what the row-level-security isolation test requires.
+ *
+ * Both paths produce an ordinary Supabase session, so everything downstream —
+ * middleware, RLS, `getCurrentUser()` — behaves identically regardless of how
+ * the user arrived.
  */
 
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
-/** The sign-in form, split out so it can sit inside a Suspense boundary. */
+/** Supabase's default minimum. Checked here so the failure is immediate. */
+const MIN_PASSWORD_LENGTH = 6;
+
+/** Which credential action the form performs. */
+type Mode = 'signIn' | 'signUp';
+
 function SignInForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
+  const next = searchParams.get('next') ?? '/datasets';
+
+  const [mode, setMode] = useState<Mode>('signIn');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [pending, setPending] = useState<'google' | 'password' | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  /**
-   * Starts the Google OAuth flow.
-   *
-   * The destination the user originally requested is threaded through the
-   * callback so they land where they meant to, rather than on a default page.
-   */
-  const signIn = async (): Promise<void> => {
-    setPending(true);
+  /** Only same-origin relative paths, so `next` cannot become an open redirect. */
+  const safeNext = next.startsWith('/') && !next.startsWith('//') ? next : '/datasets';
+
+  const signInWithGoogle = async (): Promise<void> => {
+    setPending('google');
     setError(null);
-
-    const supabase = createClient();
-    const next = searchParams.get('next') ?? '/datasets';
-    const { error: signInError } = await supabase.auth.signInWithOAuth({
+    const { error: oauthError } = await createClient().auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(safeNext)}`,
       },
     });
-
-    if (signInError !== null) {
-      // Surfaced rather than swallowed: the overwhelmingly likely cause is that
-      // the Google provider has not been enabled in the Supabase dashboard, and
-      // a silent failure here would be very hard to diagnose.
-      setError(signInError.message);
-      setPending(false);
+    if (oauthError !== null) {
+      // Almost always means the Google provider is not enabled in Supabase.
+      // Surfaced rather than swallowed, because a silent failure here is very
+      // hard to diagnose.
+      setError(oauthError.message);
+      setPending(null);
     }
+  };
+
+  const submitCredentials = async (): Promise<void> => {
+    setError(null);
+    setNotice(null);
+
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      return;
+    }
+
+    setPending('password');
+    const supabase = createClient();
+
+    if (mode === 'signUp') {
+      const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+      if (signUpError !== null) {
+        setError(signUpError.message);
+        setPending(null);
+        return;
+      }
+      // With email confirmation enabled, sign-up succeeds but returns no
+      // session. Saying so plainly beats a redirect to a page that bounces
+      // straight back to sign-in.
+      if (data.session === null) {
+        setNotice(
+          'Account created. Confirm the address from the email Supabase sent, then sign in. ' +
+            'To skip this step, turn off "Confirm email" under Authentication → Providers → Email.',
+        );
+        setMode('signIn');
+        setPending(null);
+        return;
+      }
+    } else {
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      if (signInError !== null) {
+        setError(signInError.message);
+        setPending(null);
+        return;
+      }
+    }
+
+    // The server needs to observe the new session cookie before the destination
+    // renders, so refresh precedes navigation.
+    router.refresh();
+    router.push(safeNext);
   };
 
   return (
     <div className="w-full max-w-sm">
       <h1 className="text-2xl font-semibold tracking-tight">AI Finance Controller</h1>
       <p className="mt-2 text-sm text-ink-muted">
-        Reconciles processor and bank records against your ledger, and explains every
-        discrepancy it finds.
+        Reconciles processor and bank records against your ledger, and explains every discrepancy
+        it finds.
       </p>
 
       <button
         type="button"
-        onClick={signIn}
-        disabled={pending}
-        className="mt-8 flex w-full items-center justify-center gap-3 rounded-md border border-rule bg-paper px-4 py-2.5 text-sm font-medium transition hover:bg-paper-sunk disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={() => void signInWithGoogle()}
+        disabled={pending !== null}
+        className="mt-8 flex w-full items-center justify-center gap-3 rounded-sm border border-rule bg-paper px-4 py-2.5 text-sm font-medium transition hover:bg-paper-sunk disabled:cursor-not-allowed disabled:opacity-60"
       >
         <svg aria-hidden="true" viewBox="0 0 24 24" className="h-4 w-4">
           <path
@@ -75,15 +131,87 @@ function SignInForm() {
             d="M12 4.8c1.8 0 3.4.6 4.6 1.8l3.5-3.5A12 12 0 0 0 1.3 6.6l4 3.1A7.2 7.2 0 0 1 12 4.8Z"
           />
         </svg>
-        {pending ? 'Redirecting…' : 'Continue with Google'}
+        {pending === 'google' ? 'Redirecting…' : 'Continue with Google'}
       </button>
+
+      <div className="my-6 flex items-center gap-3" aria-hidden="true">
+        <span className="h-px flex-1 bg-rule" />
+        <span className="text-xs text-ink-faint">or</span>
+        <span className="h-px flex-1 bg-rule" />
+      </div>
+
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          void submitCredentials();
+        }}
+        className="space-y-3"
+      >
+        <label className="block">
+          <span className="text-xs font-medium text-ink-muted">Email</span>
+          <input
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className="mt-1 w-full rounded-sm border border-rule bg-paper px-3 py-2 text-sm"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-xs font-medium text-ink-muted">Password</span>
+          <input
+            type="password"
+            required
+            minLength={MIN_PASSWORD_LENGTH}
+            autoComplete={mode === 'signUp' ? 'new-password' : 'current-password'}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className="mt-1 w-full rounded-sm border border-rule bg-paper px-3 py-2 text-sm"
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={pending !== null}
+          className="w-full rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
+        >
+          {pending === 'password'
+            ? 'Working…'
+            : mode === 'signUp'
+              ? 'Create account'
+              : 'Sign in'}
+        </button>
+      </form>
+
+      <p className="mt-3 text-xs text-ink-muted">
+        {mode === 'signUp' ? 'Already have an account?' : 'No account yet?'}{' '}
+        <button
+          type="button"
+          onClick={() => {
+            setMode(mode === 'signUp' ? 'signIn' : 'signUp');
+            setError(null);
+            setNotice(null);
+          }}
+          className="underline underline-offset-2 hover:text-ink"
+        >
+          {mode === 'signUp' ? 'Sign in instead' : 'Create one'}
+        </button>
+      </p>
+
+      {notice !== null && (
+        <p className="mt-4 border-l-2 border-undecided bg-undecided-wash px-3 py-2 text-sm">
+          {notice}
+        </p>
+      )}
 
       {error !== null && (
         <p
           role="alert"
-          className="mt-4 rounded-md border border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
+          className="mt-4 border-l-2 border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
         >
-          Could not start sign-in: {error}
+          {error}
         </p>
       )}
     </div>
@@ -92,8 +220,8 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-6">
-      {/* useSearchParams requires a Suspense boundary during prerendering. */}
+    <main className="flex min-h-screen items-center justify-center px-6 py-12">
+      {/* useSearchParams needs a Suspense boundary during prerendering. */}
       <Suspense fallback={null}>
         <SignInForm />
       </Suspense>
