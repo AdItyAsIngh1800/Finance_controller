@@ -31,7 +31,7 @@ Every requirement below is written to be independently verifiable. `VERIFICATION
 | FR-2.1 | A user can create a named dataset and select a domain (`settlement` \| `bank`) | P0 | Create one of each |
 | FR-2.2 | A dataset holds two sides: external source records and internal ledger entries | P0 | Schema inspection |
 | FR-2.3 | A user can list their datasets and open one | P0 | UI walkthrough |
-| FR-2.4 | A user can delete a dataset and all dependent rows | P2 | Delete, confirm cascade |
+| FR-2.4 | A user can delete a dataset, its dependent rows, and its uploaded documents | P2 | Delete a dataset; confirm records, runs and exceptions are gone and storage holds no orphans |
 
 ### FR-3 — CSV Ingestion
 

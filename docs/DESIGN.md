@@ -256,7 +256,7 @@ Specified once; every screen implements them.
 | State | Rule |
 |---|---|
 | **Empty** | Say what will appear here and give the one action that fills it. Never a bare "No data." |
-| **Loading** | Skeleton rows matching final layout for tables; inline spinner for actions. No full-page blockers. |
+| **Loading** | Route-level skeletons shaped like the content they replace, so the layout does not shift when data arrives. The skeleton is `aria-hidden`; a visually-hidden status message carries the announcement, since decorative bars read as noise. Inline pending text for actions. No full-page blockers. |
 | **Error** | What failed, whether data was affected, what to do next. Extraction errors always state *"your ledger was not modified."* |
 | **Blocked** | Disabled controls always state the reason inline (e.g. *"4 extractions need review"*), never silently grey out. |
 | **Degraded** | Gemini unavailable disables the Ask panel only; dashboard and queue remain fully functional. |

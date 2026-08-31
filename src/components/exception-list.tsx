@@ -114,7 +114,11 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
           No exceptions match this filter. Clear it to see all {exceptions.length}.
         </p>
       ) : (
-        <ul>
+        // The row columns are fixed-width so references and amounts stay aligned
+        // down the list. Below the target width that alignment would otherwise
+        // squeeze, so the list scrolls within itself rather than dragging the
+        // whole page sideways.
+        <ul className="overflow-x-auto">
           {visible.map((exception) => {
             const isOpen = expanded === exception.id;
             return (
@@ -123,7 +127,7 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
                   type="button"
                   aria-expanded={isOpen}
                   onClick={() => setExpanded(isOpen ? null : exception.id)}
-                  className="flex w-full items-center gap-3 px-1 py-2.5 text-left hover:bg-paper-sunk"
+                  className="flex w-full min-w-[46rem] items-center gap-3 px-1 py-2.5 text-left hover:bg-paper-sunk"
                 >
                   <span aria-hidden="true" className="w-3 text-ink-faint">
                     {isOpen ? '▾' : '▸'}
@@ -143,7 +147,8 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
                     <p className="max-w-2xl text-sm leading-relaxed">{exception.statedReason}</p>
 
                     {exception.evidence.length > 0 && (
-                      <table className="mt-4 text-sm">
+                      <div className="mt-4 overflow-x-auto">
+                      <table className="text-sm">
                         <thead>
                           <tr className="text-[11px] uppercase tracking-wider text-ink-muted">
                             <th scope="col" className="py-1 pr-8 text-left font-medium">
@@ -178,6 +183,7 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
                           ))}
                         </tbody>
                       </table>
+                      </div>
                     )}
 
                     {exception.suggestedAction !== undefined && (

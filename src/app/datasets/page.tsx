@@ -9,6 +9,7 @@
 
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
+import { DeleteDataset } from '@/components/delete-dataset';
 import { SeedDemo } from '@/components/seed-demo';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { isDomain } from '@/core/taxonomy';
@@ -44,6 +45,46 @@ async function createDataset(formData: FormData): Promise<void> {
   const supabase = await createClient();
   const { error } = await supabase.from('datasets').insert({ user_id: user.id, name, domain });
   if (error !== null) throw new Error(`Could not create dataset: ${error.message}`);
+
+  revalidatePath('/datasets');
+}
+
+/**
+ * Deletes a dataset and everything belonging to it.
+ *
+ * Records, runs, matches and exceptions are removed by the schema's cascading
+ * foreign keys. Storage objects are **not** — no cascade reaches the bucket —
+ * so uploaded documents are removed explicitly first. Skipping that would leave
+ * files nobody can see and nobody can delete, still counting against storage.
+ *
+ * RLS scopes the delete to the signed-in user, so a dataset belonging to
+ * someone else matches no row rather than raising.
+ *
+ * @see docs/REQUIREMENTS.md FR-2.4
+ */
+async function deleteDataset(formData: FormData): Promise<void> {
+  'use server';
+
+  const user = await getCurrentUser();
+  if (user === null) throw new Error('Not signed in.');
+
+  const datasetId = String(formData.get('datasetId') ?? '');
+  if (datasetId.length === 0) throw new Error('A dataset is required.');
+
+  const supabase = await createClient();
+
+  // Documents live under `{userId}/{datasetId}/…`, which is also what the
+  // storage policy keys on.
+  const prefix = `${user.id}/${datasetId}`;
+  const { data: objects } = await supabase.storage.from('documents').list(prefix);
+  if (objects !== null && objects.length > 0) {
+    await supabase.storage
+      .from('documents')
+      .remove(objects.map((object) => `${prefix}/${object.name}`));
+  }
+
+  const { error } = await supabase.from('datasets').delete().eq('id', datasetId);
+  if (error !== null) throw new Error(`Could not delete the dataset: ${error.message}`);
 
   revalidatePath('/datasets');
 }
@@ -129,7 +170,8 @@ export default async function DatasetsPage() {
       )}
 
       {datasets.length > 0 && (
-        <table className="mt-6 w-full border-collapse text-sm">
+        <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[32rem] border-collapse text-sm">
           <thead>
             <tr className="border-b border-rule-strong text-left">
               <th scope="col" className="py-2 pr-4 font-medium">
@@ -141,8 +183,11 @@ export default async function DatasetsPage() {
               <th scope="col" className="py-2 pr-4 font-medium">
                 Currency
               </th>
-              <th scope="col" className="py-2 font-medium">
+              <th scope="col" className="py-2 pr-4 font-medium">
                 Created
+              </th>
+              <th scope="col" className="py-2 font-medium">
+                <span className="sr-only">Actions</span>
               </th>
             </tr>
           </thead>
@@ -156,13 +201,21 @@ export default async function DatasetsPage() {
                 </td>
                 <td className="py-2 pr-4">{dataset.domain}</td>
                 <td className="py-2 pr-4 font-mono tabular-nums">{dataset.currency}</td>
-                <td className="py-2 font-mono tabular-nums text-ink-muted">
+                <td className="py-2 pr-4 font-mono tabular-nums text-ink-muted">
                   {dataset.created_at.slice(0, 10)}
+                </td>
+                <td className="py-2 text-right">
+                  <DeleteDataset
+                    datasetId={dataset.id}
+                    name={dataset.name}
+                    action={deleteDataset}
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </main>
   );
