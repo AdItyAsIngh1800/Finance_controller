@@ -12,8 +12,12 @@
  * Deliberately a single light theme — see docs/DESIGN.md §7.
  */
 :root {
-  /* Surfaces: a paper white with a trace of warmth, as ledger stock has. */
+  /* Surfaces: a paper white with a trace of warmth, as ledger stock has.
+     `--paper-raised` is the card plane, lifted a shade above the page ground so
+     panels read as objects on a desk rather than as outlined regions. */
+  --page: #f6f6f2;
   --paper: #fbfbf9;
+  --paper-raised: #ffffff;
   --paper-sunk: #f4f4f0;
   --ink: #16171a;
   --ink-muted: #6b6c70;
@@ -37,10 +41,24 @@
 
   /* "In the black": the matched proportion of the reconciliation bar. */
   --settled: #2f5d3a;
+  --settled-wash: #eef3ee;
+
+  /*
+   * Elevation.
+   *
+   * Two steps only, both barely-there. On a dense table a pronounced shadow
+   * becomes visual noise repeated forty times down the page, so these are tuned
+   * to separate planes rather than to be noticed.
+   */
+  --lift-sm: 0 1px 2px rgb(22 23 26 / 0.04), 0 1px 1px rgb(22 23 26 / 0.03);
+  --lift-md: 0 1px 2px rgb(22 23 26 / 0.04), 0 4px 12px -2px rgb(22 23 26 / 0.06);
+  --lift-lg: 0 2px 4px rgb(22 23 26 / 0.04), 0 12px 28px -6px rgb(22 23 26 / 0.10);
 }
 
 @theme inline {
+  --color-page: var(--page);
   --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
   --color-paper-sunk: var(--paper-sunk);
   --color-ink: var(--ink);
   --color-ink-muted: var(--ink-muted);
@@ -54,18 +72,34 @@
   --color-explained: var(--explained);
   --color-explained-wash: var(--explained-wash);
   --color-settled: var(--settled);
+  --color-settled-wash: var(--settled-wash);
+
   --font-sans: var(--font-plex-sans);
   --font-mono: var(--font-plex-mono);
+
+  /* One radius scale, so controls and the cards holding them agree. Before
+     this, radii drifted between `sm` and `md` across screens. */
+  --radius-control: 0.375rem;
+  --radius-card: 0.625rem;
+
+  --shadow-lift-sm: var(--lift-sm);
+  --shadow-lift-md: var(--lift-md);
+  --shadow-lift-lg: var(--lift-lg);
+
+  /* Motion. Short and eased-out: the interface should feel responsive to a
+     pointer without ever making a user wait on an animation to read a number. */
+  --ease-ui: cubic-bezier(0.2, 0, 0, 1);
 }
 
 body {
-  background: var(--paper);
+  background: var(--page);
   color: var(--ink);
   font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
   /* Tabular figures everywhere by default: column-aligned digits are how a
      finance user scans a table for anomalies, and proportional digits defeat
      that scan entirely. */
   font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
 }
 
 /*
@@ -83,6 +117,51 @@ body {
 :focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/*
+ * Section headings.
+ *
+ * The small-caps rule above a block appeared verbatim on eight screens before it
+ * was named here. Kept as a class rather than a component because it is applied
+ * to `h2`, `h3` and `dt` alike, and a component would have to take the tag.
+ */
+.eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--ink-muted);
+}
+
+/*
+ * Text that must stay readable at any width.
+ *
+ * Long-form prose is capped near 68 characters; below the tablet breakpoint the
+ * cap is the viewport, which is narrower still.
+ */
+.prose-measure {
+  max-width: 68ch;
+}
+
+/*
+ * The select chevron.
+ *
+ * Defined here rather than as a Tailwind arbitrary value: a `bg-[url('data:…')]`
+ * class contains quotes and spaces that the class scanner cannot extract, and it
+ * silently emits `url()` instead. The mark is inline SVG so it needs no asset
+ * request, and it is a background rather than a positioned element so it can
+ * never intercept a click meant for the control beneath it.
+ *
+ * Pair with `appearance-none` and right padding wide enough to clear it.
+ */
+.select-chevron {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b6c70' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 12px 12px;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -91,5 +170,6 @@ body {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
