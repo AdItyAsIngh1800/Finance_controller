@@ -15,6 +15,7 @@
  */
 
 import { useState } from 'react';
+import { Button, Card, SectionHeading } from './ui';
 
 /** One function the agent called. */
 interface AgentCall {
@@ -91,11 +92,9 @@ export function AskPanel({ runId }: { readonly runId: string }) {
   };
 
   return (
-    <section className="mt-12 border-t border-rule-strong pt-6">
-      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-        Ask about this reconciliation
-      </h2>
-      <p className="mt-1 max-w-2xl text-sm text-ink-muted">
+    <section className="mt-12">
+      <SectionHeading>Ask about this reconciliation</SectionHeading>
+      <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
         Answers come only from the results above. Every figure is quoted from a lookup, never
         calculated — and the lookups are shown.
       </p>
@@ -104,80 +103,91 @@ export function AskPanel({ runId }: { readonly runId: string }) {
         <ul className="mt-4 flex flex-wrap gap-2">
           {SUGGESTIONS.map((suggestion) => (
             <li key={suggestion}>
-              <button
-                type="button"
-                onClick={() => void ask(suggestion)}
-                className="rounded-sm border border-rule bg-paper px-3 py-1.5 text-left text-xs transition hover:bg-paper-sunk"
-              >
+              <Button size="sm" onClick={() => void ask(suggestion)} className="text-left">
                 {suggestion}
-              </button>
+              </Button>
             </li>
           ))}
         </ul>
       )}
 
-      <ol className="mt-6 space-y-6">
+      <ol className="mt-6 space-y-4">
         {exchanges.map((exchange, index) => (
           <li key={`${exchange.question}-${index}`}>
-            <p className="text-sm font-medium">{exchange.question}</p>
+            <Card className="p-4 sm:p-5">
+              <p className="text-sm font-semibold">{exchange.question}</p>
 
-            {exchange.calls.length > 0 && (
-              <ul className="mt-2 space-y-0.5">
-                {exchange.calls.map((call, callIndex) => (
-                  <li
-                    key={`${call.name}-${callIndex}`}
-                    className="font-mono text-[11px] text-ink-faint"
-                  >
-                    <span aria-hidden="true">⚙ </span>
-                    {call.name}(
-                    {Object.entries(call.args)
-                      .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
-                      .join(', ')}
-                    )
-                  </li>
-                ))}
-              </ul>
-            )}
+              {/* The trace sits above the answer, never behind a disclosure —
+                  it is the evidence the answer came from data. */}
+              {exchange.calls.length > 0 && (
+                <ul className="mt-2.5 space-y-0.5 overflow-x-auto rounded-control bg-paper-sunk/70 px-3 py-2">
+                  {exchange.calls.map((call, callIndex) => (
+                    <li
+                      key={`${call.name}-${callIndex}`}
+                      className="whitespace-nowrap font-mono text-[11px] text-ink-muted"
+                    >
+                      <span aria-hidden="true" className="text-ink-faint">
+                        ⚙{' '}
+                      </span>
+                      {call.name}(
+                      {Object.entries(call.args)
+                        .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
+                        .join(', ')}
+                      )
+                    </li>
+                  ))}
+                </ul>
+              )}
 
-            <p
-              className={`mt-2 max-w-2xl border-l-2 pl-3 text-sm leading-relaxed ${
-                exchange.failed
-                  ? 'border-unaccounted text-unaccounted'
-                  : exchange.declined
-                    ? 'border-rule-strong text-ink-muted'
-                    : 'border-settled'
-              }`}
-            >
-              {exchange.answer}
-            </p>
+              <p
+                className={`prose-measure mt-3 border-l-2 pl-3 text-sm leading-relaxed ${
+                  exchange.failed
+                    ? 'border-unaccounted text-unaccounted'
+                    : exchange.declined
+                      ? 'border-rule-strong text-ink-muted'
+                      : 'border-settled'
+                }`}
+              >
+                {exchange.answer}
+              </p>
+            </Card>
           </li>
         ))}
       </ol>
+
+      {thinking && (
+        <p role="status" className="mt-4 text-sm text-ink-muted">
+          <span aria-hidden="true" className="mr-1.5 inline-block animate-pulse">
+            ⚙
+          </span>
+          Looking it up…
+        </p>
+      )}
 
       <form
         onSubmit={(event) => {
           event.preventDefault();
           void ask(question);
         }}
-        className="mt-6 flex gap-2"
+        className="mt-5 flex gap-2"
       >
-        <label className="flex-1">
+        <label className="min-w-0 flex-1">
           <span className="sr-only">Ask a question about this reconciliation</span>
           <input
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
             placeholder={thinking ? 'Looking…' : 'Ask a follow-up…'}
             disabled={thinking}
-            className="w-full rounded-sm border border-rule bg-paper px-3 py-2 text-sm"
+            className="w-full rounded-control border border-rule bg-paper-raised px-3 py-2 text-sm shadow-lift-sm transition-[border-color] duration-150 ease-ui placeholder:text-ink-faint hover:border-rule-strong disabled:bg-paper-sunk disabled:opacity-60"
           />
         </label>
-        <button
+        <Button
           type="submit"
+          variant="primary"
           disabled={thinking || question.trim().length === 0}
-          className="rounded-sm bg-ink px-4 py-2 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
         >
           Ask
-        </button>
+        </Button>
       </form>
     </section>
   );

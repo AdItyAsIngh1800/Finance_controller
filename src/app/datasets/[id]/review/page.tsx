@@ -8,8 +8,10 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { CONFIDENCE_THRESHOLD, EXTRACTED_FIELDS } from '@/ai/extract';
+import { AppHeader, Breadcrumb, PageHeading } from '@/components/app-header';
 import { ExtractionReview, type ReviewItem } from '@/components/extraction-review';
-import { createClient } from '@/lib/supabase/server';
+import { buttonClasses, EmptyState, PageShell } from '@/components/ui';
+import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** How long a preview link stays valid. Long enough to review, not indefinite. */
 const SIGNED_URL_SECONDS = 60 * 30;
@@ -47,7 +49,7 @@ export default async function ReviewPage({
   readonly params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = await createClient();
+  const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   const { data: dataset } = await client
     .from('datasets')
@@ -99,46 +101,48 @@ export default async function ReviewPage({
     }),
   );
 
+  const datasetName = (dataset as { name: string }).name;
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <nav className="text-xs text-ink-muted">
-        <Link href="/datasets" className="hover:text-ink">
-          Datasets
-        </Link>
-        <span className="mx-1.5" aria-hidden="true">/</span>
-        <Link href={`/datasets/${id}`} className="hover:text-ink">
-          {(dataset as { name: string }).name}
-        </Link>
-        <span className="mx-1.5" aria-hidden="true">/</span>
-        <span>Review</span>
-      </nav>
+    <>
+      <AppHeader email={user?.email} />
+      <PageShell width="wide">
+        <Breadcrumb
+          items={[
+            { label: 'Datasets', href: '/datasets' },
+            { label: datasetName, href: `/datasets/${id}` },
+            { label: 'Review' },
+          ]}
+        />
 
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Awaiting review</h1>
-      <p className="mt-1 max-w-2xl text-sm text-ink-muted">
-        The model read these documents but was not confident about every field. Nothing here has
-        entered the ledger. Correct anything it misread, then confirm.
-      </p>
+        <div className="mt-3">
+          <PageHeading
+            title="Awaiting review"
+            description="The model read these documents but was not confident about every field. Nothing here has entered the ledger. Correct anything it misread, then confirm."
+          />
+        </div>
 
-      {items.length === 0 ? (
-        <div className="mt-12 border-t border-rule-strong py-16 text-center">
-          <p className="text-sm font-medium">Nothing waiting.</p>
-          <p className="mt-1 text-sm text-ink-muted">
-            Every uploaded document has been dealt with — added to the ledger, or discarded.
-          </p>
-          <Link
-            href={`/datasets/${id}`}
-            className="mt-4 inline-block text-sm underline underline-offset-2"
-          >
-            Back to the dataset
-          </Link>
-        </div>
-      ) : (
-        <div className="mt-8 space-y-8">
-          {items.map((item) => (
-            <ExtractionReview key={item.extractionId} item={item} />
-          ))}
-        </div>
-      )}
-    </main>
+        {items.length === 0 ? (
+          <div className="mt-8">
+            <EmptyState
+              title="Nothing waiting."
+              action={
+                <Link href={`/datasets/${id}`} className={buttonClasses()}>
+                  Back to the dataset
+                </Link>
+              }
+            >
+              Every uploaded document has been dealt with — added to the ledger, or discarded.
+            </EmptyState>
+          </div>
+        ) : (
+          <div className="mt-8 space-y-6">
+            {items.map((item) => (
+              <ExtractionReview key={item.extractionId} item={item} />
+            ))}
+          </div>
+        )}
+      </PageShell>
+    </>
   );
 }

@@ -4,8 +4,10 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AppHeader, Breadcrumb, PageHeading } from '@/components/app-header';
 import { DatasetWorkbench } from '@/components/dataset-workbench';
-import { createClient } from '@/lib/supabase/server';
+import { Card, PageShell, SectionHeading } from '@/components/ui';
+import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** A previous run, as listed. */
 interface RunRow {
@@ -21,7 +23,7 @@ export default async function DatasetPage({
   readonly params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const client = await createClient();
+  const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   // RLS scopes this to the signed-in user, so a dataset belonging to someone
   // else is indistinguishable from one that does not exist — which is exactly
@@ -49,56 +51,72 @@ export default async function DatasetPage({
   const history = (runs ?? []) as RunRow[];
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <nav className="text-xs text-ink-muted">
-        <Link href="/datasets" className="hover:text-ink">
-          Datasets
-        </Link>
-        <span className="mx-1.5" aria-hidden="true">
-          /
-        </span>
-        <span>{record.name}</span>
-      </nav>
-
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">{record.name}</h1>
-      <p className="mt-1 font-mono text-xs uppercase tracking-wider text-ink-muted">
-        {record.domain} · {record.currency}
-      </p>
-
-      <div className="mt-8">
-        <DatasetWorkbench
-          datasetId={record.id}
-          domain={record.domain === 'bank' ? 'bank' : 'settlement'}
-          sourceCount={sourceCount ?? 0}
-          ledgerCount={ledgerCount ?? 0}
+    <>
+      <AppHeader email={user?.email} />
+      <PageShell width="wide">
+        <Breadcrumb
+          items={[{ label: 'Datasets', href: '/datasets' }, { label: record.name }]}
         />
-      </div>
 
-      {history.length > 0 && (
-        <section className="mt-14">
-          <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Previous runs
-          </h2>
-          <ul>
-            {history.map((run) => (
-              <li key={run.id} className="border-b border-rule">
-                <Link
-                  href={`/datasets/${record.id}/runs/${run.id}`}
-                  className="flex items-baseline gap-6 px-1 py-2.5 text-sm hover:bg-paper-sunk"
-                >
-                  <span className="font-mono text-ink-muted">
-                    {run.created_at.slice(0, 16).replace('T', ' ')}
-                  </span>
-                  <span className="font-mono">{(run.match_rate * 100).toFixed(1)}%</span>
-                  <span className="text-ink-muted">
-                    {run.exception_count} exception{run.exception_count === 1 ? '' : 's'}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-    </main>
+        <div className="mt-3">
+          <PageHeading
+            title={record.name}
+            description={
+              <span className="inline-flex flex-wrap items-center gap-2">
+                <span className="rounded-control border border-rule bg-paper-sunk px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+                  {record.domain}
+                </span>
+                <span className="rounded-control border border-rule bg-paper-sunk px-2 py-0.5 font-mono text-[11px] uppercase tracking-wider text-ink-muted">
+                  {record.currency}
+                </span>
+              </span>
+            }
+          />
+        </div>
+
+        <div className="mt-8">
+          <DatasetWorkbench
+            datasetId={record.id}
+            domain={record.domain === 'bank' ? 'bank' : 'settlement'}
+            sourceCount={sourceCount ?? 0}
+            ledgerCount={ledgerCount ?? 0}
+          />
+        </div>
+
+        {history.length > 0 && (
+          <section className="mt-12">
+            <SectionHeading>Previous runs</SectionHeading>
+            <Card className="mt-3 overflow-hidden">
+              <ul>
+                {history.map((run) => (
+                  <li key={run.id} className="border-b border-rule last:border-0">
+                    <Link
+                      href={`/datasets/${record.id}/runs/${run.id}`}
+                      className="flex flex-wrap items-baseline gap-x-6 gap-y-1 px-4 py-3 text-sm transition-colors duration-150 ease-ui hover:bg-paper-sunk/60"
+                    >
+                      <span className="font-mono text-xs text-ink-muted">
+                        {run.created_at.slice(0, 16).replace('T', ' ')}
+                      </span>
+                      <span className="font-mono font-medium">
+                        {(run.match_rate * 100).toFixed(1)}%
+                      </span>
+                      <span className="text-ink-muted">
+                        {run.exception_count} exception{run.exception_count === 1 ? '' : 's'}
+                      </span>
+                      <span
+                        aria-hidden="true"
+                        className="ml-auto text-ink-faint transition-transform duration-150 ease-ui"
+                      >
+                        →
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          </section>
+        )}
+      </PageShell>
+    </>
   );
 }

@@ -32,7 +32,10 @@ export function ReconciliationBar({
         role="img"
         aria-label={`${matched} of ${total} source records matched, ${outstanding} outstanding`}
       >
-        <div className="bg-settled" style={{ width: `${settledPercent}%` }} />
+        <div
+          className="bg-settled transition-[width] duration-500 ease-ui"
+          style={{ width: `${settledPercent}%` }}
+        />
         <div className="flex-1 bg-unaccounted" />
       </div>
       <div className="mt-2 flex justify-between text-[11px] text-ink-muted">

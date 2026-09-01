@@ -10,7 +10,7 @@
 
 /** A single muted bar. */
 function Bar({ className = '' }: { readonly className?: string }) {
-  return <span className={`block h-3 animate-pulse rounded-sm bg-paper-sunk ${className}`} />;
+  return <span className={`block h-3 animate-pulse rounded-sm bg-rule/70 ${className}`} />;
 }
 
 /**
@@ -27,9 +27,9 @@ export function TableSkeleton({
   readonly columns?: readonly string[];
 }) {
   return (
-    <div aria-hidden="true" className="mt-2">
+    <div aria-hidden="true" className="mt-6">
       {Array.from({ length: rows }, (_, rowIndex) => (
-        <div key={rowIndex} className="flex items-center gap-4 border-b border-rule py-3">
+        <div key={rowIndex} className="flex items-center gap-4 border-b border-rule py-3.5">
           {columns.map((width, columnIndex) => (
             <Bar key={columnIndex} className={width} />
           ))}

@@ -12,8 +12,10 @@
  * this screen exists to avoid.
  */
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button, Card, Notice } from './ui';
 
 /** A row the adapter could not read. */
 interface RowError {
@@ -162,36 +164,38 @@ export function DatasetWorkbench({
       </div>
 
       {needsReview && (
-        <p className="mt-5 flex flex-wrap items-center gap-3 border-l-2 border-undecided bg-undecided-wash px-3 py-2 text-sm">
-          A document is waiting to be reviewed before it can enter the ledger.
-          <a href={`/datasets/${datasetId}/review`} className="underline underline-offset-2">
-            Review it
-          </a>
-        </p>
+        <Notice tone="warning" className="mt-5">
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            A document is waiting to be reviewed before it can enter the ledger.
+            <Link
+              href={`/datasets/${datasetId}/review`}
+              className="rounded-sm font-medium underline underline-offset-2 transition-opacity duration-150 ease-ui hover:opacity-70"
+            >
+              Review it
+            </Link>
+          </span>
+        </Notice>
       )}
 
-      <div className="mt-6 flex flex-wrap items-center gap-4">
-        <button
-          type="button"
+      <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <Button
+          variant="primary"
           onClick={() => void reconcile()}
           disabled={!bothSidesLoaded || running}
-          className="rounded-sm bg-ink px-5 py-2 text-sm font-medium text-paper transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {running ? 'Reconciling…' : 'Reconcile'}
-        </button>
+        </Button>
         {!bothSidesLoaded && (
           // Disabled controls always say why. A greyed-out button with no
           // explanation is a dead end.
-          <p className="text-sm text-ink-muted">
-            Load both sides to reconcile.
-          </p>
+          <p className="text-sm text-ink-muted">Load both sides to reconcile.</p>
         )}
       </div>
 
       {runError !== null && (
-        <p role="alert" className="mt-4 border-l-2 border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted">
+        <Notice tone="error" className="mt-4">
           {runError}
-        </p>
+        </Notice>
       )}
     </div>
   );
@@ -213,38 +217,55 @@ function UploadPanel({
   readonly state: SideState;
   readonly onFile: (file: File) => void;
 }) {
+  const busy = state.status === 'uploading';
+
   return (
-    <div className="border border-rule bg-paper p-4">
+    <Card className="flex flex-col p-4 transition-shadow duration-150 ease-ui hover:shadow-lift-md sm:p-5">
       <h3 className="text-sm font-semibold">{title}</h3>
       <p className="mt-0.5 text-xs text-ink-muted">{hint}</p>
 
-      <label className="mt-4 block">
+      {/*
+        The file input is the drop target, stretched over the dashed well and
+        made transparent, so the whole area accepts a drag without any drag
+        handlers of its own. The browser's own file semantics — keyboard
+        activation, drop, the picker — all still apply.
+      */}
+      <label
+        className={`relative mt-4 flex min-h-24 flex-col items-center justify-center rounded-control border border-dashed px-4 py-5 text-center transition-colors duration-150 ease-ui ${
+          busy
+            ? 'border-rule bg-paper-sunk'
+            : 'border-rule-strong bg-paper-sunk/40 hover:border-ink-faint hover:bg-paper-sunk'
+        }`}
+      >
         <span className="sr-only">
           Choose a {acceptsDocuments ? 'CSV, PDF or image' : 'CSV'} file for {title}
         </span>
         <input
           type="file"
           accept={acceptsDocuments ? '.csv,text/csv,application/pdf,image/*' : '.csv,text/csv'}
-          disabled={state.status === 'uploading'}
+          disabled={busy}
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (file !== undefined) onFile(file);
           }}
-          className="w-full text-xs file:mr-3 file:cursor-pointer file:rounded-sm file:border file:border-rule file:bg-paper-sunk file:px-3 file:py-1.5 file:text-xs file:font-medium"
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0 disabled:cursor-not-allowed"
         />
+        <span aria-hidden="true" className="text-base text-ink-faint">
+          {busy ? '⋯' : '↑'}
+        </span>
+        <span className="mt-1 text-xs font-medium text-ink">
+          {busy ? 'Reading…' : 'Drop a file, or choose one'}
+        </span>
+        <span className="mt-0.5 font-mono text-[11px] text-ink-muted">
+          {count.toLocaleString()} record{count === 1 ? '' : 's'} loaded
+        </span>
       </label>
 
-      <p className="mt-3 font-mono text-xs text-ink-muted">
-        {state.status === 'uploading'
-          ? 'Reading…'
-          : `${count.toLocaleString()} record${count === 1 ? '' : 's'} loaded`}
-      </p>
-
       {state.status === 'error' && (
-        <div role="alert" className="mt-3 border-l-2 border-unaccounted bg-unaccounted-wash px-3 py-2">
-          <p className="text-xs text-unaccounted">{state.message}</p>
+        <Notice tone="error" className="mt-3">
+          <p className="text-xs">{state.message}</p>
           {state.rows !== undefined && state.rows.length > 0 && (
-            <ul className="mt-2 space-y-0.5 font-mono text-[11px] text-unaccounted">
+            <ul className="mt-2 space-y-0.5 font-mono text-[11px]">
               {state.rows.slice(0, 8).map((row) => (
                 <li key={`${row.lineNumber}-${row.column ?? ''}`}>
                   line {row.lineNumber}
@@ -254,12 +275,12 @@ function UploadPanel({
               {state.rows.length > 8 && <li>…and {state.rows.length - 8} more</li>}
             </ul>
           )}
-        </div>
+        </Notice>
       )}
 
       {state.status === 'done' && (
-        <p className="mt-3 text-xs text-settled">{state.message}</p>
+        <p className="mt-3 text-xs leading-relaxed text-settled">{state.message}</p>
       )}
-    </div>
+    </Card>
   );
 }

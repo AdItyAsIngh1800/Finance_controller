@@ -9,8 +9,19 @@
 
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
+import { AppHeader, PageHeading } from '@/components/app-header';
 import { DeleteDataset } from '@/components/delete-dataset';
 import { SeedDemo } from '@/components/seed-demo';
+import {
+  Button,
+  Card,
+  EmptyState,
+  Field,
+  Notice,
+  PageShell,
+  SectionHeading,
+  SelectField,
+} from '@/components/ui';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 import { isDomain } from '@/core/taxonomy';
 
@@ -100,123 +111,181 @@ export default async function DatasetsPage() {
   const datasets = (data ?? []) as DatasetRow[];
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-10">
-      <header className="flex items-baseline justify-between gap-4 border-b border-rule-strong pb-4">
-        <div>
-          <h1 className="text-xl font-semibold tracking-tight">Datasets</h1>
-          <p className="mt-1 text-sm text-ink-muted">
-            Signed in as {user?.email ?? 'unknown'}
-          </p>
-        </div>
-        <form action="/auth/signout" method="post">
-          <button
-            type="submit"
-            className="rounded-md border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk"
-          >
-            Sign out
-          </button>
-        </form>
-      </header>
+    <>
+      <AppHeader email={user?.email} />
+      <PageShell>
+        <PageHeading
+          title="Datasets"
+          description="Each dataset pairs one external source — a processor settlement or a bank statement — with the ledger it should agree with."
+        />
 
-      <form
-        action={createDataset}
-        className="mt-6 flex flex-wrap items-end gap-3 rounded-md border border-rule p-4"
-      >
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Name</span>
-          <input
-            name="name"
-            required
-            placeholder="August settlements"
-            className="rounded-md border border-rule bg-paper px-3 py-1.5"
-          />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="font-medium">Domain</span>
-          <select
-            name="domain"
-            defaultValue="settlement"
-            className="rounded-md border border-rule bg-paper px-3 py-1.5"
-          >
-            <option value="settlement">Settlement</option>
-            <option value="bank">Bank</option>
-          </select>
-        </label>
-        <button
-          type="submit"
-          className="rounded-md bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90"
-        >
-          Create dataset
-        </button>
-      </form>
+        <Card className="mt-7 p-4 sm:p-5">
+          <form action={createDataset} className="grid gap-4 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+            <Field
+              label="Name"
+              name="name"
+              required
+              placeholder="August settlements"
+              autoComplete="off"
+            />
+            <SelectField label="Domain" name="domain" defaultValue="settlement">
+              <option value="settlement">Settlement</option>
+              <option value="bank">Bank</option>
+            </SelectField>
+            <Button type="submit" variant="primary" className="w-full sm:w-auto">
+              Create dataset
+            </Button>
+          </form>
+        </Card>
 
-      {error !== null && (
-        <p
-          role="alert"
-          className="mt-6 rounded-md border border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
-        >
-          Could not load datasets: {error.message}
-        </p>
-      )}
+        {error !== null && (
+          <Notice tone="error" className="mt-6">
+            Could not load datasets: {error.message}
+          </Notice>
+        )}
 
-      {error === null && datasets.length === 0 && (
-        <div className="mt-10">
-          <p className="text-sm text-ink-muted">
-            No datasets yet. Create one above to upload a settlement report or bank statement
-            alongside your ledger — or start from prepared data.
-          </p>
-          <SeedDemo />
-        </div>
-      )}
+        {error === null && datasets.length === 0 && (
+          <div className="mt-8">
+            <EmptyState title="No datasets yet" action={<SeedDemo />}>
+              Create one above to upload a settlement report or bank statement alongside your
+              ledger — or start from prepared data with known discrepancies already planted.
+            </EmptyState>
+          </div>
+        )}
 
-      {datasets.length > 0 && (
-        <div className="mt-6 overflow-x-auto">
-        <table className="w-full min-w-[32rem] border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-rule-strong text-left">
-              <th scope="col" className="py-2 pr-4 font-medium">
-                Name
-              </th>
-              <th scope="col" className="py-2 pr-4 font-medium">
-                Domain
-              </th>
-              <th scope="col" className="py-2 pr-4 font-medium">
-                Currency
-              </th>
-              <th scope="col" className="py-2 pr-4 font-medium">
-                Created
-              </th>
-              <th scope="col" className="py-2 font-medium">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {datasets.map((dataset) => (
-              <tr key={dataset.id} className="border-b border-rule">
-                <td className="py-2 pr-4">
-                  <Link href={`/datasets/${dataset.id}`} className="underline-offset-2 hover:underline">
-                    {dataset.name}
-                  </Link>
-                </td>
-                <td className="py-2 pr-4">{dataset.domain}</td>
-                <td className="py-2 pr-4 font-mono tabular-nums">{dataset.currency}</td>
-                <td className="py-2 pr-4 font-mono tabular-nums text-ink-muted">
-                  {dataset.created_at.slice(0, 10)}
-                </td>
-                <td className="py-2 text-right">
-                  <DeleteDataset
-                    datasetId={dataset.id}
-                    name={dataset.name}
-                    action={deleteDataset}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        </div>
-      )}
-    </main>
+        {datasets.length > 0 && (
+          <section className="mt-10">
+            <SectionHeading
+              trailing={
+                <span className="font-mono text-xs text-ink-muted">
+                  {datasets.length} total
+                </span>
+              }
+            >
+              Your datasets
+            </SectionHeading>
+
+            {/*
+              Two renderings of the same rows.
+
+              A reconciliation table cannot usefully compress to a phone: the
+              columns are already at their minimum legible width. Rather than
+              scroll it sideways, below `md` each row is restated as a card,
+              which keeps every field readable and the whole list scannable in
+              one direction. The table markup is preserved above that width,
+              where column alignment is what makes the list scannable at all.
+            */}
+            <ul className="mt-3 grid gap-3 md:hidden">
+              {datasets.map((dataset) => (
+                <li key={dataset.id}>
+                  <Card className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <Link
+                        href={`/datasets/${dataset.id}`}
+                        className="text-sm font-medium underline-offset-2 hover:underline"
+                      >
+                        {dataset.name}
+                      </Link>
+                      <DeleteDataset
+                        datasetId={dataset.id}
+                        name={dataset.name}
+                        action={deleteDataset}
+                      />
+                    </div>
+                    <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <Meta label="Domain">{dataset.domain}</Meta>
+                      <Meta label="Currency" mono>
+                        {dataset.currency}
+                      </Meta>
+                      <Meta label="Created" mono>
+                        {dataset.created_at.slice(0, 10)}
+                      </Meta>
+                    </dl>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-3 hidden md:block">
+              <Card className="overflow-hidden">
+                <table className="w-full border-collapse text-sm">
+                  <thead>
+                    <tr className="border-b border-rule bg-paper-sunk/60 text-left">
+                      <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
+                        Name
+                      </th>
+                      <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
+                        Domain
+                      </th>
+                      <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
+                        Currency
+                      </th>
+                      <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
+                        Created
+                      </th>
+                      <th scope="col" className="px-4 py-2.5 font-medium">
+                        <span className="sr-only">Actions</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {datasets.map((dataset) => (
+                      <tr
+                        key={dataset.id}
+                        className="border-b border-rule transition-colors duration-150 ease-ui last:border-0 hover:bg-paper-sunk/50"
+                      >
+                        <td className="px-4 py-2.5">
+                          <Link
+                            href={`/datasets/${dataset.id}`}
+                            className="font-medium underline-offset-2 hover:underline"
+                          >
+                            {dataset.name}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 text-ink-muted">{dataset.domain}</td>
+                        <td className="px-4 py-2.5 font-mono">{dataset.currency}</td>
+                        <td className="px-4 py-2.5 font-mono text-ink-muted">
+                          {dataset.created_at.slice(0, 10)}
+                        </td>
+                        <td className="px-4 py-2.5 text-right">
+                          <DeleteDataset
+                            datasetId={dataset.id}
+                            name={dataset.name}
+                            action={deleteDataset}
+                          />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </Card>
+            </div>
+          </section>
+        )}
+      </PageShell>
+    </>
+  );
+}
+
+/**
+ * One labelled value in the mobile card rendering of a dataset row.
+ *
+ * @param props.mono - Whether the value is a figure or code, which gets the
+ *   monospace face so digits stay column-aligned between stacked cards.
+ */
+function Meta({
+  label,
+  mono = false,
+  children,
+}: {
+  readonly label: string;
+  readonly mono?: boolean;
+  readonly children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <dt className="text-[11px] uppercase tracking-wider text-ink-faint">{label}</dt>
+      <dd className={`mt-0.5 text-ink ${mono ? 'font-mono' : ''}`}>{children}</dd>
+    </div>
   );
 }

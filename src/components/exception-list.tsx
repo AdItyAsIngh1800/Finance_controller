@@ -17,6 +17,7 @@
 
 import { useMemo, useState } from 'react';
 import { SeverityBadge } from './severity';
+import { Card, EmptyState, InlineSelect, SectionHeading } from './ui';
 import type { Severity } from '@/core/taxonomy';
 
 /** One line of the side-by-side comparison, already formatted for display. */
@@ -61,29 +62,23 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
   if (exceptions.length === 0) {
     // A genuine success state, not an empty table.
     return (
-      <div className="border-t border-rule-strong py-16 text-center">
-        <p className="text-sm font-medium">Everything reconciled.</p>
-        <p className="mt-1 text-sm text-ink-muted">
+      <section className="mt-10">
+        <EmptyState title="Everything reconciled.">
           Every source record found its counterpart, with no discrepancies to review.
-        </p>
-      </div>
+        </EmptyState>
+      </section>
     );
   }
 
   return (
-    <section className="mt-12">
-      <div className="flex flex-wrap items-baseline justify-between gap-3 border-b border-rule-strong pb-2">
-        <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Exceptions
-          <span className="ml-2 font-mono text-ink">{exceptions.length}</span>
-        </h2>
-        <div className="flex gap-2 text-xs">
-          <label className="flex items-center gap-1.5">
-            <span className="text-ink-muted">Type</span>
-            <select
+    <section className="mt-10">
+      <SectionHeading
+        trailing={
+          <div className="flex flex-wrap items-center gap-2">
+            <InlineSelect
+              label="Type"
               value={type}
               onChange={(event) => setType(event.target.value)}
-              className="rounded-sm border border-rule bg-paper px-2 py-1"
             >
               <option value={ALL}>All</option>
               {types.map((name) => (
@@ -91,113 +86,133 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
                   {name}
                 </option>
               ))}
-            </select>
-          </label>
-          <label className="flex items-center gap-1.5">
-            <span className="text-ink-muted">Severity</span>
-            <select
+            </InlineSelect>
+            <InlineSelect
+              label="Severity"
               value={severity}
               onChange={(event) => setSeverity(event.target.value)}
-              className="rounded-sm border border-rule bg-paper px-2 py-1"
             >
               <option value={ALL}>All</option>
               <option value="high">High</option>
               <option value="medium">Medium</option>
               <option value="low">Low</option>
-            </select>
-          </label>
-        </div>
-      </div>
+            </InlineSelect>
+          </div>
+        }
+      >
+        Exceptions
+        <span className="ml-2 font-mono text-ink">{exceptions.length}</span>
+      </SectionHeading>
 
       {visible.length === 0 ? (
         <p className="py-10 text-center text-sm text-ink-muted">
           No exceptions match this filter. Clear it to see all {exceptions.length}.
         </p>
       ) : (
-        // The row columns are fixed-width so references and amounts stay aligned
-        // down the list. Below the target width that alignment would otherwise
-        // squeeze, so the list scrolls within itself rather than dragging the
-        // whole page sideways.
-        <ul className="overflow-x-auto">
-          {visible.map((exception) => {
-            const isOpen = expanded === exception.id;
-            return (
-              <li key={exception.id} className="border-b border-rule">
-                <button
-                  type="button"
-                  aria-expanded={isOpen}
-                  onClick={() => setExpanded(isOpen ? null : exception.id)}
-                  className="flex w-full min-w-[46rem] items-center gap-3 px-1 py-2.5 text-left hover:bg-paper-sunk"
-                >
-                  <span aria-hidden="true" className="w-3 text-ink-faint">
-                    {isOpen ? '▾' : '▸'}
-                  </span>
-                  <SeverityBadge severity={exception.severity} />
-                  <span className="w-52 shrink-0 font-mono text-xs text-ink-muted">
-                    {exception.type}
-                  </span>
-                  <span className="w-28 shrink-0 font-mono text-sm">{exception.reference}</span>
-                  <span className="flex-1 truncate text-sm text-ink-muted">
-                    {exception.summary}
-                  </span>
-                </button>
+        <Card className="mt-3 overflow-hidden">
+          <ul>
+            {visible.map((exception) => {
+              const isOpen = expanded === exception.id;
+              return (
+                <li key={exception.id} className="border-b border-rule last:border-0">
+                  {/*
+                    The trigger reflows rather than scrolling sideways.
 
-                {isOpen && (
-                  <div className="border-t border-rule bg-paper-sunk/60 px-8 py-5">
-                    <p className="max-w-2xl text-sm leading-relaxed">{exception.statedReason}</p>
+                    From `md` the columns are fixed-width so references and
+                    amounts stay aligned down the list, which is what makes the
+                    queue scannable. Below that the fixed widths would exceed
+                    the viewport, so the row wraps into two lines instead —
+                    identity on the first, summary on the second.
+                  */}
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    onClick={() => setExpanded(isOpen ? null : exception.id)}
+                    className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-3 text-left transition-colors duration-150 ease-ui hover:bg-paper-sunk/60 md:flex-nowrap md:px-4"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`w-3 shrink-0 text-ink-faint transition-transform duration-150 ease-ui ${
+                        isOpen ? 'rotate-90' : ''
+                      }`}
+                    >
+                      ▸
+                    </span>
+                    <SeverityBadge severity={exception.severity} />
+                    <span className="shrink-0 font-mono text-xs text-ink-muted md:w-52">
+                      {exception.type}
+                    </span>
+                    <span className="shrink-0 font-mono text-sm font-medium md:w-28">
+                      {exception.reference}
+                    </span>
+                    <span className="w-full text-sm text-ink-muted md:w-auto md:flex-1 md:truncate">
+                      {exception.summary}
+                    </span>
+                  </button>
 
-                    {exception.evidence.length > 0 && (
-                      <div className="mt-4 overflow-x-auto">
-                      <table className="text-sm">
-                        <thead>
-                          <tr className="text-[11px] uppercase tracking-wider text-ink-muted">
-                            <th scope="col" className="py-1 pr-8 text-left font-medium">
-                              Evidence
-                            </th>
-                            <th scope="col" className="py-1 pr-8 text-right font-medium">
-                              Source
-                            </th>
-                            <th scope="col" className="py-1 pr-8 text-right font-medium">
-                              Ledger
-                            </th>
-                            <th scope="col" className="py-1 text-left font-medium" />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {exception.evidence.map((line, index) => (
-                            <tr
-                              key={`${line.label}-${index}`}
-                              className={line.note === undefined ? '' : 'text-unaccounted'}
-                            >
-                              <td className="py-1 pr-8">{line.label}</td>
-                              <td className="py-1 pr-8 text-right font-mono">
-                                {line.source ?? '—'}
-                              </td>
-                              <td className="py-1 pr-8 text-right font-mono">
-                                {line.ledger ?? '—'}
-                              </td>
-                              <td className="py-1 text-xs">
-                                {line.note === undefined ? '' : `← ${line.note}`}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                      </div>
-                    )}
-
-                    {exception.suggestedAction !== undefined && (
-                      <p className="mt-4 text-sm text-ink-muted">
-                        <span className="font-medium text-ink">Next: </span>
-                        {exception.suggestedAction}
+                  {isOpen && (
+                    <div className="border-t border-rule bg-paper-sunk/50 px-4 py-5 sm:px-8">
+                      <p className="prose-measure text-sm leading-relaxed">
+                        {exception.statedReason}
                       </p>
-                    )}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+
+                      {exception.evidence.length > 0 && (
+                        <div className="mt-4 overflow-x-auto">
+                          <table className="w-full min-w-[22rem] max-w-xl text-sm">
+                            <thead>
+                              <tr className="border-b border-rule text-[11px] uppercase tracking-wider text-ink-muted">
+                                <th scope="col" className="py-1.5 pr-6 text-left font-medium">
+                                  Evidence
+                                </th>
+                                <th scope="col" className="py-1.5 pr-6 text-right font-medium">
+                                  Source
+                                </th>
+                                <th scope="col" className="py-1.5 text-right font-medium">
+                                  Ledger
+                                </th>
+                                <th scope="col" className="py-1.5 pl-6 text-left font-medium" />
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {exception.evidence.map((line, index) => (
+                                <tr
+                                  key={`${line.label}-${index}`}
+                                  className={
+                                    line.note === undefined
+                                      ? 'border-b border-rule/60 last:border-0'
+                                      : 'border-b border-rule/60 font-medium text-unaccounted last:border-0'
+                                  }
+                                >
+                                  <td className="py-1.5 pr-6">{line.label}</td>
+                                  <td className="py-1.5 pr-6 text-right font-mono">
+                                    {line.source ?? '—'}
+                                  </td>
+                                  <td className="py-1.5 text-right font-mono">
+                                    {line.ledger ?? '—'}
+                                  </td>
+                                  <td className="whitespace-nowrap py-1.5 pl-6 text-xs">
+                                    {line.note === undefined ? '' : `← ${line.note}`}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+
+                      {exception.suggestedAction !== undefined && (
+                        <p className="prose-measure mt-4 text-sm text-ink-muted">
+                          <span className="font-medium text-ink">Next: </span>
+                          {exception.suggestedAction}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
       )}
     </section>
   );

@@ -31,7 +31,7 @@ export function DeleteDataset({
       <button
         type="button"
         onClick={() => setArmed(true)}
-        className="text-xs text-ink-muted underline underline-offset-2 hover:text-unaccounted"
+        className="rounded-sm text-xs text-ink-muted underline underline-offset-2 transition-colors duration-150 ease-ui hover:text-unaccounted"
       >
         Delete
       </button>
@@ -48,14 +48,14 @@ export function DeleteDataset({
       <span className="sr-only">Delete {name} and everything in it?</span>
       <button
         type="submit"
-        className="rounded-sm border border-unaccounted px-2 py-0.5 text-xs text-unaccounted transition hover:bg-unaccounted-wash"
+        className="rounded-control border border-unaccounted px-2 py-1 text-xs font-medium text-unaccounted transition-colors duration-150 ease-ui hover:bg-unaccounted-wash"
       >
         Delete everything
       </button>
       <button
         type="button"
         onClick={() => setArmed(false)}
-        className="text-xs text-ink-muted underline underline-offset-2 hover:text-ink"
+        className="rounded-sm text-xs text-ink-muted underline underline-offset-2 transition-colors duration-150 ease-ui hover:text-ink"
       >
         Keep
       </button>

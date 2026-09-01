@@ -11,6 +11,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button, Notice } from './ui';
 
 export function SeedDemo() {
   const router = useRouter();
@@ -42,25 +43,17 @@ export function SeedDemo() {
   };
 
   return (
-    <div className="mt-4">
-      <button
-        type="button"
-        onClick={() => void seed()}
-        disabled={state === 'seeding'}
-        className="rounded-sm border border-rule bg-paper-sunk px-3 py-1.5 text-sm transition hover:bg-paper disabled:opacity-50"
-      >
+    <div className="flex flex-col items-center">
+      <Button variant="primary" onClick={() => void seed()} disabled={state === 'seeding'}>
         {state === 'seeding' ? 'Preparing demo data…' : 'Load a demo dataset'}
-      </button>
-      <p className="mt-1.5 text-xs text-ink-muted">
+      </Button>
+      <p className="mt-2 text-xs text-ink-muted">
         250 record pairs with known discrepancies planted, reconciled immediately.
       </p>
       {message !== null && (
-        <p
-          role="alert"
-          className="mt-2 border-l-2 border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted"
-        >
+        <Notice tone="error" className="mt-3 text-left">
           {message}
-        </p>
+        </Notice>
       )}
     </div>
   );

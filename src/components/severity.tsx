@@ -46,7 +46,7 @@ export function SeverityBadge({ severity }: { readonly severity: Severity }) {
   const style = PRESENTATION[severity];
   return (
     <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-sm border px-1.5 py-0.5 text-[11px] font-medium ${style.wash} ${style.text}`}
+      className={`inline-flex shrink-0 items-center gap-1.5 rounded-control border px-2 py-0.5 text-[11px] font-medium ${style.wash} ${style.text}`}
     >
       <span aria-hidden="true">{style.marker}</span>
       {style.label}

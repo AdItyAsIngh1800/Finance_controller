@@ -9,15 +9,16 @@
  * @see docs/DESIGN.md §S-5, §S-6
  */
 
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { AppHeader, Breadcrumb } from '@/components/app-header';
 import { AskPanel } from '@/components/ask-panel';
 import { ExceptionList, type ExceptionView } from '@/components/exception-list';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
 import { formatMinor, toMinor } from '@/core/money';
 import { MATCH_TIERS, type MatchTier, type Severity } from '@/core/taxonomy';
+import { Card, PageShell, SectionHeading } from '@/components/ui';
 import { decodeFromJsonb } from '@/lib/serialize';
-import { createClient } from '@/lib/supabase/server';
+import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** Human-readable name for each tier. */
 const TIER_LABELS: Readonly<Record<MatchTier, string>> = {
@@ -53,7 +54,7 @@ export default async function RunPage({
   readonly params: Promise<{ id: string; runId: string }>;
 }) {
   const { id, runId } = await params;
-  const client = await createClient();
+  const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   const { data: run } = await client
     .from('recon_runs')
@@ -147,106 +148,115 @@ export default async function RunPage({
   const datasetName = (dataset as { name?: string } | null)?.name ?? 'Dataset';
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 py-10">
-      <nav className="text-xs text-ink-muted">
-        <Link href="/datasets" className="hover:text-ink">
-          Datasets
-        </Link>
-        <span className="mx-1.5" aria-hidden="true">/</span>
-        <Link href={`/datasets/${id}`} className="hover:text-ink">
-          {datasetName}
-        </Link>
-        <span className="mx-1.5" aria-hidden="true">/</span>
-        <span className="font-mono">{summary.created_at.slice(0, 16).replace('T', ' ')}</span>
-      </nav>
+    <>
+      <AppHeader email={user?.email} />
+      <PageShell width="wide">
+        <Breadcrumb
+          items={[
+            { label: 'Datasets', href: '/datasets' },
+            { label: datasetName, href: `/datasets/${id}` },
+            { label: summary.created_at.slice(0, 16).replace('T', ' ') },
+          ]}
+        />
 
-      {/* The closing figure, under a double rule — the accounting convention
-          for a final total rather than a subtotal. */}
-      <section className="mt-8 max-w-md">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Match rate
-        </p>
-        <p className="rule-closing pb-2 font-mono text-6xl font-medium tracking-tight">
-          {(summary.match_rate * 100).toFixed(1)}
-          <span className="text-3xl text-ink-muted">%</span>
-        </p>
-        <div className="mt-5">
-          <ReconciliationBar matched={summary.matched_count} total={summary.source_count} />
-        </div>
-        <p className="mt-3 text-xs text-ink-faint">
-          Reconciled in {summary.duration_ms} ms, with no model involved.
-        </p>
-      </section>
+        {/* The closing figure, under a double rule — the accounting convention
+            for a final total rather than a subtotal. */}
+        <Card className="mt-4 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
+          <div>
+            <p className="eyebrow">Match rate</p>
+            <p className="rule-closing pb-2 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
+              {(summary.match_rate * 100).toFixed(1)}
+              <span className="text-2xl text-ink-muted sm:text-3xl">%</span>
+            </p>
+            <div className="mt-5">
+              <ReconciliationBar matched={summary.matched_count} total={summary.source_count} />
+            </div>
+            <p className="mt-3 text-xs text-ink-faint">
+              Reconciled in {summary.duration_ms} ms, with no model involved.
+            </p>
+          </div>
 
-      <div className="mt-12 grid gap-10 md:grid-cols-3">
-        <section>
-          <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Matched by
-          </h2>
-          <dl className="mt-1">
-            {tierCounts.map(({ tier, count }) => (
-              <div key={tier} className="flex justify-between border-b border-rule py-1.5 text-sm">
-                <dt className="text-ink-muted">{TIER_LABELS[tier]}</dt>
-                <dd className="font-mono">{count}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+          {/* The three read-outs that qualify the headline. Side by side with it
+              from `lg`, stacked beneath it below that — a controller should not
+              have to scroll away from the rate to see what produced it. */}
+          <div className="grid gap-x-8 gap-y-7 sm:grid-cols-2 lg:grid-cols-3">
+            <section>
+              <SectionHeading>Matched by</SectionHeading>
+              <dl className="mt-1">
+                {tierCounts.map(({ tier, count }) => (
+                  <Row key={tier} label={TIER_LABELS[tier]} value={count} />
+                ))}
+              </dl>
+            </section>
 
-        <section>
-          <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Exceptions by type
-          </h2>
-          <dl className="mt-1">
-            {typeCounts.length === 0 && (
-              <p className="py-1.5 text-sm text-ink-muted">None.</p>
-            )}
-            {typeCounts.map(([type, count]) => (
-              <div key={type} className="flex justify-between border-b border-rule py-1.5 text-sm">
-                <dt className="font-mono text-xs text-ink-muted">{type}</dt>
-                <dd className="font-mono">{count}</dd>
-              </div>
-            ))}
-          </dl>
-        </section>
+            <section>
+              <SectionHeading>Exceptions by type</SectionHeading>
+              <dl className="mt-1">
+                {typeCounts.length === 0 && (
+                  <p className="py-1.5 text-sm text-ink-muted">None.</p>
+                )}
+                {typeCounts.map(([type, count]) => (
+                  <Row key={type} label={type} value={count} mono />
+                ))}
+              </dl>
+            </section>
 
-        {/* Always visible, never behind a settings panel: a threshold a user
-            cannot see is a magic number they cannot trust. */}
-        <section>
-          <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Thresholds applied
-          </h2>
-          <dl className="mt-1 text-sm">
-            <Threshold label="Date window" value={`±${String(params_.dateWindowDays ?? '—')} days`} />
-            <Threshold
-              label="Amount tolerance"
-              value={`±${(Number(params_.amountToleranceBps ?? 0) / 100).toFixed(2)}%`}
-            />
-            <Threshold
-              label="Reference match"
-              value={`≥ ${String(params_.refSimilarityThreshold ?? '—')}`}
-            />
-            <Threshold
-              label="Combined payments"
-              value={`≤ ${String(params_.maxPartialSetSize ?? '—')} records`}
-            />
-          </dl>
-        </section>
-      </div>
+            {/* Always visible, never behind a settings panel: a threshold a user
+                cannot see is a magic number they cannot trust. */}
+            <section className="sm:col-span-2 lg:col-span-1">
+              <SectionHeading>Thresholds applied</SectionHeading>
+              <dl className="mt-1">
+                <Row label="Date window" value={`±${String(params_.dateWindowDays ?? '—')} days`} />
+                <Row
+                  label="Amount tolerance"
+                  value={`±${(Number(params_.amountToleranceBps ?? 0) / 100).toFixed(2)}%`}
+                />
+                <Row
+                  label="Reference match"
+                  value={`≥ ${String(params_.refSimilarityThreshold ?? '—')}`}
+                />
+                <Row
+                  label="Combined payments"
+                  value={`≤ ${String(params_.maxPartialSetSize ?? '—')} records`}
+                />
+              </dl>
+            </section>
+          </div>
+        </Card>
 
-      <ExceptionList exceptions={exceptions} />
+        <ExceptionList exceptions={exceptions} />
 
-      <AskPanel runId={runId} />
-    </main>
+        <AskPanel runId={runId} />
+      </PageShell>
+    </>
   );
 }
 
-/** One threshold row. */
-function Threshold({ label, value }: { readonly label: string; readonly value: string }) {
+/**
+ * One label-and-figure row.
+ *
+ * The three summary lists — tiers, exception types, thresholds — were three
+ * near-identical row markups before this; they are one shape, so they are one
+ * component.
+ *
+ * @param props.mono - Whether the label itself is a code rather than prose,
+ *   which the taxonomy names are.
+ */
+function Row({
+  label,
+  value,
+  mono = false,
+}: {
+  readonly label: string;
+  readonly value: string | number;
+  readonly mono?: boolean;
+}) {
   return (
-    <div className="flex justify-between border-b border-rule py-1.5">
-      <dt className="text-ink-muted">{label}</dt>
-      <dd className="font-mono text-xs">{value}</dd>
+    <div className="flex items-baseline justify-between gap-3 border-b border-rule py-1.5 text-sm last:border-0">
+      <dt className={`min-w-0 truncate text-ink-muted ${mono ? 'font-mono text-xs' : ''}`}>
+        {label}
+      </dt>
+      <dd className="shrink-0 font-mono text-sm">{value}</dd>
     </div>
   );
 }

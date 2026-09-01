@@ -12,6 +12,7 @@
  */
 
 import Link from 'next/link';
+import { Card, PageShell, SectionHeading } from '@/components/ui';
 import {
   computeScorecards,
   EXTRACTION_RESULTS,
@@ -36,9 +37,11 @@ export default function EvaluationPage() {
   );
 
   return (
-    <main className="mx-auto w-full max-w-4xl px-6 py-12">
-      <h1 className="text-2xl font-semibold tracking-tight">How do you know it&rsquo;s right?</h1>
-      <p className="mt-3 max-w-2xl text-sm leading-relaxed text-ink-muted">
+    <PageShell>
+      <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+        How do you know it&rsquo;s right?
+      </h1>
+      <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
         The data generator plants discrepancies deliberately and records exactly what it planted,
         so the engine&rsquo;s output is scored against a known answer rather than eyeballed. The
         figures below come from actually running the engine, not from a stored number &mdash; the
@@ -47,29 +50,30 @@ export default function EvaluationPage() {
 
       {/* The headline is not the match rate. A tool can score 100% by matching
           everything to anything; what it cannot fake is never mismatching. */}
-      <section className="mt-10 border-y border-rule-strong py-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          False matches
+      <Card className="mt-8 p-5 sm:p-7">
+        <p className="eyebrow">False matches</p>
+        {/* The double rule needs a run of width to read as the accounting
+            convention it is; on a single-digit figure it would otherwise draw
+            only under the glyph and look like a strikethrough. */}
+        <p className="rule-closing w-full max-w-[10rem] pb-1 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
+          {totalFalseMatches}
         </p>
-        <p className="mt-1 font-mono text-6xl font-medium tracking-tight">{totalFalseMatches}</p>
-        <p className="mt-3 max-w-2xl text-sm text-ink-muted">
+        <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
           A record pair the ground truth says should not match, which the engine matched anyway.
           This is the metric that matters most: a false exception costs a reviewer thirty seconds,
           whereas a false match silently hides the discrepancy this tool exists to catch. The two
           errors are not symmetric, and the thresholds do not treat them as such — recall may miss
           5%, this must be zero.
         </p>
-      </section>
+      </Card>
 
       {scorecards.map((card) => (
         <Scorecard key={card.domain} card={card} />
       ))}
 
       <section className="mt-12">
-        <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Document extraction
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm text-ink-muted">
+        <SectionHeading>Document extraction</SectionHeading>
+        <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
           Measured {EXTRACTION_RESULTS.measuredOn} against{' '}
           <span className="font-mono">{EXTRACTION_RESULTS.model}</span>, on statements rendered
           from records whose correct values were already known.
@@ -86,7 +90,7 @@ export default function EvaluationPage() {
             value={EXTRACTION_RESULTS.degradedConfidence.toFixed(2)}
           />
         </dl>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+        <p className="prose-measure mt-4 text-sm leading-relaxed">
           <span className="font-medium">The second column is the one that matters.</span> On a
           deliberately degraded scan the model read every figure wrong — and reported{' '}
           {EXTRACTION_RESULTS.degradedConfidence.toFixed(2)} confidence, below the{' '}
@@ -98,10 +102,8 @@ export default function EvaluationPage() {
       </section>
 
       <section className="mt-12">
-        <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Answer grounding
-        </h2>
-        <p className="mt-3 max-w-2xl text-sm text-ink-muted">
+        <SectionHeading>Answer grounding</SectionHeading>
+        <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
           Measured {GROUNDING_RESULTS.measuredOn}. {GROUNDING_RESULTS.questionsAsked} adversarial
           questions — some the data supports, some it cannot, two phrased to bait arithmetic or a
           forecast.
@@ -110,7 +112,7 @@ export default function EvaluationPage() {
           <Figure label="Ungrounded figures" value={String(GROUNDING_RESULTS.ungroundedFigures)} />
           <Figure label="Unanswerable questions declined" value={GROUNDING_RESULTS.refusalsCorrect} />
         </dl>
-        <p className="mt-4 max-w-2xl text-sm leading-relaxed">
+        <p className="prose-measure mt-4 text-sm leading-relaxed">
           Every monetary amount quoted in an answer is checked against a transcript of what the
           lookup functions actually returned. A figure the model produced but no function supplied
           is caught however plausible it reads — which is the only way to catch a failure whose
@@ -119,19 +121,20 @@ export default function EvaluationPage() {
       </section>
 
       <section className="mt-12">
-        <h2 className="border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          What this does not establish
-        </h2>
-        <ul className="mt-4 max-w-2xl space-y-3">
+        <SectionHeading>What this does not establish</SectionHeading>
+        <ul className="prose-measure mt-4 space-y-3">
           {KNOWN_LIMITATIONS.map((limitation) => (
-            <li key={limitation} className="border-l-2 border-rule pl-3 text-sm leading-relaxed">
+            <li
+              key={limitation}
+              className="border-l-2 border-rule-strong pl-3 text-sm leading-relaxed"
+            >
               {limitation}
             </li>
           ))}
         </ul>
       </section>
 
-      <p className="mt-12 border-t border-rule pt-4 text-xs text-ink-muted">
+      <p className="mt-12 border-t border-rule pt-4 text-xs leading-relaxed text-ink-muted">
         Reproduce these figures with <span className="font-mono">npm run scorecard</span>,{' '}
         <span className="font-mono">npm run extraction:report</span>, and{' '}
         <span className="font-mono">npm run grounding:report</span>.{' '}
@@ -139,7 +142,7 @@ export default function EvaluationPage() {
           Back to the app
         </Link>
       </p>
-    </main>
+    </PageShell>
   );
 }
 
@@ -149,40 +152,51 @@ function Scorecard({ card }: { readonly card: DomainScorecard }) {
 
   return (
     <section className="mt-12">
-      <h2 className="flex items-baseline justify-between border-b border-rule-strong pb-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-        <span>{card.domain} domain</span>
-        <span className="font-mono normal-case tracking-normal">
-          {((card.matchedCount / card.sourceCount) * 100).toFixed(1)}% matched ·{' '}
-          {card.durationMs.toFixed(0)} ms
-        </span>
-      </h2>
+      <SectionHeading
+        trailing={
+          <span className="font-mono text-xs text-ink-muted">
+            {((card.matchedCount / card.sourceCount) * 100).toFixed(1)}% matched ·{' '}
+            {card.durationMs.toFixed(0)} ms
+          </span>
+        }
+      >
+        {card.domain} domain
+      </SectionHeading>
 
-      <div className="overflow-x-auto">
-        <table className="mt-2 w-full min-w-[34rem] text-sm">
-          <thead>
-            <tr className="text-[11px] uppercase tracking-wider text-ink-muted">
-              <th scope="col" className="py-1.5 text-left font-medium">
-                Exception type
-              </th>
-              <th scope="col" className="py-1.5 text-right font-medium">Planted</th>
-              <th scope="col" className="py-1.5 text-right font-medium">Reported</th>
-              <th scope="col" className="py-1.5 text-right font-medium">Precision</th>
-              <th scope="col" className="py-1.5 text-right font-medium">Recall</th>
-            </tr>
-          </thead>
-          <tbody>
-            {scored.map((row) => (
-              <tr key={row.type} className="border-t border-rule">
-                <td className="py-1.5 font-mono text-xs">{row.type}</td>
-                <td className="py-1.5 text-right font-mono">{row.planted}</td>
-                <td className="py-1.5 text-right font-mono">{row.reported}</td>
-                <td className="py-1.5 text-right font-mono">{row.precision.toFixed(2)}</td>
-                <td className="py-1.5 text-right font-mono">{row.recall.toFixed(2)}</td>
+      {/* A precision/recall table has five numeric columns that mean nothing
+          apart from each other, so it scrolls within its card below the width
+          they fit in rather than reflowing into stacked pairs. */}
+      <Card className="mt-3 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[34rem] text-sm">
+            <thead>
+              <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
+                <th scope="col" className="px-4 py-2 text-left font-medium">
+                  Exception type
+                </th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Planted</th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Reported</th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Precision</th>
+                <th scope="col" className="px-4 py-2 text-right font-medium">Recall</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {scored.map((row) => (
+                <tr
+                  key={row.type}
+                  className="border-b border-rule transition-colors duration-150 ease-ui last:border-0 hover:bg-paper-sunk/50"
+                >
+                  <td className="px-4 py-2 font-mono text-xs">{row.type}</td>
+                  <td className="px-4 py-2 text-right font-mono">{row.planted}</td>
+                  <td className="px-4 py-2 text-right font-mono">{row.reported}</td>
+                  <td className="px-4 py-2 text-right font-mono">{row.precision.toFixed(2)}</td>
+                  <td className="px-4 py-2 text-right font-mono">{row.recall.toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       <p className="mt-3 text-xs text-ink-muted">
         Matched by:{' '}

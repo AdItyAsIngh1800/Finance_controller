@@ -15,6 +15,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button, Card, Notice } from './ui';
 
 /** One extracted value with the model's confidence in it. */
 export interface ReviewField {
@@ -97,125 +98,126 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
 
   if (item.status === 'failed') {
     return (
-      <article className="border border-rule bg-paper p-5">
+      <Card className="p-5">
         <h3 className="text-sm font-semibold text-unaccounted">Could not read this document</h3>
-        <p className="mt-1 text-sm text-ink-muted">{item.error ?? 'The model returned no result.'}</p>
+        <p className="mt-1 text-sm text-ink-muted">
+          {item.error ?? 'The model returned no result.'}
+        </p>
         {/* Stated explicitly: the most useful thing a reader can know after a
             failure is that nothing was silently written. */}
-        <p className="mt-3 text-sm">Your ledger was not modified.</p>
-        <button
-          type="button"
+        <p className="mt-3 text-sm font-medium">Your ledger was not modified.</p>
+        <Button
+          size="sm"
           onClick={() => void discard()}
           disabled={discarding}
-          className="mt-4 rounded-sm border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk disabled:opacity-50"
+          className="mt-4"
         >
           {discarding ? 'Discarding…' : 'Discard this document'}
-        </button>
+        </Button>
         {error !== null && (
-          <p role="alert" className="mt-3 text-sm text-unaccounted">
+          <Notice tone="error" className="mt-3">
             {error}
-          </p>
+          </Notice>
         )}
-      </article>
+      </Card>
     );
   }
 
   return (
-    <article className="grid gap-6 border border-rule bg-paper p-5 lg:grid-cols-2">
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Document
-        </h3>
-        <div className="mt-2 border border-rule bg-paper-sunk">
-          {item.documentUrl === null ? (
-            <p className="p-6 text-sm text-ink-muted">Preview unavailable.</p>
-          ) : item.mimeType === 'application/pdf' ? (
-            <iframe
-              src={item.documentUrl}
-              title="Uploaded document"
-              className="h-[30rem] w-full"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element -- signed URL from storage, not a static asset
-            <img src={item.documentUrl} alt="Uploaded document" className="w-full" />
+    <Card className="overflow-hidden">
+      <div className="grid gap-6 p-5 lg:grid-cols-2 lg:gap-8">
+        <div>
+          <h3 className="eyebrow">Document</h3>
+          <div className="mt-2 overflow-hidden rounded-control border border-rule bg-paper-sunk">
+            {item.documentUrl === null ? (
+              <p className="p-6 text-sm text-ink-muted">Preview unavailable.</p>
+            ) : item.mimeType === 'application/pdf' ? (
+              <iframe
+                src={item.documentUrl}
+                title="Uploaded document"
+                className="h-[22rem] w-full sm:h-[30rem]"
+              />
+            ) : (
+              // eslint-disable-next-line @next/next/no-img-element -- signed URL from storage, not a static asset
+              <img src={item.documentUrl} alt="Uploaded document" className="w-full" />
+            )}
+          </div>
+        </div>
+
+        <div className="min-w-0">
+          <h3 className="eyebrow">Extracted fields</h3>
+
+          <div className="mt-2 divide-y divide-rule">
+            {item.fields.map((field) => {
+              const flagged = field.confidence < item.threshold;
+              const percent = Math.round(field.confidence * 100);
+              return (
+                <label
+                  key={field.name}
+                  className="grid grid-cols-[5rem_minmax(0,1fr)] items-center gap-x-3 gap-y-2 py-2.5 sm:grid-cols-[5rem_minmax(0,1fr)_5.5rem]"
+                >
+                  <span className="text-sm text-ink-muted">{field.label}</span>
+                  <input
+                    value={values[field.name] ?? ''}
+                    onChange={(event) =>
+                      setValues((current) => ({ ...current, [field.name]: event.target.value }))
+                    }
+                    className={`min-w-0 rounded-control border px-2.5 py-1.5 font-mono text-sm transition-[border-color] duration-150 ease-ui ${
+                      flagged
+                        ? 'border-undecided bg-undecided-wash'
+                        : 'border-rule bg-paper-raised hover:border-rule-strong'
+                    }`}
+                  />
+                  {/* Confidence as a bar for scanning and a number for judgement —
+                      each does one job. The pair sits under the input on a phone,
+                      where a third column would squeeze the value itself. */}
+                  <span className="col-start-2 flex items-center gap-2 sm:col-start-3">
+                    <span className="h-1 flex-1 overflow-hidden rounded-full bg-paper-sunk">
+                      <span
+                        className={`block h-full rounded-full ${flagged ? 'bg-undecided' : 'bg-settled'}`}
+                        style={{ width: `${percent}%` }}
+                      />
+                    </span>
+                    <span className="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums text-ink-muted">
+                      {percent}%
+                    </span>
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+
+          {belowThreshold.length > 0 && (
+            <Notice tone="warning" className="mt-4">
+              {belowThreshold.length} field{belowThreshold.length === 1 ? '' : 's'} below{' '}
+              {Math.round(item.threshold * 100)}% confidence. This record is blocked from the
+              ledger until you confirm it.
+            </Notice>
           )}
+
+          {error !== null && (
+            <Notice tone="error" className="mt-3">
+              {error}
+            </Notice>
+          )}
+
+          <div className="mt-5 flex flex-wrap items-center gap-3">
+            <Button
+              variant="primary"
+              onClick={() => void confirm()}
+              disabled={saving || discarding}
+            >
+              {saving ? 'Saving…' : 'Confirm and add to ledger'}
+            </Button>
+            <Button onClick={() => void discard()} disabled={saving || discarding}>
+              {discarding ? 'Discarding…' : 'Discard'}
+            </Button>
+            {item.modelId !== null && (
+              <span className="font-mono text-[11px] text-ink-faint">read by {item.modelId}</span>
+            )}
+          </div>
         </div>
       </div>
-
-      <div>
-        <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-muted">
-          Extracted fields
-        </h3>
-
-        <div className="mt-2 divide-y divide-rule">
-          {item.fields.map((field) => {
-            const flagged = field.confidence < item.threshold;
-            return (
-              <label key={field.name} className="flex items-center gap-3 py-2">
-                <span className="w-24 shrink-0 text-sm text-ink-muted">{field.label}</span>
-                <input
-                  value={values[field.name] ?? ''}
-                  onChange={(event) =>
-                    setValues((current) => ({ ...current, [field.name]: event.target.value }))
-                  }
-                  className={`min-w-0 flex-1 rounded-sm border px-2 py-1 font-mono text-sm ${
-                    flagged ? 'border-undecided bg-undecided-wash' : 'border-rule bg-paper'
-                  }`}
-                />
-                {/* Confidence as a bar for scanning and a number for judgement —
-                    each does one job. */}
-                <span className="flex w-20 shrink-0 items-center gap-1.5">
-                  <span className="h-1 flex-1 overflow-hidden rounded-full bg-paper-sunk">
-                    <span
-                      className={`block h-full ${flagged ? 'bg-undecided' : 'bg-settled'}`}
-                      style={{ width: `${Math.round(field.confidence * 100)}%` }}
-                    />
-                  </span>
-                  <span className="font-mono text-[11px] tabular-nums text-ink-muted">
-                    {Math.round(field.confidence * 100)}%
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
-
-        {belowThreshold.length > 0 && (
-          <p className="mt-4 border-l-2 border-undecided bg-undecided-wash px-3 py-2 text-sm">
-            {belowThreshold.length} field{belowThreshold.length === 1 ? '' : 's'} below{' '}
-            {Math.round(item.threshold * 100)}% confidence. This record is blocked from the ledger
-            until you confirm it.
-          </p>
-        )}
-
-        {error !== null && (
-          <p role="alert" className="mt-3 border-l-2 border-unaccounted bg-unaccounted-wash px-3 py-2 text-sm text-unaccounted">
-            {error}
-          </p>
-        )}
-
-        <div className="mt-5 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => void confirm()}
-            disabled={saving || discarding}
-            className="rounded-sm bg-ink px-4 py-1.5 text-sm font-medium text-paper transition hover:opacity-90 disabled:opacity-40"
-          >
-            {saving ? 'Saving…' : 'Confirm and add to ledger'}
-          </button>
-          <button
-            type="button"
-            onClick={() => void discard()}
-            disabled={saving || discarding}
-            className="rounded-sm border border-rule px-3 py-1.5 text-sm transition hover:bg-paper-sunk disabled:opacity-40"
-          >
-            {discarding ? 'Discarding…' : 'Discard'}
-          </button>
-          {item.modelId !== null && (
-            <span className="font-mono text-[11px] text-ink-faint">read by {item.modelId}</span>
-          )}
-        </div>
-      </div>
-    </article>
+    </Card>
   );
 }
