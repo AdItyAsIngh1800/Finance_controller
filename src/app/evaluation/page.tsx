@@ -12,6 +12,7 @@
  */
 
 import Link from 'next/link';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Card, PageShell, SectionHeading } from '@/components/ui';
 import {
   computeScorecards,
@@ -38,9 +39,13 @@ export default function EvaluationPage() {
 
   return (
     <PageShell>
-      <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
-        How do you know it&rsquo;s right?
-      </h1>
+      <div className="flex items-start justify-between gap-4">
+        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+          How do you know it&rsquo;s right?
+        </h1>
+        {/* Reachable without signing in, like the rest of this page. */}
+        <ThemeToggle />
+      </div>
       <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
         The data generator plants discrepancies deliberately and records exactly what it planted,
         so the engine&rsquo;s output is scored against a known answer rather than eyeballed. The

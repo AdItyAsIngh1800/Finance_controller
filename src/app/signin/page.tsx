@@ -16,6 +16,7 @@
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { Button, Card, Field, Notice } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 
@@ -150,7 +151,7 @@ function SignInForm() {
 
         <div className="my-5 flex items-center gap-3" aria-hidden="true">
           <span className="h-px flex-1 bg-rule" />
-          <span className="text-[11px] uppercase tracking-wider text-ink-faint">or</span>
+          <span className="text-[11px] uppercase tracking-wider text-ink-muted">or</span>
           <span className="h-px flex-1 bg-rule" />
         </div>
 
@@ -234,7 +235,12 @@ function SignInForm() {
 
 export default function SignInPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 sm:py-12">
+      {/* No app bar on this screen, so the theme control gets the corner —
+          a viewer should not have to sign in to change how the page looks. */}
+      <div className="absolute right-3 top-3">
+        <ThemeToggle />
+      </div>
       {/* useSearchParams needs a Suspense boundary during prerendering. */}
       <Suspense fallback={null}>
         <SignInForm />

@@ -15,6 +15,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { ThemeToggle } from './theme-toggle';
 
 /** One step in a {@link Breadcrumb}. */
 export interface Crumb {
@@ -74,6 +75,8 @@ export function AppHeader({ email }: { readonly email?: string | null }) {
             </span>
           </>
         )}
+
+        <ThemeToggle />
 
         <form action="/auth/signout" method="post" className="shrink-0">
           <button

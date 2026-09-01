@@ -9,9 +9,22 @@
  * general "attention". Severity always pairs colour with a text label, so the
  * encoding never depends on colour alone.
  *
- * Deliberately a single light theme — see docs/DESIGN.md §7.
+ * Two themes. The light one is the original and still the default; the dark one
+ * was added on 1 September 2026 (docs/DESIGN.md §7.1). Both obey the same rule
+ * above — only the values move, never the meanings.
+ *
+ * The dark values live in exactly one place, `[data-theme="dark"]` below, and a
+ * blocking script in the document head resolves the viewer's preference to that
+ * attribute before first paint. The alternative — repeating every value inside a
+ * `prefers-color-scheme` media query as well — would be pure CSS, but it would
+ * also be thirty-odd colours maintained in two places, which is precisely the
+ * drift this token layer exists to prevent. The cost is that with JavaScript
+ * disabled the interface stays light; that costs nothing here, because the app
+ * is unusable without JavaScript anyway (auth, upload and every control need it).
  */
 :root {
+  color-scheme: light;
+
   /* Surfaces: a paper white with a trace of warmth, as ledger stock has.
      `--paper-raised` is the card plane, lifted a shade above the page ground so
      panels read as objects on a desk rather than as outlined regions. */
@@ -21,6 +34,11 @@
   --paper-sunk: #f4f4f0;
   --ink: #16171a;
   --ink-muted: #6b6c70;
+  /* `--ink-faint` is for decorative marks only — disclosure arrows, breadcrumb
+     separators, the ⚙ before a call trace — every one of which is aria-hidden.
+     It is deliberately below the 4.5:1 text floor, and the palette has no room
+     to raise it: a value that clears the floor on the sunk plane is
+     indistinguishable from `--ink-muted`. Readable text takes `--ink-muted`. */
   --ink-faint: #9a9b9e;
 
   /* Hairlines. Two weights: a rule between rows, a heavier one between blocks. */
@@ -31,8 +49,12 @@
   --unaccounted: #a32a22;
   --unaccounted-wash: #fbf1f0;
 
-  /* Awaiting a human decision. */
-  --undecided: #8a6d1f;
+  /* Awaiting a human decision.
+     Darkened from #8a6d1f on 1 Sep 2026: that value landed on exactly 4.50:1
+     against its own wash, so sub-pixel rounding put the Medium badge under the
+     AA floor about as often as over it. #7d6219 clears it at 5.31:1 and is
+     visually indistinguishable. */
+  --undecided: #7d6219;
   --undecided-wash: #faf5e8;
 
   /* Explained — the money is accounted for, it simply moved differently. */
@@ -53,6 +75,58 @@
   --lift-sm: 0 1px 2px rgb(22 23 26 / 0.04), 0 1px 1px rgb(22 23 26 / 0.03);
   --lift-md: 0 1px 2px rgb(22 23 26 / 0.04), 0 4px 12px -2px rgb(22 23 26 / 0.06);
   --lift-lg: 0 2px 4px rgb(22 23 26 / 0.04), 0 12px 28px -6px rgb(22 23 26 / 0.10);
+}
+
+/*
+ * Dark.
+ *
+ * Not an inversion. Three things are re-derived rather than flipped:
+ *
+ * 1. The ground is the *darkest* plane and cards lift above it, preserving the
+ *    light theme's "panels are objects on a desk" relationship. A naive inversion
+ *    would sink the cards below the page and read as holes.
+ * 2. Ink is #ecedeb, not white. Pure white on near-black haloes at the small
+ *    sizes this interface uses for figures.
+ * 3. The four semantic colours are re-picked, not lightened arithmetically. Each
+ *    is chosen to clear 4.5:1 against the raised card *and* against its own wash,
+ *    since severity badges put the colour on the wash rather than on the card.
+ *
+ * Measured against the card plane: ink 14.3:1, ink-muted 6.8:1, unaccounted
+ * 6.7:1, undecided 8.9:1, settled 8.4:1. Hairlines sit at 1.5:1 and 2.2:1,
+ * proportionate to the 1.3:1 and 1.7:1 they hold in the light theme — a rule is
+ * meant to be felt rather than read.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --page: #131417;
+  --paper: #191a1e;
+  --paper-raised: #1c1d21;
+  --paper-sunk: #17181b;
+  --ink: #ecedeb;
+  --ink-muted: #a3a4a9;
+  --ink-faint: #787980;
+
+  --rule: #3a3b41;
+  --rule-strong: #52535a;
+
+  --unaccounted: #f0857a;
+  --unaccounted-wash: #2b1a18;
+
+  --undecided: #dcb85c;
+  --undecided-wash: #2a2418;
+
+  --explained: #a3a4a9;
+  --explained-wash: #232429;
+
+  --settled: #74c98a;
+  --settled-wash: #182619;
+
+  /* Shadows carry almost nothing on a dark ground, so they go deeper and the
+     card border does correspondingly more of the separating. */
+  --lift-sm: 0 1px 2px rgb(0 0 0 / 0.40);
+  --lift-md: 0 1px 2px rgb(0 0 0 / 0.40), 0 4px 12px -2px rgb(0 0 0 / 0.45);
+  --lift-lg: 0 2px 4px rgb(0 0 0 / 0.40), 0 12px 28px -6px rgb(0 0 0 / 0.55);
 }
 
 @theme inline {
@@ -162,6 +236,12 @@ body {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 12px 12px;
+}
+
+/* The chevron's stroke is baked into the data URI, so the dark theme needs its
+   own copy rather than a colour override. */
+:root[data-theme='dark'] .select-chevron {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23a3a4a9' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {

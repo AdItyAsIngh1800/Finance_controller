@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 /**
@@ -12,7 +13,10 @@ import './globals.css';
  * aligned digits are how a finance user scans a reconciliation table for
  * anomalies, so the monospace face is load-bearing rather than decorative.
  *
- * @see docs/DESIGN.md §2 — visual language
+ * Also carries the theme-resolution script, which must execute before the first
+ * paint rather than in a React effect.
+ *
+ * @see docs/DESIGN.md §2 — visual language, §7.1 — dark theme
  */
 
 const plexSans = IBM_Plex_Sans({
@@ -47,10 +51,26 @@ interface RootLayoutProps {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
+    // `suppressHydrationWarning` is required and is scoped to this one element:
+    // the init script sets `data-theme` on <html> before React hydrates, so the
+    // server markup (no attribute) and the client DOM (attribute present)
+    // legitimately differ. Suppressing it here does not affect any child.
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
     >
+      <head>
+        {/*
+          Resolves the theme before first paint.
+
+          It must run synchronously in <head>, ahead of any markup, or the
+          browser paints the light palette and then repaints — the flash of
+          wrong theme. Next.js does not defer or reorder a plain inline script
+          placed here.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
