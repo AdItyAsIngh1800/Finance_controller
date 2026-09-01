@@ -283,7 +283,6 @@ Specified once; every screen implements them.
 
 | Excluded | Why |
 |---|---|
-| Dark mode | Zero grading value; non-trivial cost across dense tables |
 | Charts and graphs | The interesting data is tabular. A pie chart of exception types is decoration, not insight. |
 | Onboarding tour | The demo is guided; a tour would be built for nobody |
 | Exception assign/comment/close | Real product need, no grading value in one week (`DATA_MODEL.md` §7) |
@@ -296,5 +295,26 @@ Two exclusions above were lifted deliberately, not drifted past.
 |---|---|---|
 | **Mobile layout** — "reconciliation is desktop work" | Responsive from 320px | The claim was about where the *work* happens, and it still holds: nobody clears an exception queue on a phone. But checking a match rate or reading an explanation on the way to a meeting is ordinary, and a layout that breaks at that moment reads as unfinished regardless of how good the desktop view is. Density at desktop width is unchanged — the reflow only engages below `md`. |
 | **Animated transitions** — "density and speed over polish" | 150ms hover/focus transitions | The concern was animation delaying a reading, and that is still enforced: nothing animates on load, nothing defers content, and `prefers-reduced-motion` drops every duration to near-zero. What was added is pointer feedback on controls, which makes the interface feel responsive rather than slower. |
+| **Dark mode** — "non-trivial cost across dense tables" | Full dark theme | The cost was real but it was a cost of *duplicating* colours, and the token layer added on the same day removes it: every screen already reads its colour through a variable, so a second theme is one block of values rather than a second stylesheet. The dense-table concern was addressed by re-deriving the palette rather than inverting it — see §7.2. |
 
 Density itself was **not** reversed. §1's "dense, not decorated" still governs: rows stay compact, whitespace was regularised into a scale rather than enlarged.
+
+### 7.2 The dark theme
+
+**Preference model.** Three states. `system` follows `prefers-color-scheme` and is the default; `light` and `dark` pin the choice. A two-state toggle was rejected because once clicked it can never return to following the OS — a viewer who flips it to look at something has silently opted out of their machine's evening switch, with no way back. The stored value is the *preference*, never the resolved theme, so someone who chose `system` in daylight still gets dark at night. `system` is stored as the absence of a key, so "never touched the control" and "explicitly chose to follow the OS" are the same state.
+
+**No flash.** A small script in `<head>` resolves the preference to a `data-theme` attribute on `<html>` before first paint. Resolving it in a React effect instead would paint light and then repaint, which is what makes a dark mode feel broken. The `<html>` element carries `suppressHydrationWarning` for exactly this reason — server markup has no attribute, the hydrated DOM does — and the suppression is scoped to that one element.
+
+**One source of values.** The dark palette exists only under `[data-theme="dark"]`, not additionally inside a `prefers-color-scheme` media query. Duplicating it would be pure CSS but would put thirty-odd colours in two places. The trade-off: with JavaScript disabled the interface stays light, which costs nothing because auth, upload and every control already require JavaScript.
+
+**Re-derived, not inverted.** Three things are chosen rather than flipped:
+
+- The ground is the darkest plane and cards lift *above* it, preserving the light theme's "panels are objects on a desk" relationship. Inverting would sink cards below the page and read as holes.
+- Ink is `#ecedeb`, not white — pure white haloes at the small sizes used for figures.
+- The four semantic colours are re-picked to clear 4.5:1 against the card **and** against their own wash, because a severity badge puts the colour on the wash.
+
+**Measured.** Against the card plane: ink 14.3:1, ink-muted 6.8:1, unaccounted 6.7:1, undecided 8.9:1, settled 8.4:1. Hairlines sit at 1.5:1 and 2.2:1, proportionate to the 1.3:1 and 1.7:1 they hold in light — a rule is meant to be felt, not read.
+
+**`--ink-faint` is not a text colour.** It is for decorative marks only — disclosure arrows, breadcrumb separators, the ⚙ before a call trace — every one of which is `aria-hidden`. It sits deliberately below the 4.5:1 floor, and the palette has no room to raise it: a value clearing the floor on the sunk plane is indistinguishable from `--ink-muted`. Readable text takes `--ink-muted`.
+
+**Verified** with axe-core 4.12.1 (`wcag2a,wcag2aa`): zero violations on every route in both themes.
