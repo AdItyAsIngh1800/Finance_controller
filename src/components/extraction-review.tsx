@@ -213,7 +213,7 @@ export function ExtractionReview({ item }: { readonly item: ReviewItem }) {
               {discarding ? 'Discarding…' : 'Discard'}
             </Button>
             {item.modelId !== null && (
-              <span className="font-mono text-[11px] text-ink-faint">read by {item.modelId}</span>
+              <span className="font-mono text-[11px] text-ink-muted">read by {item.modelId}</span>
             )}
           </div>
         </div>

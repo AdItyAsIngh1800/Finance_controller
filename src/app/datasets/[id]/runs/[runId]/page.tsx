@@ -171,7 +171,7 @@ export default async function RunPage({
             <div className="mt-5">
               <ReconciliationBar matched={summary.matched_count} total={summary.source_count} />
             </div>
-            <p className="mt-3 text-xs text-ink-faint">
+            <p className="mt-3 text-xs text-ink-muted">
               Reconciled in {summary.duration_ms} ms, with no model involved.
             </p>
           </div>

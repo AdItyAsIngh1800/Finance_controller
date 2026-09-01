@@ -284,7 +284,7 @@ function Meta({
 }) {
   return (
     <div>
-      <dt className="text-[11px] uppercase tracking-wider text-ink-faint">{label}</dt>
+      <dt className="text-[11px] uppercase tracking-wider text-ink-muted">{label}</dt>
       <dd className={`mt-0.5 text-ink ${mono ? 'font-mono' : ''}`}>{children}</dd>
     </div>
   );

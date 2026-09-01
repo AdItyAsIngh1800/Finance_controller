@@ -196,7 +196,7 @@ export function Field({
     <label className={`block ${className}`}>
       <span className="mb-1.5 block text-xs font-medium text-ink-muted">{label}</span>
       <input className={FIELD_BASE} {...rest} />
-      {hint !== undefined && <span className="mt-1 block text-xs text-ink-faint">{hint}</span>}
+      {hint !== undefined && <span className="mt-1 block text-xs text-ink-muted">{hint}</span>}
     </label>
   );
 }
