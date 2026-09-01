@@ -166,7 +166,7 @@ Every requirement below is written to be independently verifiable. `VERIFICATION
 | NFR-5.2 | Monetary values display with currency symbol and consistent precision | P0 |
 | NFR-5.3 | Interactive controls are keyboard reachable with visible focus | P1 |
 | NFR-5.4 | Colour is never the sole carrier of meaning (severity also uses label/icon) | P1 |
-| NFR-5.5 | Usable at 1280px width and above | P1 |
+| NFR-5.5 | Usable from 320px width up; the page body never scrolls horizontally, and tables whose columns are only meaningful together scroll within their own container (see `DESIGN.md` §6, §7.1) | P1 |
 
 ### NFR-6 — Maintainability
 

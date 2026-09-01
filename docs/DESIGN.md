@@ -1,6 +1,6 @@
 # Design — AI Finance Controller
 
-**Last updated:** 29 August 2026
+**Last updated:** 1 September 2026
 **Purpose:** Screen inventory, flows, and interaction states, specified before Day 4 so the UI is built rather than improvised.
 
 ---
@@ -23,13 +23,17 @@
 
 | Element | Decision |
 |---|---|
-| Type | System sans for UI; **tabular-figure monospace for all monetary and reference values** |
+| Type | IBM Plex Sans for UI; **IBM Plex Mono, tabular figures, for all monetary and reference values** |
+| Surfaces | Three planes: page ground, raised card, sunk well. Cards carry a hairline border plus a barely-there shadow — the border does the structural work, the shadow only separates the plane |
+| Radii | Two tokens only — `--radius-control` for buttons, inputs and badges, `--radius-card` for panels |
+| Motion | 150ms `--ease-ui` on hover and focus transitions; 1px press translation. Never gates reading a figure on an animation |
 | Density | Compact rows (~36px), sortable headers, sticky table headers |
 | Severity | Colour **plus** a text label and icon — never colour alone (`NFR-5.4`) |
 | Confidence | Inline bar/percentage on the field; sub-threshold values additionally outlined and labelled |
 | Numbers | Right-aligned, consistent 2-decimal display, ₹ prefix, thousands separators |
 | Negatives | Parenthesised — `(₹412.00)` — the accounting convention, not a minus sign |
 | Empty states | Explain what the screen will show and the single action that fills it |
+| Chrome | One sticky header on every signed-in screen: mark, wordmark, nav, signed-in address, sign-out. Breadcrumbs are an ordered list in a labelled `<nav>` |
 
 **Severity encoding** (from the frozen taxonomy in `DATA_MODEL.md` §3.4):
 
@@ -270,7 +274,8 @@ Specified once; every screen implements them.
 - Tables use real `<table>` semantics with scoped headers, not styled `<div>`s.
 - Confidence conveyed numerically as well as visually.
 - Expandable rows use proper `aria-expanded` disclosure semantics.
-- Target 1280px and above; below that, tables scroll horizontally within their container rather than reflowing into unreadable stacks.
+- **Responsive from 320px up.** Verified free of horizontal page overflow at 320, 360, 390, 414, 768, 1024, 1280 and 1440px.
+- Where a table's columns mean something only next to each other — precision/recall, the exception evidence comparison — it scrolls inside its own container rather than reflowing, and the page body never scrolls sideways. Where rows are independent records, as in the dataset list, each row is restated as a card below `md`.
 
 ---
 
@@ -280,7 +285,16 @@ Specified once; every screen implements them.
 |---|---|
 | Dark mode | Zero grading value; non-trivial cost across dense tables |
 | Charts and graphs | The interesting data is tabular. A pie chart of exception types is decoration, not insight. |
-| Mobile layout | Reconciliation is desktop work |
 | Onboarding tour | The demo is guided; a tour would be built for nobody |
-| Animated transitions | Density and speed over polish |
 | Exception assign/comment/close | Real product need, no grading value in one week (`DATA_MODEL.md` §7) |
+
+### 7.1 Reversed on 1 September 2026
+
+Two exclusions above were lifted deliberately, not drifted past.
+
+| Previously excluded | Now | Reasoning |
+|---|---|---|
+| **Mobile layout** — "reconciliation is desktop work" | Responsive from 320px | The claim was about where the *work* happens, and it still holds: nobody clears an exception queue on a phone. But checking a match rate or reading an explanation on the way to a meeting is ordinary, and a layout that breaks at that moment reads as unfinished regardless of how good the desktop view is. Density at desktop width is unchanged — the reflow only engages below `md`. |
+| **Animated transitions** — "density and speed over polish" | 150ms hover/focus transitions | The concern was animation delaying a reading, and that is still enforced: nothing animates on load, nothing defers content, and `prefers-reduced-motion` drops every duration to near-zero. What was added is pointer feedback on controls, which makes the interface feel responsive rather than slower. |
+
+Density itself was **not** reversed. §1's "dense, not decorated" still governs: rows stay compact, whitespace was regularised into a scale rather than enlarged.
