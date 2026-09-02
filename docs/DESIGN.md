@@ -60,6 +60,9 @@ That low/high split is the queue's most useful property: a timing difference and
 | S-6 | Exception queue | same, primary panel | Filterable, expandable findings | P0 |
 | S-7 | Ask (Q&A) | side panel on S-5/S-6 | Grounded agent + call trace | P0 |
 | S-8 | Evaluation | `/evaluation` | Accuracy vs ground truth | P0 |
+| S-9 | Reconciliations | `/reconciliations` | Every run, across datasets | P1 |
+| S-10 | Exceptions | `/exceptions` | Every finding, across runs | P1 |
+| S-11 | Settings | `/settings` | Account, and the published thresholds | P1 |
 
 ---
 
@@ -311,6 +314,19 @@ The exception queue gained a **CSV export** of the currently filtered rows in th
 
 An expanded finding is now addressable as `?exception=<id>`, resolved server-side so the row is open in the first paint. A finding that cannot be linked cannot be handed to the person who has to act on it.
 
+
+### 7.1.2 Reversed on 3 September 2026
+
+A second, larger pass, taken on external design review. Four exclusions lifted, each for a stated reason rather than by drift.
+
+| Previously excluded | Now | Reasoning |
+|---|---|---|
+| **Ledger paper palette** — warm stock, red for money unaccounted for | Charcoal-navy ground, amber/blue/teal semantics, no red anywhere | The argument against red: an exception here is a normal part of the workflow rather than a fault, and a queue of red rows reads as a system in trouble instead of a day's work. What was **not** accepted was collapsing every exception to one amber — that would destroy the high/low split §1 calls the queue's most useful property. The three-way encoding is kept and re-hued: amber flagged, blue awaiting a decision, grey explained, teal settled, which is also the dashboard's status vocabulary. Every pair was measured before adoption; the light theme is derived from the dark hues rather than the reverse. |
+| **IBM Plex Sans + Plex Mono** | Space Grotesk + Inter, two faces total | The load-bearing property was never the monospace face but column-aligned digits, and Inter ships true tabular figures. `--font-mono` now resolves to Inter, so figures still align and codes no longer look typewritten — the accepted cost of a two-face system. |
+| **Charts and graphs** — "the interesting data is tabular" | Three charts on the run dashboard | Two constraints kept from the original argument. **No pie**: the exception breakdown is a ranking, so it is a horizontal bar chart, where lengths are compared instead of angles. **Nothing plotted that is not measured**: the trend chart plots one point per actual run, not a synthetic calendar, and a dataset run once says so rather than inventing thirty days of history. The confidence histogram is the one chart that argues something the tables cannot — a model with flat confidence could not be gated, however accurate. |
+| **Exception assign/comment/close** — "no grading value in one week" | A three-state `status` on each exception | Only the state, not the workflow: no assignee, no comment thread, no audit trail. Severity stays the engine's and is never edited; status is the one field a person may change, and it is a separate column so the run's own output remains reproducible. Runs stay append-only — status is an annotation on a frozen result. |
+
+The signed-in surface moved from a top bar to a **sidebar** (S-9 to S-11) at the same time, and the run dashboard gained four summary cards including the reconciled *value*, which no screen previously showed.
 ### 7.2 The dark theme
 
 **Preference model.** Three states. `system` follows `prefers-color-scheme` and is the default; `light` and `dark` pin the choice. A two-state toggle was rejected because once clicked it can never return to following the OS — a viewer who flips it to look at something has silently opted out of their machine's evening switch, with no way back. The stored value is the *preference*, never the resolved theme, so someone who chose `system` in daylight still gets dark at night. `system` is stored as the absence of a key, so "never touched the control" and "explicitly chose to follow the OS" are the same state.
