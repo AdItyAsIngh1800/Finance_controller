@@ -9,7 +9,8 @@
 
 import Link from 'next/link';
 import { revalidatePath } from 'next/cache';
-import { AppHeader, PageHeading } from '@/components/app-header';
+import { PageHeading } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { DeleteDataset } from '@/components/delete-dataset';
 import { SeedDemo } from '@/components/seed-demo';
 import {
@@ -111,8 +112,7 @@ export default async function DatasetsPage() {
   const datasets = (data ?? []) as DatasetRow[];
 
   return (
-    <>
-      <AppHeader email={user?.email} />
+    <AppShell email={user?.email}>
       <PageShell>
         <PageHeading
           title="Datasets"
@@ -263,7 +263,7 @@ export default async function DatasetsPage() {
           </section>
         )}
       </PageShell>
-    </>
+    </AppShell>
   );
 }
 

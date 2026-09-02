@@ -1,12 +1,11 @@
 /** Shown while a dataset and its run history resolve. */
-import { AppHeader } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { HeaderSkeleton, LoadingAnnouncement, TableSkeleton } from '@/components/skeleton';
 import { PageShell } from '@/components/ui';
 
 export default function Loading() {
   return (
-    <>
-      <AppHeader />
+    <AppShell>
       <PageShell width="wide">
         <LoadingAnnouncement label="Loading this dataset" />
         <HeaderSkeleton />
@@ -16,6 +15,6 @@ export default function Loading() {
         </div>
         <TableSkeleton rows={3} columns={['w-32', 'w-16', 'w-28']} />
       </PageShell>
-    </>
+    </AppShell>
   );
 }

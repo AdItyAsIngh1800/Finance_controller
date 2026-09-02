@@ -1,12 +1,11 @@
 /** Shown while a reconciliation run resolves. */
-import { AppHeader } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { HeaderSkeleton, LoadingAnnouncement, TableSkeleton } from '@/components/skeleton';
 import { PageShell } from '@/components/ui';
 
 export default function Loading() {
   return (
-    <>
-      <AppHeader />
+    <AppShell>
       <PageShell width="wide">
         <LoadingAnnouncement label="Loading reconciliation results" />
         <HeaderSkeleton />
@@ -17,6 +16,6 @@ export default function Loading() {
         />
         <TableSkeleton rows={8} columns={['w-16', 'w-44', 'w-24', 'w-64']} />
       </PageShell>
-    </>
+    </AppShell>
   );
 }

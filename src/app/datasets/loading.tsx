@@ -1,12 +1,11 @@
 /** Shown while the dataset list resolves. */
-import { AppHeader } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { HeaderSkeleton, LoadingAnnouncement, TableSkeleton } from '@/components/skeleton';
 import { PageShell } from '@/components/ui';
 
 export default function Loading() {
   return (
-    <>
-      <AppHeader />
+    <AppShell>
       <PageShell>
         <LoadingAnnouncement label="Loading your datasets" />
         <HeaderSkeleton />
@@ -18,6 +17,6 @@ export default function Loading() {
         />
         <TableSkeleton columns={['w-48', 'w-24', 'w-16', 'w-24']} />
       </PageShell>
-    </>
+    </AppShell>
   );
 }

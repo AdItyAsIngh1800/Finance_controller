@@ -3,8 +3,9 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { AppHeader, Breadcrumb, PageHeading } from '@/components/app-header';
+import { notFound, redirect } from 'next/navigation';
+import { Breadcrumb, PageHeading } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { DatasetWorkbench } from '@/components/dataset-workbench';
 import { Card, PageShell, SectionHeading } from '@/components/ui';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
@@ -24,6 +25,13 @@ export default async function DatasetPage({
 }) {
   const { id } = await params;
   const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
+  // Defence in depth. The proxy already keeps signed-out visitors off this
+  // route, but Next's own documentation is explicit that proxy is an optimistic
+  // check rather than an authorization boundary — and the proxy silently did
+  // not run in development until 3 September 2026, which is exactly the class
+  // of failure this guard exists for. RLS is the layer beneath both.
+  if (user === null) redirect('/signin?next=%2Fdatasets');
+
 
   // RLS scopes this to the signed-in user, so a dataset belonging to someone
   // else is indistinguishable from one that does not exist — which is exactly
@@ -51,8 +59,7 @@ export default async function DatasetPage({
   const history = (runs ?? []) as RunRow[];
 
   return (
-    <>
-      <AppHeader email={user?.email} />
+    <AppShell email={user?.email}>
       <PageShell width="wide">
         <Breadcrumb
           items={[{ label: 'Datasets', href: '/datasets' }, { label: record.name }]}
@@ -117,6 +124,6 @@ export default async function DatasetPage({
           </section>
         )}
       </PageShell>
-    </>
+    </AppShell>
   );
 }

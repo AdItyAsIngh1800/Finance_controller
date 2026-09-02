@@ -1,12 +1,11 @@
 /** Shown while the review queue resolves. */
-import { AppHeader } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { HeaderSkeleton, LoadingAnnouncement } from '@/components/skeleton';
 import { PageShell } from '@/components/ui';
 
 export default function Loading() {
   return (
-    <>
-      <AppHeader />
+    <AppShell>
       <PageShell width="wide">
         <LoadingAnnouncement label="Loading documents awaiting review" />
         <HeaderSkeleton />
@@ -16,6 +15,6 @@ export default function Loading() {
           className="mt-8 h-96 animate-pulse rounded-card border border-rule bg-paper-raised"
         />
       </PageShell>
-    </>
+    </AppShell>
   );
 }

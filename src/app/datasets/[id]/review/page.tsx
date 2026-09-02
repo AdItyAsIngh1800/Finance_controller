@@ -6,9 +6,10 @@
  */
 
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { CONFIDENCE_THRESHOLD, EXTRACTED_FIELDS } from '@/ai/extract';
-import { AppHeader, Breadcrumb, PageHeading } from '@/components/app-header';
+import { Breadcrumb, PageHeading } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
 import { ExtractionReview, type ReviewItem } from '@/components/extraction-review';
 import { buttonClasses, EmptyState, PageShell } from '@/components/ui';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
@@ -50,6 +51,13 @@ export default async function ReviewPage({
 }) {
   const { id } = await params;
   const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
+  // Defence in depth. The proxy already keeps signed-out visitors off this
+  // route, but Next's own documentation is explicit that proxy is an optimistic
+  // check rather than an authorization boundary — and the proxy silently did
+  // not run in development until 3 September 2026, which is exactly the class
+  // of failure this guard exists for. RLS is the layer beneath both.
+  if (user === null) redirect('/signin?next=%2Fdatasets');
+
 
   const { data: dataset } = await client
     .from('datasets')
@@ -104,8 +112,7 @@ export default async function ReviewPage({
   const datasetName = (dataset as { name: string }).name;
 
   return (
-    <>
-      <AppHeader email={user?.email} />
+    <AppShell email={user?.email}>
       <PageShell width="wide">
         <Breadcrumb
           items={[
@@ -143,6 +150,6 @@ export default async function ReviewPage({
           </div>
         )}
       </PageShell>
-    </>
+    </AppShell>
   );
 }
