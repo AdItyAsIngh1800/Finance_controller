@@ -9,13 +9,16 @@
  * @see docs/DESIGN.md §S-5, §S-6
  */
 
-import { notFound } from 'next/navigation';
-import { AppHeader, Breadcrumb } from '@/components/app-header';
-import { AskPanel } from '@/components/ask-panel';
-import { ExceptionList, type ExceptionView } from '@/components/exception-list';
+import { notFound, redirect } from 'next/navigation';
+import { Breadcrumb } from '@/components/app-header';
+import { AppShell } from '@/components/app-sidebar';
+import type { ExceptionStatus, ExceptionView } from '@/components/exception-list';
+import { RunCharts, type ConfidenceDatum } from '@/components/run-charts';
+import { RunWorkspace } from '@/components/run-workspace';
+import { SummaryCards } from '@/components/summary-cards';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
-import { formatMinor, toMinor } from '@/core/money';
-import { MATCH_TIERS, type MatchTier, type Severity } from '@/core/taxonomy';
+import { formatMinor, sumMinor, toMinor } from '@/core/money';
+import { EXCEPTION_SEVERITY, MATCH_TIERS, type ExceptionType, type MatchTier, type Severity } from '@/core/taxonomy';
 import { Card, PageShell, SectionHeading } from '@/components/ui';
 import { decodeFromJsonb } from '@/lib/serialize';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
@@ -33,6 +36,7 @@ interface ExceptionRow {
   readonly id: string;
   readonly type: string;
   readonly severity: Severity;
+  readonly status: ExceptionStatus;
   readonly source_record_ids: readonly string[];
   readonly ledger_entry_ids: readonly string[];
   readonly stated_reason: string;
@@ -68,16 +72,24 @@ export default async function RunPage({
   const expandedParam = (await searchParams).exception;
   const initialExpanded = typeof expandedParam === 'string' ? expandedParam : null;
   const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
+  // Defence in depth. The proxy already keeps signed-out visitors off this
+  // route, but Next's own documentation is explicit that proxy is an optimistic
+  // check rather than an authorization boundary — and the proxy silently did
+  // not run in development until 3 September 2026, which is exactly the class
+  // of failure this guard exists for. RLS is the layer beneath both.
+  if (user === null) redirect('/signin?next=%2Fdatasets');
+
 
   const { data: run } = await client
     .from('recon_runs')
-    .select('id, dataset_id, params, source_count, matched_count, exception_count, match_rate, duration_ms, created_at')
+    .select('id, dataset_id, params, source_count, ledger_count, matched_count, exception_count, match_rate, duration_ms, created_at')
     .eq('id', runId)
     .maybeSingle();
 
   if (run === null) notFound();
   const summary = run as {
     source_count: number;
+    ledger_count: number;
     matched_count: number;
     exception_count: number;
     match_rate: number;
@@ -86,13 +98,23 @@ export default async function RunPage({
     params: Record<string, unknown>;
   };
 
-  const [{ data: dataset }, { data: matches }, { data: exceptionRows }] = await Promise.all([
+  const [{ data: dataset }, { data: matches }, { data: exceptionRows }, { data: runHistory }] =
+    await Promise.all([
     client.from('datasets').select('name, domain').eq('id', id).maybeSingle(),
-    client.from('matches').select('tier').eq('recon_run_id', runId),
+    // `source_record_ids` comes back too: the reconciled *value* is the sum of
+    // the amounts behind the matches, and there is no stored total to read.
+    client.from('matches').select('tier, source_record_ids').eq('recon_run_id', runId),
     client
       .from('exceptions')
-      .select('id, type, severity, source_record_ids, ledger_entry_ids, stated_reason, evidence, suggested_action')
+      .select('id, type, severity, status, source_record_ids, ledger_entry_ids, stated_reason, evidence, suggested_action')
       .eq('recon_run_id', runId),
+    // Every run of this dataset, oldest first — the trend chart's x-axis is
+    // these runs in order, not a calendar.
+    client
+      .from('recon_runs')
+      .select('id, match_rate, created_at')
+      .eq('dataset_id', id)
+      .order('created_at', { ascending: true }),
   ]);
 
   // Resolve record identifiers back to their references, so the queue shows
@@ -102,15 +124,38 @@ export default async function RunPage({
     ...new Set(rows.flatMap((row) => [...row.source_record_ids, ...row.ledger_entry_ids])),
   ];
 
-  const referenceById = new Map<string, string>();
+  /** One resolved record, as the queue's Date and Amount columns need it. */
+  interface ResolvedRecord {
+    readonly ref: string;
+    readonly date: string;
+    readonly amountMinor: bigint;
+    readonly minConfidence: number | null;
+  }
+
+  const recordById = new Map<string, ResolvedRecord>();
   if (referencedIds.length > 0) {
+    // `extractions(min_confidence)` is an embedded read across the FK, so the
+    // confidence column costs no extra round trip. It is null for CSV-loaded
+    // records, which is the honest value: nothing was inferred.
+    const columns = 'id, external_ref, txn_date, amount_minor, extractions(min_confidence)';
     const [{ data: sources }, { data: ledgers }] = await Promise.all([
-      client.from('source_records').select('id, external_ref').in('id', referencedIds),
-      client.from('ledger_entries').select('id, external_ref').in('id', referencedIds),
+      client.from('source_records').select(columns).in('id', referencedIds),
+      client.from('ledger_entries').select(columns).in('id', referencedIds),
     ]);
     for (const row of [...(sources ?? []), ...(ledgers ?? [])]) {
-      const typed = row as { id: string; external_ref: string };
-      referenceById.set(typed.id, typed.external_ref);
+      const typed = row as unknown as {
+        id: string;
+        external_ref: string;
+        txn_date: string;
+        amount_minor: number | string;
+        extractions: { min_confidence: number | null } | null;
+      };
+      recordById.set(typed.id, {
+        ref: typed.external_ref,
+        date: typed.txn_date,
+        amountMinor: BigInt(typed.amount_minor),
+        minConfidence: typed.extractions?.min_confidence ?? null,
+      });
     }
   }
 
@@ -129,16 +174,24 @@ export default async function RunPage({
   // reintroduce floats into the money path.
   const exceptions: ExceptionView[] = rows.map((row) => {
     const evidence = (decodeFromJsonb(row.evidence) ?? []) as EvidenceLine[];
-    const reference =
-      referenceById.get(row.source_record_ids[0] ?? '') ??
-      referenceById.get(row.ledger_entry_ids[0] ?? '') ??
-      '—';
+    const record =
+      recordById.get(row.source_record_ids[0] ?? '') ??
+      recordById.get(row.ledger_entry_ids[0] ?? '');
 
     return {
       id: row.id,
       type: row.type,
       severity: row.severity,
-      reference,
+      status: row.status,
+      reference: record?.ref ?? '—',
+      date: record?.date ?? '—',
+      amount: record === undefined ? '—' : formatMinor(toMinor(record.amountMinor)),
+      // Only present when the record came from an extraction. A CSV row has no
+      // confidence, and printing 1.00 would assert a certainty the pipeline
+      // never produced.
+      ...(record?.minConfidence == null
+        ? {}
+        : { confidence: record.minConfidence.toFixed(2) }),
       // The first sentence of the reason doubles as the collapsed summary,
       // so a reader can triage the queue without expanding every row.
       summary: `${row.stated_reason.split('. ')[0] ?? row.stated_reason}`,
@@ -157,12 +210,78 @@ export default async function RunPage({
     };
   });
 
+  /*
+   * Value reconciled: the sum of the amounts behind every match.
+   *
+   * Summed over the *source* records named by the matches, deduplicated,
+   * because a PARTIAL_SET match names several of them and adding the match's
+   * records twice would overstate the figure. `sumMinor` keeps this in bigint
+   * from end to end — this is the one place on the page that adds money, and
+   * doing it in `number` is exactly the float drift the money type exists to
+   * prevent.
+   */
+  const matchedSourceIds = new Set(
+    (matches ?? []).flatMap((match) => (match as { source_record_ids: string[] }).source_record_ids),
+  );
+  const reconciledMinor = sumMinor(
+    [...matchedSourceIds]
+      .map((recordId) => recordById.get(recordId)?.amountMinor)
+      .filter((amount): amount is bigint => amount !== undefined)
+      .map((amount) => toMinor(amount)),
+  );
+
+  /** Exceptions still awaiting a reviewer — the actionable count. */
+  const openCount = rows.filter((row) => row.status !== 'resolved').length;
+
+  /** Bars for the breakdown chart, largest first, coloured by severity. */
+  const chartByType = typeCounts.map(([type, count]) => ({
+    type,
+    count,
+    severity: EXCEPTION_SEVERITY[type as ExceptionType] ?? 'low',
+  }));
+
+  /** One point per run of this dataset, in the order they happened. */
+  const chartTrend = ((runHistory ?? []) as { id: string; match_rate: number; created_at: string }[])
+    .map((entry, index) => ({
+      label: `Run ${index + 1}`,
+      matchRate: Number((entry.match_rate * 100).toFixed(1)),
+    }));
+
+  /*
+   * Confidence histogram.
+   *
+   * Bucketed over the records this run actually referenced rather than over
+   * every extraction in the dataset, so the chart describes the same population
+   * as the rest of the page. Empty when nothing was extracted, which the chart
+   * renders as an explanation rather than as an empty axis.
+   */
+  const BUCKETS = ['0.5–0.6', '0.6–0.7', '0.7–0.8', '0.8–0.9', '0.9–1.0'] as const;
+  const confidences = [...recordById.values()]
+    .map((record) => record.minConfidence)
+    .filter((value): value is number => value !== null);
+  const chartConfidence: ConfidenceDatum[] =
+    confidences.length === 0
+      ? []
+      : BUCKETS.map((bucket, index) => {
+          const low = 0.5 + index * 0.1;
+          const high = low + 0.1;
+          return {
+            bucket,
+            count: confidences.filter(
+              (value) => value >= low && (index === BUCKETS.length - 1 ? value <= high : value < high),
+            ).length,
+            // 0.85 sits inside the 0.8–0.9 bucket, so that bucket straddles the
+            // gate. Marked as below it: a bucket containing *any* held-back
+            // record should not read as fully passed.
+            belowThreshold: low < 0.85,
+          };
+        });
+
   const params_ = summary.params;
   const datasetName = (dataset as { name?: string } | null)?.name ?? 'Dataset';
 
   return (
-    <>
-      <AppHeader email={user?.email} />
+    <AppShell email={user?.email}>
       <PageShell width="wide">
         <Breadcrumb
           items={[
@@ -172,9 +291,47 @@ export default async function RunPage({
           ]}
         />
 
+        {/*
+          The four figures a controller looks for first. The match rate appears
+          here *and* as the headline below: this row is for scanning, the block
+          below is for interrogating, and the same number serving both is
+          cheaper than teaching a reader that they differ.
+        */}
+        <div className="mt-4">
+          <SummaryCards
+            figures={[
+              {
+                label: 'Transactions processed',
+                value: summary.source_count.toLocaleString('en-IN'),
+                detail: `${summary.ledger_count.toLocaleString('en-IN')} ledger entries compared`,
+              },
+              {
+                label: 'Match rate',
+                value: `${(summary.match_rate * 100).toFixed(1)}%`,
+                detail: `${summary.matched_count.toLocaleString('en-IN')} of ${summary.source_count.toLocaleString('en-IN')} source records`,
+                tone: 'settled',
+              },
+              {
+                label: 'Exceptions to review',
+                value: openCount.toLocaleString('en-IN'),
+                detail:
+                  openCount === summary.exception_count
+                    ? 'None resolved yet'
+                    : `${summary.exception_count - openCount} resolved`,
+                ...(openCount > 0 ? ({ tone: 'unaccounted' } as const) : {}),
+              },
+              {
+                label: 'Value reconciled',
+                value: formatMinor(reconciledMinor),
+                detail: 'Sum of the matched source records',
+              },
+            ]}
+          />
+        </div>
+
         {/* The closing figure, under a double rule — the accounting convention
             for a final total rather than a subtotal. */}
-        <Card className="mt-4 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
+        <Card className="mt-6 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
           <div>
             <p className="eyebrow">Match rate</p>
             <p className="rule-closing pb-2 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
@@ -246,11 +403,15 @@ export default async function RunPage({
           </div>
         </Card>
 
-        <ExceptionList exceptions={exceptions} initialExpanded={initialExpanded} />
+        <RunCharts byType={chartByType} trend={chartTrend} confidence={chartConfidence} />
 
-        <AskPanel runId={runId} />
+        <RunWorkspace
+          runId={runId}
+          exceptions={exceptions}
+          initialExpanded={initialExpanded}
+        />
       </PageShell>
-    </>
+    </AppShell>
   );
 }
 

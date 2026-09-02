@@ -14,7 +14,7 @@
  * would teach the reader to read it as one.
  */
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button, Card, SectionHeading } from './ui';
 
 /** One function the agent called. */
@@ -39,10 +39,25 @@ const SUGGESTIONS = [
   'Which exceptions are the most serious?',
 ] as const;
 
-export function AskPanel({ runId }: { readonly runId: string }) {
+/**
+ * @param props.runId - The run every answer is grounded in.
+ * @param props.seed - A question handed over from the exception queue's "Ask
+ *   about this". Carries a nonce rather than being a bare string so that asking
+ *   the *same* question about the same exception twice still fires: comparing
+ *   the text alone would silently swallow the second click.
+ */
+export function AskPanel({
+  runId,
+  seed,
+}: {
+  readonly runId: string;
+  readonly seed?: { readonly nonce: number; readonly question: string } | undefined;
+}) {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [question, setQuestion] = useState('');
   const [thinking, setThinking] = useState(false);
+  const panel = useRef<HTMLElement>(null);
+  const lastSeed = useRef<number>(0);
 
   const ask = async (text: string): Promise<void> => {
     const asked = text.trim();
@@ -91,8 +106,24 @@ export function AskPanel({ runId }: { readonly runId: string }) {
     setThinking(false);
   };
 
+  /*
+   * Asks whatever the queue handed over.
+   *
+   * `ask` is redefined every render, so it is deliberately not a dependency —
+   * including it would re-fire the seeded question on each keystroke in the
+   * input. The nonce is the real trigger, and the ref guards against a double
+   * fire under React's development double-invoke.
+   */
+  useEffect(() => {
+    if (seed === undefined || seed.nonce === lastSeed.current) return;
+    lastSeed.current = seed.nonce;
+    panel.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    void ask(seed.question);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seed?.nonce]);
+
   return (
-    <section className="mt-12">
+    <section ref={panel} className="mt-12 scroll-mt-6">
       <SectionHeading>Ask about this reconciliation</SectionHeading>
       <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
         Answers come only from the results above. Every figure is quoted from a lookup, never
