@@ -1,19 +1,16 @@
 /**
- * Root route — public overview (docs/DESIGN.md §7.1).
+ * Root route — public overview (docs/DESIGN.md §S-0, §7.1.1).
  *
  * Signed-in users still go straight to their datasets; only the signed-out
- * branch changed. Previously it redirected to `/signin`, on the reasoning that
- * a working tool should show the product or the door to it and nothing else.
- * That held while the only visitor was a user. It stopped holding once the
- * first visitor became a reviewer, who arrives at the production URL with no
- * account and no reason to make one, and whose question is not "how do I get
- * in" but "what is this and why should I believe it".
+ * branch renders this. The page carries one argument — where the AI is and
+ * where it is deliberately absent — supported by measured figures, and offers
+ * two ways on: the accuracy report and sign-in.
  *
- * So this page carries exactly one argument — where the AI is and where it is
- * deliberately absent — and two ways out: the accuracy report, which needs no
- * account, and sign-in. `PRD.md` §5 SC-3 requires that judgment be visible in
- * the product rather than only in the documents, and a login form makes it
- * visible to nobody.
+ * Every figure in the stats strip is computed here by actually running the
+ * engine, not stored as copy. The generators are seeded and the engine is
+ * deterministic, so the numbers on this page and on `/evaluation` cannot
+ * disagree — a marketing figure that has drifted from the measured one is
+ * exactly the failure this project exists to argue against.
  *
  * @see docs/ARCHITECTURE.md §1 — the trust boundaries this page states
  */
@@ -21,76 +18,61 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { ThemeToggle } from '@/components/theme-toggle';
-import { buttonClasses, Card, Mark, PageShell, SectionHeading } from '@/components/ui';
+import { MatchAnimation } from '@/components/match-animation';
+import { PublicFooter, PublicHeader } from '@/components/public-chrome';
+import { buttonClasses, Card, PageShell, SectionHeading } from '@/components/ui';
+import { EXCEPTION_TYPES } from '@/core/taxonomy';
+import { computeScorecards } from '@/lib/evaluation';
 import { getCurrentUser } from '@/lib/supabase/server';
 
 /**
  * One stage of the pipeline.
  *
- * @param props.step - Position in the sequence. Rendered because this genuinely
- *   is a sequence — the output of each stage is the input of the next — not as
- *   decoration.
  * @param props.name - The stage's name.
  * @param props.trust - Whether the stage uses a model, stated in full rather
  *   than abbreviated to a tick or a colour. This line is the page's argument.
- * @param props.inverted - Renders the row on the ink plane. Reserved for stage
+ * @param props.icon - A mark for the stage. Decorative and `aria-hidden`: the
+ *   name beside it already says what the stage is, and an icon that repeats the
+ *   label only adds noise to a screen reader.
+ * @param props.emphasis - Renders the card on the ink plane. Reserved for stage
  *   two: the absence of a model in the matching engine is the claim the rest of
  *   the page exists to set up, so it is the one place given visual weight.
  */
 function Stage({
-  step,
   name,
   trust,
-  inverted = false,
+  icon,
+  emphasis = false,
   children,
 }: {
-  readonly step: number;
   readonly name: string;
   readonly trust: string;
-  readonly inverted?: boolean;
+  readonly icon: ReactNode;
+  readonly emphasis?: boolean;
   readonly children: ReactNode;
 }) {
   return (
-    // Two columns from `sm` up: the stage's identity on the left, its prose on
-    // the right. A single flowing column would either run the text to a poor
-    // measure or, capped at `prose-measure`, leave the card's right third empty
-    // with the trust line stranded across the gap from the name it qualifies.
     <div
-      className={`grid gap-x-6 gap-y-1 p-5 sm:grid-cols-[13rem_1fr] sm:p-6 ${
-        inverted ? 'bg-ink text-paper' : ''
+      className={`flex flex-col rounded-card border p-5 ${
+        emphasis
+          ? 'border-ink bg-ink text-paper shadow-lift-md'
+          : 'border-rule bg-paper-raised shadow-lift-sm'
       }`}
     >
-      <div>
-        <h3 className="flex items-baseline gap-2 text-base font-semibold tracking-tight">
-          {/*
-            `--ink-muted`, not `--ink-faint`.
-
-            A step number is a digit a sighted reader actually reads, so it is
-            readable text and takes the readable colour — §7.2 reserves
-            `--ink-faint` for decorative marks (arrows, separators), and it sits
-            deliberately below the 4.5:1 floor. Kept `aria-hidden` because the
-            sequence is already carried by DOM order, so announcing "1 Extract"
-            would only add noise.
-          */}
-          <span
-            aria-hidden="true"
-            className={`font-mono text-xs font-normal ${
-              inverted ? 'text-paper/80' : 'text-ink-muted'
-            }`}
-          >
-            {step}
-          </span>
-          {name}
-        </h3>
-        <p className={`mt-1 text-xs font-medium ${inverted ? 'text-paper/80' : 'text-ink-muted'}`}>
-          {trust}
-        </p>
-      </div>
-      <p
-        className={`mt-2 text-sm leading-relaxed sm:mt-0 ${
-          inverted ? 'text-paper/80' : 'text-ink-muted'
+      <span
+        aria-hidden="true"
+        className={`flex h-9 w-9 items-center justify-center rounded-control ${
+          emphasis ? 'bg-paper/15 text-paper' : 'bg-paper-sunk text-ink-muted'
         }`}
+      >
+        {icon}
+      </span>
+      <h3 className="mt-4 text-base font-semibold tracking-tight">{name}</h3>
+      <p className={`mt-1 text-xs font-medium ${emphasis ? 'text-paper/80' : 'text-ink-muted'}`}>
+        {trust}
+      </p>
+      <p
+        className={`mt-3 text-sm leading-relaxed ${emphasis ? 'text-paper/80' : 'text-ink-muted'}`}
       >
         {children}
       </p>
@@ -98,73 +80,137 @@ function Stage({
   );
 }
 
+/**
+ * One figure in the stats strip.
+ *
+ * The label sits *under* the number, and carries the qualification rather than
+ * the headline. "Match rate" is not an accuracy score and must not be read as
+ * one, so the label says what it actually counts.
+ */
+function Stat({ value, label }: { readonly value: string; readonly label: string }) {
+  return (
+    <div className="px-1">
+      <p className="text-2xl font-semibold tracking-tight sm:text-3xl">{value}</p>
+      <p className="mt-1 text-xs leading-snug text-ink-muted">{label}</p>
+    </div>
+  );
+}
+
+/* Stage marks. Drawn inline so they inherit `currentColor` and cost no request. */
+
+/** A document: what stage one reads. */
+const ExtractIcon = (
+  <svg viewBox="0 0 20 20" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M11.5 2.5H5.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1V6.5z" strokeLinejoin="round" />
+    <path d="M11.5 2.5v4h4M7.5 10.5h5M7.5 13.5h3" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/** Two halves meeting: what stage two decides. */
+const ReconcileIcon = (
+  <svg viewBox="0 0 20 20" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M3 6.5h4.5a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2H17" strokeLinecap="round" />
+    <path d="M3 13.5h4.5a2 2 0 0 0 2-2v-3a2 2 0 0 1 2-2H17" strokeLinecap="round" />
+    <path d="M14.5 4.5 17 6.5l-2.5 2M14.5 11.5 17 13.5l-2.5 2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+/** A conversation: what stage three answers. */
+const ExplainIcon = (
+  <svg viewBox="0 0 20 20" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path
+      d="M17 11.5a2 2 0 0 1-2 2h-5l-4 3v-3H5a2 2 0 0 1-2-2v-6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
+      strokeLinejoin="round"
+    />
+    <path d="M7 7.5h6M7 10h4" strokeLinecap="round" />
+  </svg>
+);
+
 export default async function HomePage() {
   const user = await getCurrentUser();
   if (user !== null) {
     redirect('/datasets');
   }
 
+  const scorecards = computeScorecards();
+  const falseMatches = scorecards.reduce(
+    (count, card) => count + card.score.falseMatches.length,
+    0,
+  );
+  // Both domains score identically, so the strip quotes the settlement figure
+  // and names the domain count separately rather than averaging two equal
+  // numbers and implying a spread that does not exist.
+  const settlement = scorecards[0];
+  const matchRate =
+    settlement === undefined
+      ? '—'
+      : `${((settlement.matchedCount / settlement.sourceCount) * 100).toFixed(1)}%`;
+
   return (
-    <PageShell>
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <Mark size="md" />
-          <span className="text-sm font-semibold tracking-tight">AI Finance Controller</span>
-        </div>
-        <ThemeToggle />
-      </div>
-
-      <h1 className="mt-8 text-2xl font-semibold leading-tight tracking-tight sm:text-3xl">
-        Every discrepancy, and why.
-      </h1>
-      <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
-        Point it at a processor settlement or a bank statement alongside your own ledger. It pairs
-        the records that correspond, and for everything left over it names the reason — a fee that
-        came in higher than agreed, a refund the ledger never recorded, a payout that arrived two
-        days after the sale.
-      </p>
-
-      <section className="mt-12">
-        <SectionHeading>Where the AI is, and where it is not</SectionHeading>
-        <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-          Three stages, and they are not trusted equally. The middle one decides what matches what,
-          which is the answer everything else is built on, so it is the one stage with no model in
-          it at all.
+    <>
+      <PublicHeader />
+      <PageShell>
+        <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+          Every discrepancy, and why.
+        </h1>
+        <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
+          Point it at a processor settlement or a bank statement alongside your own ledger. It pairs
+          the records that correspond, and for everything left over it names the reason — a fee that
+          came in higher than agreed, a refund the ledger never recorded, a payout that arrived two
+          days after the sale.
         </p>
 
-        {/* `divide-y` rather than a border per row: the rule belongs *between*
-            stages, and drawing it on the rows themselves puts one against the
-            card's own border at the top and bottom. */}
-        <Card className="mt-5 divide-y divide-rule overflow-hidden">
-          <Stage step={1} name="Extract" trust="AI — Gemini, confidence-gated">
-            Statements arrive as PDFs and photographs. A multimodal model reads them into
-            structured records and scores its own confidence field by field. Anything below 0.85
-            is held back for a person to confirm; it never enters the ledger unreviewed.
-          </Stage>
-          <Stage step={2} name="Reconcile" trust="No AI, deliberately" inverted>
-            Matching is ordinary code. Four tiers run strongest-evidence-first, and a pair is
-            accepted only when each record is the other&rsquo;s sole candidate — contested groups
-            become an exception rather than a guess. The same input produces byte-identical output
-            every time. There is no model here to have an off day, and no scoring to tune until
-            the numbers look good.
-          </Stage>
-          <Stage step={3} name="Explain" trust="AI — grounded, read-only">
-            Ask why something did not match and a model answers, but it may only call read-only
-            lookups and quote what they return. It never computes a figure of its own, every
-            answer shows the calls behind it, and asked something the data cannot support it
-            declines instead of obliging.
-          </Stage>
+        <MatchAnimation />
+
+        {/*
+          Figures before argument. A reviewer who reads nothing else should still
+          leave with the one number that cannot be faked.
+        */}
+        <Card className="mt-10 grid grid-cols-2 gap-y-6 p-5 sm:grid-cols-4 sm:p-6">
+          <Stat value={String(falseMatches)} label="False matches, both domains" />
+          <Stat value={matchRate} label="Source records matched" />
+          <Stat value={String(EXCEPTION_TYPES.length)} label="Exception types detected" />
+          <Stat value={String(scorecards.length)} label="Domains, one shared engine" />
         </Card>
-      </section>
-
-      <section className="mt-12">
-        <SectionHeading>The claim, and the evidence for it</SectionHeading>
-        <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-          The data generator plants discrepancies on purpose and records exactly what it planted,
-          so the engine is scored against a known answer rather than eyeballed. Both domains, every
-          exception type, measured — including the failures.
+        <p className="prose-measure mt-3 text-xs leading-relaxed text-ink-muted">
+          Measured, not asserted: these come from running the engine against data whose
+          discrepancies were planted on purpose.{' '}
+          <Link href="/evaluation" className="text-accent underline underline-offset-2">
+            See the full scorecard
+          </Link>
+          . Match rate is a coverage figure, not a correctness one — the figure that matters is the
+          zero beside it.
         </p>
-        <div className="mt-5 flex flex-wrap items-center gap-3">
+
+        <section id="how-it-works" className="mt-14 scroll-mt-20">
+          <SectionHeading>Where the AI is, and where it is not</SectionHeading>
+          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
+            Three stages, and they are not trusted equally. The middle one decides what matches
+            what, which is the answer everything else is built on, so it is the one stage with no
+            model in it at all.
+          </p>
+
+          <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <Stage name="Extract" trust="AI — Gemini, confidence-gated" icon={ExtractIcon}>
+              Statements arrive as PDFs and photographs. A multimodal model reads them into
+              structured records and scores its own confidence field by field. Anything below 0.85
+              is held back for a person to confirm; it never enters the ledger unreviewed.
+            </Stage>
+            <Stage name="Reconcile" trust="No AI, deliberately" icon={ReconcileIcon} emphasis>
+              Matching is ordinary code. Four tiers run strongest-evidence-first, and a pair is
+              accepted only when each record is the other&rsquo;s sole candidate — contested groups
+              become an exception rather than a guess. The same input produces byte-identical
+              output every time.
+            </Stage>
+            <Stage name="Explain" trust="AI — grounded, read-only" icon={ExplainIcon}>
+              Ask why something did not match and a model answers, but it may only call read-only
+              lookups and quote what they return. It never computes a figure of its own, and every
+              answer shows the calls behind it.
+            </Stage>
+          </div>
+        </section>
+
+        <div className="mt-12 flex flex-wrap items-center gap-3">
           <Link href="/evaluation" className={buttonClasses('primary')}>
             How do you know it&rsquo;s right?
           </Link>
@@ -172,7 +218,8 @@ export default async function HomePage() {
             Sign in
           </Link>
         </div>
-      </section>
-    </PageShell>
+      </PageShell>
+      <PublicFooter />
+    </>
   );
 }
