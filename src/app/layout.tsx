@@ -31,7 +31,23 @@ const plexMono = IBM_Plex_Mono({
   weight: ['400', '500'],
 });
 
+/**
+ * Absolute base for generated metadata URLs.
+ *
+ * `opengraph-image.tsx` emits a relative path, and a social client resolving
+ * `og:image` has no page origin to resolve it against — so without a base the
+ * card silently fails to unfurl. Vercel sets `VERCEL_PROJECT_PRODUCTION_URL` to
+ * the *stable* production domain on every deployment, preview builds included,
+ * which is what is wanted here: a preview's own hashed URL would pin the card
+ * to one build that later stops being the current one.
+ */
+const SITE_URL =
+  process.env.VERCEL_PROJECT_PRODUCTION_URL !== undefined
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000';
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'AI Finance Controller',
   description:
     'Reconciles processor and bank records against an internal ledger, with a deterministic matching engine and AI confined to document extraction and grounded explanation.',
