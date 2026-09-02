@@ -51,6 +51,7 @@ That low/high split is the queue's most useful property: a timing difference and
 
 | # | Screen | Route | Purpose | Priority |
 |---|---|---|---|---|
+| S-0 | Public overview | `/` (signed out) | The three stages and where the AI is not | P0 |
 | S-1 | Sign in | `/signin` | Google OAuth | P0 |
 | S-2 | Dataset list | `/datasets` | Create, open, list | P0 |
 | S-3 | Dataset detail / upload | `/datasets/[id]` | Upload both sides, trigger run | P0 |
@@ -298,6 +299,17 @@ Two exclusions above were lifted deliberately, not drifted past.
 | **Dark mode** — "non-trivial cost across dense tables" | Full dark theme | The cost was real but it was a cost of *duplicating* colours, and the token layer added on the same day removes it: every screen already reads its colour through a variable, so a second theme is one block of values rather than a second stylesheet. The dense-table concern was addressed by re-deriving the palette rather than inverting it — see §7.2. |
 
 Density itself was **not** reversed. §1's "dense, not decorated" still governs: rows stay compact, whitespace was regularised into a scale rather than enlarged.
+
+### 7.1.1 Reversed on 2 September 2026
+
+| Previously excluded | Now | Reasoning |
+|---|---|---|
+| **No landing page** — "a working tool shows the product or the door to it" | Public overview at `/` for signed-out visitors (S-0) | The claim was about *users*, and for a user it still holds — signed in, `/` still goes straight to the dataset list. It stopped holding once the first visitor became a reviewer, who arrives with no account and whose question is not "how do I get in" but "what is this and why should I believe it". `PRD.md` §5 SC-3 requires the AI judgment be visible in the product rather than only in the documents, and a login form makes it visible to nobody. The page carries one argument — the three stages and which of them has no model — and two ways out: `/evaluation` and sign-in. It is not marketing: no testimonials, no feature grid, no call to action beyond the two links. |
+| **Charts and graphs** — still excluded | — | Unchanged, and re-confirmed while adding S-0. A pie chart of exception types remains decoration; the overview states the pipeline in words and a single inverted band, not in a diagram library. |
+
+The exception queue gained a **CSV export** of the currently filtered rows in the same pass. This is not a reversal of the assign/comment/close exclusion above: it adds no state, no workflow and no second source of truth. It ends the tool's responsibility at the point where the work leaves it for a spreadsheet, which is where clearing a queue actually continues.
+
+An expanded finding is now addressable as `?exception=<id>`, resolved server-side so the row is open in the first paint. A finding that cannot be linked cannot be handed to the person who has to act on it.
 
 ### 7.2 The dark theme
 
