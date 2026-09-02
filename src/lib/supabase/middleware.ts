@@ -17,7 +17,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { supabasePublishableKey, supabaseUrl } from './env';
 
 /** Routes reachable without a session. Everything else requires sign-in. */
-const PUBLIC_ROUTES = ['/', '/signin', '/auth', '/evaluation'] as const;
+const PUBLIC_ROUTES = ['/', '/signin', '/auth', '/evaluation', '/opengraph-image'] as const;
 
 /**
  * Is this path publicly reachable?
@@ -25,6 +25,13 @@ const PUBLIC_ROUTES = ['/', '/signin', '/auth', '/evaluation'] as const;
  * `/evaluation` is deliberately public: it reports accuracy against synthetic
  * ground truth, exposes no user data, and saves a reviewer from having to
  * create an account to see it.
+ *
+ * `/opengraph-image` must be public for a different reason: the client
+ * unfurling a shared link is a scraper with no cookies, so gating it means the
+ * card never renders for anyone. It is a generated static image containing only
+ * the wordmark and a figure already published on `/evaluation`, so there is
+ * nothing behind the gate to protect. Found by requesting it on production —
+ * the matcher below excludes real image *files*, but this is a route.
  */
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
