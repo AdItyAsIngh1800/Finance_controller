@@ -187,6 +187,18 @@ body {
   border-bottom: 3px double var(--rule-strong);
 }
 
+/*
+ * The single rule.
+ *
+ * The other half of the same convention: one rule above a figure marks it as
+ * the sum of what precedes it, where the double rule marks the closing figure.
+ * Drawn on the top edge, because a subtotal rule separates the addends from
+ * their total rather than closing the block off underneath.
+ */
+.rule-subtotal {
+  border-top: 1px solid var(--rule-strong);
+}
+
 /* Keyboard focus stays visible everywhere, at the quality floor. */
 :focus-visible {
   outline: 2px solid var(--ink);

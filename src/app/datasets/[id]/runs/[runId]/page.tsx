@@ -186,6 +186,15 @@ export default async function RunPage({
                 {tierCounts.map(({ tier, count }) => (
                   <Row key={tier} label={TIER_LABELS[tier]} value={count} />
                 ))}
+                {/*
+                  No total row here, deliberately. These are counts of *matches*,
+                  while `matched_count` behind the headline counts matched source
+                  *records* — a PARTIAL_SET pairing contributes one match and
+                  several records, so the two disagree exactly when combined
+                  payments occur. Printing either figure under this column would
+                  read as its sum and be wrong in the one case the tier exists
+                  for. @see src/core/reconcile/engine.ts — matchedSourceIds
+                */}
               </dl>
             </section>
 

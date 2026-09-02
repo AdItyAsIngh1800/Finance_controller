@@ -202,6 +202,32 @@ function Scorecard({ card }: { readonly card: DomainScorecard }) {
                 </tr>
               ))}
             </tbody>
+            {/*
+              The one figure the methodology turns on — planted against
+              reported — currently costs the reader seven additions to check.
+              Under the single rule that bookkeeping uses for a subtotal, as
+              against the double rule under the closing figure above.
+
+              Precision and recall are deliberately blank rather than summed or
+              averaged: they are ratios, and aggregating them means choosing
+              between micro- and macro-averaging, which is a methodology
+              decision belonging to docs/EVALUATION.md rather than to a table
+              footer. `minRecall` and `minPrecision` on the score are the
+              worst-case figures, not aggregates.
+            */}
+            <tfoot>
+              <tr className="rule-subtotal font-medium">
+                <td className="px-4 py-2 text-xs">Total</td>
+                <td className="px-4 py-2 text-right font-mono">
+                  {scored.reduce((sum, row) => sum + row.planted, 0)}
+                </td>
+                <td className="px-4 py-2 text-right font-mono">
+                  {scored.reduce((sum, row) => sum + row.reported, 0)}
+                </td>
+                <td className="px-4 py-2" />
+                <td className="px-4 py-2" />
+              </tr>
+            </tfoot>
           </table>
         </div>
       </Card>
