@@ -1,6 +1,6 @@
 # Roadmap — AI Finance Controller
 
-**Last updated:** 29 August 2026
+**Last updated:** 2 September 2026
 **Deadline:** 4 September 2026 · **Build mode:** solo · **Scope posture:** nothing cut
 **Status:** living document — update phase status as work closes.
 
@@ -14,12 +14,12 @@
 | P1 | Domain model & types | 1 | 🟢 Complete |
 | P2 | Synthetic data + ground truth | 1 | 🟢 Complete |
 | P3 | Reconciliation engine | 2 | 🟢 Complete |
-| P4 | Application foundation | 3 | 🟡 Auth + RLS verified end to end; deploy pending |
+| P4 | Application foundation | 3 | 🟢 Complete — deployed; Google sign-in verified on the production URL |
 | P5 | Pipeline wiring & results UI | 4 | 🟢 Complete — dashboard matches the test-suite figure |
 | P6 | Stage 1 — extraction | 5 | 🟢 Complete — both paths verified in the running app |
 | P7 | Stage 3 — grounded Q&A | 5 | 🟢 Complete — verified against the live data source |
 | P8 | Bank domain adapter | 6 | 🟢 Complete — engine source untouched |
-| P9 | Evaluation, polish, deploy | 6 | 🟡 Evaluation page + demo seeding built; deploy pending |
+| P9 | Evaluation, polish, deploy | 6 | 🟢 Complete — full loop clean twice on production |
 
 ⚪ Not started · 🟡 In progress · 🟢 Complete · 🔴 Blocked
 
@@ -94,7 +94,7 @@ Each phase closes only when its gate passes. A phase that "mostly works" is not 
 | R-1 | **Day 5 double-booking** — two AI integrations in one day | High | High | P6 before P7; P8 is movable to Day 7 to buy back P7 time | P6 unfinished by Day 5 midday |
 | R-2 | Gemini model ID drift | Medium | Medium | Model ID in env var, not a literal; confirm against the live model list before use | 404 on first call |
 | R-2a | **Model unavailable under load — observed 29 Aug** | **High** | **High** | `gemini-3.7-flash` returned 503 then timed out repeatedly; switched to `gemini-3.6-flash`. **A fallback chain was considered and declined**, so an overload on 3.6 during the demo has nothing to catch it. Mitigation if it recurs: seeded demo data (§P9) does not require live extraction | Extraction slow or failing on the day |
-| R-3 | OAuth redirect misconfigured in production | Medium | High | Deploy Day 3 and test sign-in on the live domain immediately | Sign-in works locally, fails deployed |
+| R-3 | ~~OAuth redirect misconfigured in production~~ **retired** | — | — | **Verified 2 Sep on the production URL.** Sign-in builds `redirectTo` from `window.location.origin`, so the only external dependency is Supabase's redirect allowlist; `https://finance-controller-adityasi181-8013s-projects.vercel.app/**` covers it and a live Google sign-in completed. Preview deployments are covered separately by a `finance-controller-*-…` wildcard | — |
 | R-4 | ~~Extraction quality on degraded scans~~ **retired** | — | — | **Verified 31 Aug in the running app.** A degraded scan produced 6 of 7 fields below threshold and was blocked from the ledger; discarding it wrote no record. A clean document read at 0.95 and was promoted automatically. The gate degrades into review items exactly as designed | — |
 | R-5 | Agent states an ungrounded figure | Low | **Critical** | Grounding constraint + call-trace display + manual §3.5 checks | Any demo figure not traceable to a row |
 | R-6 | Float creeps into the money path | Medium | High | `bigint` at the type level; P3 tests assert exact integers | Any test failing on a rounding delta |
