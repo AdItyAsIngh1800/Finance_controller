@@ -63,10 +63,20 @@ function Stage({
     >
       <div>
         <h3 className="flex items-baseline gap-2 text-base font-semibold tracking-tight">
+          {/*
+            `--ink-muted`, not `--ink-faint`.
+
+            A step number is a digit a sighted reader actually reads, so it is
+            readable text and takes the readable colour — §7.2 reserves
+            `--ink-faint` for decorative marks (arrows, separators), and it sits
+            deliberately below the 4.5:1 floor. Kept `aria-hidden` because the
+            sequence is already carried by DOM order, so announcing "1 Extract"
+            would only add noise.
+          */}
           <span
             aria-hidden="true"
             className={`font-mono text-xs font-normal ${
-              inverted ? 'text-paper/60' : 'text-ink-faint'
+              inverted ? 'text-paper/80' : 'text-ink-muted'
             }`}
           >
             {step}
