@@ -50,10 +50,23 @@ interface EvidenceLine {
 
 export default async function RunPage({
   params,
+  searchParams,
 }: {
   readonly params: Promise<{ id: string; runId: string }>;
+  /**
+   * `?exception=<id>` opens that finding on arrival.
+   *
+   * Resolved here rather than in the client component so the row is expanded in
+   * the first paint. Reading it on the client instead would mean either a
+   * hydration mismatch (the server rendered it closed) or a visible jump as the
+   * row opens after hydration, and this parameter exists precisely so a link
+   * lands someone *on* the finding.
+   */
+  readonly searchParams: Promise<Record<string, string | readonly string[] | undefined>>;
 }) {
   const { id, runId } = await params;
+  const expandedParam = (await searchParams).exception;
+  const initialExpanded = typeof expandedParam === 'string' ? expandedParam : null;
   const [client, user] = await Promise.all([createClient(), getCurrentUser()]);
 
   const { data: run } = await client
@@ -233,7 +246,7 @@ export default async function RunPage({
           </div>
         </Card>
 
-        <ExceptionList exceptions={exceptions} />
+        <ExceptionList exceptions={exceptions} initialExpanded={initialExpanded} />
 
         <AskPanel runId={runId} />
       </PageShell>

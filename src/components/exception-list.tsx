@@ -84,10 +84,46 @@ function exceptionsToCsv(rows: readonly ExceptionView[]): string {
   ]);
 }
 
-export function ExceptionList({ exceptions }: { readonly exceptions: readonly ExceptionView[] }) {
+/**
+ * @param props.exceptions - The run's findings, in engine order.
+ * @param props.initialExpanded - Exception id to open on arrival, from
+ *   `?exception=` on the page. Resolved on the server so the row is open in the
+ *   first paint rather than after hydration.
+ */
+export function ExceptionList({
+  exceptions,
+  initialExpanded = null,
+}: {
+  readonly exceptions: readonly ExceptionView[];
+  readonly initialExpanded?: string | null;
+}) {
   const [type, setType] = useState<string>(ALL);
   const [severity, setSeverity] = useState<string>(ALL);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(initialExpanded);
+
+  /**
+   * Opens or closes a finding, and writes the choice into the URL.
+   *
+   * `history.replaceState` rather than a router navigation: expanding a row is
+   * not a new destination, and routing would re-run the server component to
+   * change one boolean. It also keeps the Back button meaning "the page I came
+   * from" instead of "the row I last collapsed".
+   *
+   * The URL is what makes a finding shareable — the demo links straight to the
+   * amount mismatch, and "Ask about this" can be sent to someone.
+   */
+  const toggle = (id: string): void => {
+    const next = expanded === id ? null : id;
+    setExpanded(next);
+
+    const url = new URL(window.location.href);
+    if (next === null) {
+      url.searchParams.delete('exception');
+    } else {
+      url.searchParams.set('exception', next);
+    }
+    window.history.replaceState(null, '', url);
+  };
 
   const types = useMemo(
     () => [...new Set(exceptions.map((exception) => exception.type))].sort(),
@@ -191,7 +227,7 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
                   <button
                     type="button"
                     aria-expanded={isOpen}
-                    onClick={() => setExpanded(isOpen ? null : exception.id)}
+                    onClick={() => toggle(exception.id)}
                     className="flex w-full flex-wrap items-center gap-x-3 gap-y-1.5 px-3 py-3 text-left transition-colors duration-150 ease-ui hover:bg-paper-sunk/60 md:flex-nowrap md:px-4"
                   >
                     <span
