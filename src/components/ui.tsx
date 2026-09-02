@@ -66,6 +66,37 @@ export function Card({
 }
 
 /**
+ * The product mark.
+ *
+ * Two rules and a double rule — the bookkeeping notation for a closing figure,
+ * which is what this tool produces. Drawn inline so it inherits `currentColor`
+ * and needs no asset request.
+ *
+ * Lives here rather than beside the header because three screens draw it: the
+ * signed-in header, the sign-in card and the public overview. The first two had
+ * already diverged into separate copies at different sizes, which is exactly the
+ * drift this module exists to stop.
+ *
+ * @param props.size - `sm` for the header bar, `md` where the mark opens a page
+ *   and carries the wordmark beside it at heading weight.
+ */
+export function Mark({ size = 'sm' }: { readonly size?: 'sm' | 'md' }) {
+  const box = size === 'md' ? 'h-8 w-8' : 'h-6 w-6';
+  const glyph = size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5';
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex ${box} items-center justify-center rounded-control bg-ink text-paper`}
+    >
+      <svg viewBox="0 0 16 16" className={glyph} fill="none" stroke="currentColor">
+        <path d="M3 4.5h10M3 8h7" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M3 11h10M3 12.75h10" strokeWidth="1.25" strokeLinecap="round" />
+      </svg>
+    </span>
+  );
+}
+
+/**
  * A section heading with its rule.
  *
  * @param props.trailing - Optional right-aligned content, such as a count or a

@@ -17,7 +17,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Button, Card, Field, Notice } from '@/components/ui';
+import { Button, Card, Field, Mark, Notice } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
 
 /** Supabase's default minimum. Checked here so the failure is immediate. */
@@ -108,15 +108,7 @@ function SignInForm() {
   return (
     <div className="w-full max-w-sm">
       <div className="flex items-center gap-2.5">
-        <span
-          aria-hidden="true"
-          className="flex h-8 w-8 items-center justify-center rounded-control bg-ink text-paper"
-        >
-          <svg viewBox="0 0 16 16" className="h-4 w-4" fill="none" stroke="currentColor">
-            <path d="M3 4.5h10M3 8h7" strokeWidth="1.5" strokeLinecap="round" />
-            <path d="M3 11h10M3 12.75h10" strokeWidth="1.25" strokeLinecap="round" />
-          </svg>
-        </span>
+        <Mark size="md" />
         <h1 className="text-lg font-semibold tracking-tight">AI Finance Controller</h1>
       </div>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">

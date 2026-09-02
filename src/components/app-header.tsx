@@ -16,6 +16,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { ThemeToggle } from './theme-toggle';
+import { Mark } from './ui';
 
 /** One step in a {@link Breadcrumb}. */
 export interface Crumb {
@@ -88,27 +89,6 @@ export function AppHeader({ email }: { readonly email?: string | null }) {
         </form>
       </div>
     </header>
-  );
-}
-
-/**
- * The product mark.
- *
- * Two rules and a double rule — the bookkeeping notation for a closing figure,
- * which is what this tool produces. Drawn inline so it inherits `currentColor`
- * and needs no asset request.
- */
-function Mark() {
-  return (
-    <span
-      aria-hidden="true"
-      className="flex h-6 w-6 items-center justify-center rounded-control bg-ink text-paper"
-    >
-      <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor">
-        <path d="M3 4.5h10M3 8h7" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M3 11h10M3 12.75h10" strokeWidth="1.25" strokeLinecap="round" />
-      </svg>
-    </span>
   );
 }
 
