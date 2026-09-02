@@ -107,10 +107,13 @@ function SignInForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <div className="flex items-center gap-2.5">
+      {/* The wordmark is the way back to the public overview. Someone who
+          arrived here from a bookmark or an OAuth bounce has otherwise no route
+          to it, and a wordmark that does not go home reads as broken. */}
+      <Link href="/" className="flex items-center gap-2.5 rounded-control transition-opacity duration-150 ease-ui hover:opacity-80">
         <Mark size="md" />
         <h1 className="text-lg font-semibold tracking-tight">AI Finance Controller</h1>
-      </div>
+      </Link>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">
         Reconciles processor and bank records against your ledger, and explains every discrepancy
         it finds.

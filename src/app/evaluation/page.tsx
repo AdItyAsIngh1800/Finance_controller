@@ -143,8 +143,11 @@ export default function EvaluationPage() {
         Reproduce these figures with <span className="font-mono">npm run scorecard</span>,{' '}
         <span className="font-mono">npm run extraction:report</span>, and{' '}
         <span className="font-mono">npm run grounding:report</span>.{' '}
+        {/* `/` now branches: the overview for a signed-out visitor, the dataset
+            list for a signed-in one. This page is public and static, so it
+            cannot know which — the label has to be true of both. */}
         <Link href="/" className="underline underline-offset-2">
-          Back to the app
+          Back to AI Finance Controller
         </Link>
       </p>
     </PageShell>
