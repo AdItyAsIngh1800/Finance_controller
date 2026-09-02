@@ -177,6 +177,50 @@ body {
 }
 
 /*
+ * Paper grain.
+ *
+ * A fibre texture on the page ground, and deliberately *only* there. §2's three
+ * planes describe cards as objects resting on a desk; giving the desk a tooth
+ * the documents do not have is what makes that relationship read as material
+ * rather than as two flat greys. On `--paper-raised` the same texture would sit
+ * directly behind small monospace figures and dirty them.
+ *
+ * Fixed attachment so the grain belongs to the surface rather than scrolling
+ * with the content, which would read as a pattern rather than as paper.
+ *
+ * The data URI lives in a class for the same reason `.select-chevron` does: a
+ * Tailwind `bg-[url('data:…')]` arbitrary value contains quotes and spaces that
+ * the class scanner cannot extract, and it silently emits `url()` instead —
+ * which is what broke the chevron on 1 September.
+ *
+ * `baseFrequency` is high and the octave count is one: this is a fine tooth, not
+ * a cloud. Anything lower reads as a stain.
+ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  /* 0.035 in light: enough to feel under a fingertip, not enough to measure.
+     The turbulence is monochrome, so it darkens the ground very slightly — the
+     page token was not lightened to compensate, because at this opacity the
+     shift is below a just-noticeable difference. */
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/*
+ * Dark grain is roughly half strength, and the value is arrived at by eye
+ * rather than by halving the number: noise on a near-black ground reads as
+ * sensor grain — the failure mode of a photograph, not of paper — long before
+ * it reaches the light theme's apparent strength.
+ */
+:root[data-theme='dark'] body::before {
+  opacity: 0.019;
+}
+
+/*
  * The double rule.
  *
  * In double-entry bookkeeping a single rule marks a subtotal and a double rule
