@@ -25,45 +25,60 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces: a paper white with a trace of warmth, as ledger stock has.
-     `--paper-raised` is the card plane, lifted a shade above the page ground so
-     panels read as objects on a desk rather than as outlined regions. */
-  --page: #f6f6f2;
-  --paper: #fbfbf9;
+  /* Surfaces. A cool near-white rather than the warm ledger stock this
+     interface used until 3 September 2026: the palette is now anchored on the
+     dark theme (see below), and a warm paper under a cool dark counterpart made
+     the two themes read as two products. */
+  --page: #f4f6f8;
+  --paper: #fafbfc;
   --paper-raised: #ffffff;
-  --paper-sunk: #f4f4f0;
-  --ink: #16171a;
-  --ink-muted: #6b6c70;
+  --paper-sunk: #eff2f5;
+  --ink: #0f1419;
+  --ink-muted: #55606e;
   /* `--ink-faint` is for decorative marks only — disclosure arrows, breadcrumb
      separators, the ⚙ before a call trace — every one of which is aria-hidden.
-     It is deliberately below the 4.5:1 text floor, and the palette has no room
-     to raise it: a value that clears the floor on the sunk plane is
-     indistinguishable from `--ink-muted`. Readable text takes `--ink-muted`. */
-  --ink-faint: #9a9b9e;
+     It sits deliberately below the 4.5:1 text floor (3.01:1 on the card);
+     readable text takes `--ink-muted`. */
+  --ink-faint: #8a96a5;
 
   /* Hairlines. Two weights: a rule between rows, a heavier one between blocks. */
-  --rule: #e2e2dc;
-  --rule-strong: #c9c9c2;
+  --rule: #dfe4ea;
+  --rule-strong: #c3cbd5;
 
-  /* Money unaccounted for. Used for high severity and nothing else. */
-  --unaccounted: #a32a22;
-  --unaccounted-wash: #fbf1f0;
+  /*
+   * Severity, re-hued on 3 September 2026.
+   *
+   * Red is gone from the palette. The argument for removing it: an exception is
+   * a normal part of this workflow rather than a fault, and a queue of red rows
+   * reads as a system in trouble instead of a day's work. What replaces it is
+   * *not* one amber for everything — that would collapse the high/low split
+   * §1 calls the queue's most useful property — but the three-way encoding
+   * below, which is the same one the dashboard uses for status.
+   *
+   * Every value is darkened from its dark-theme counterpart to clear 4.5:1 on
+   * this theme's lighter planes; the hues are unchanged.
+   */
 
-  /* Awaiting a human decision.
-     Darkened from #8a6d1f on 1 Sep 2026: that value landed on exactly 4.50:1
-     against its own wash, so sub-pixel rounding put the Medium badge under the
-     AA floor about as often as over it. #7d6219 clears it at 5.31:1 and is
-     visually indistinguishable. */
-  --undecided: #7d6219;
-  --undecided-wash: #faf5e8;
+  /* Money unaccounted for. Amber, flagged for attention. */
+  --unaccounted: #8a5206;
+  --unaccounted-wash: #fdf4e6;
+
+  /* Awaiting a human decision. Blue, the dashboard's "pending review". */
+  --undecided: #2c5fc4;
+  --undecided-wash: #edf2fd;
 
   /* Explained — the money is accounted for, it simply moved differently. */
-  --explained: #6b6c70;
-  --explained-wash: #f2f2ee;
+  --explained: #55606e;
+  --explained-wash: #eff2f5;
 
-  /* "In the black": the matched proportion of the reconciliation bar. */
-  --settled: #2f5d3a;
-  --settled-wash: #eef3ee;
+  /* "In the black": matched, reconciled, resolved. */
+  --settled: #0b6b55;
+  --settled-wash: #e6f7f2;
+
+  /* Links and the primary action. Carried as its own token rather than reusing
+     `--undecided`, which happens to share the hue: one is a severity and the
+     other is an affordance, and a future change to either must not move both. */
+  --accent: #2c5fc4;
 
   /*
    * Elevation.
@@ -72,55 +87,55 @@
    * becomes visual noise repeated forty times down the page, so these are tuned
    * to separate planes rather than to be noticed.
    */
-  --lift-sm: 0 1px 2px rgb(22 23 26 / 0.04), 0 1px 1px rgb(22 23 26 / 0.03);
-  --lift-md: 0 1px 2px rgb(22 23 26 / 0.04), 0 4px 12px -2px rgb(22 23 26 / 0.06);
-  --lift-lg: 0 2px 4px rgb(22 23 26 / 0.04), 0 12px 28px -6px rgb(22 23 26 / 0.10);
+  --lift-sm: 0 1px 2px rgb(15 20 25 / 0.04), 0 1px 1px rgb(15 20 25 / 0.03);
+  --lift-md: 0 1px 2px rgb(15 20 25 / 0.04), 0 4px 12px -2px rgb(15 20 25 / 0.06);
+  --lift-lg: 0 2px 4px rgb(15 20 25 / 0.04), 0 12px 28px -6px rgb(15 20 25 / 0.10);
 }
 
 /*
- * Dark.
+ * Dark — and, since 3 September 2026, the theme the palette is designed *from*.
+ * The light theme above is derived from these hues rather than the reverse.
  *
- * Not an inversion. Three things are re-derived rather than flipped:
+ * Anchors: a deep charcoal-navy ground rather than pure black, and a soft white
+ * rather than #fff — pure white on near-black haloes at the small sizes this
+ * interface uses for figures.
  *
- * 1. The ground is the *darkest* plane and cards lift above it, preserving the
- *    light theme's "panels are objects on a desk" relationship. A naive inversion
- *    would sink the cards below the page and read as holes.
- * 2. Ink is #ecedeb, not white. Pure white on near-black haloes at the small
- *    sizes this interface uses for figures.
- * 3. The four semantic colours are re-picked, not lightened arithmetically. Each
- *    is chosen to clear 4.5:1 against the raised card *and* against its own wash,
- *    since severity badges put the colour on the wash rather than on the card.
+ * The ground stays the darkest plane and cards lift above it, preserving the
+ * "panels are objects on a desk" relationship; inverting that would sink the
+ * cards and read as holes.
  *
- * Measured against the card plane: ink 14.3:1, ink-muted 6.8:1, unaccounted
- * 6.7:1, undecided 8.9:1, settled 8.4:1. Hairlines sit at 1.5:1 and 2.2:1,
- * proportionate to the 1.3:1 and 1.7:1 they hold in the light theme — a rule is
- * meant to be felt rather than read.
+ * Measured against the card plane: ink 13.3:1, ink-muted 6.4:1, unaccounted
+ * 7.9:1, undecided 5.0:1, settled 8.5:1, accent 5.0:1 — every text pair clears
+ * AA on the card, on the page and on its own wash. Hairlines sit at 1.2:1 and
+ * 1.6:1: a rule is meant to be felt rather than read.
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --page: #131417;
-  --paper: #191a1e;
-  --paper-raised: #1c1d21;
-  --paper-sunk: #17181b;
-  --ink: #ecedeb;
-  --ink-muted: #a3a4a9;
-  --ink-faint: #787980;
+  --page: #0f1419;
+  --paper: #151b22;
+  --paper-raised: #1a222b;
+  --paper-sunk: #131920;
+  --ink: #e8eaed;
+  --ink-muted: #9aa4b2;
+  --ink-faint: #6b7684;
 
-  --rule: #3a3b41;
-  --rule-strong: #52535a;
+  --rule: #232d38;
+  --rule-strong: #35414f;
 
-  --unaccounted: #f0857a;
-  --unaccounted-wash: #2b1a18;
+  --unaccounted: #f5a623;
+  --unaccounted-wash: #2a2116;
 
-  --undecided: #dcb85c;
-  --undecided-wash: #2a2418;
+  --undecided: #5b8def;
+  --undecided-wash: #182131;
 
-  --explained: #a3a4a9;
-  --explained-wash: #232429;
+  --explained: #9aa4b2;
+  --explained-wash: #1b222a;
 
-  --settled: #74c98a;
-  --settled-wash: #182619;
+  --settled: #2dd4a8;
+  --settled-wash: #10241f;
+
+  --accent: #5b8def;
 
   /* Shadows carry almost nothing on a dark ground, so they go deeper and the
      card border does correspondingly more of the separating. */
@@ -147,9 +162,15 @@
   --color-explained-wash: var(--explained-wash);
   --color-settled: var(--settled);
   --color-settled-wash: var(--settled-wash);
+  --color-accent: var(--accent);
 
-  --font-sans: var(--font-plex-sans);
-  --font-mono: var(--font-plex-mono);
+  --font-sans: var(--font-body);
+  /* Kept as `--font-mono` so the existing `font-mono` call sites still read as
+     "this is a figure or a code". It resolves to the body face now: the
+     alignment those sites need comes from `tabular-nums` on `body`, not from a
+     monospace advance width. @see src/app/layout.tsx */
+  --font-mono: var(--font-body);
+  --font-display: var(--font-display);
 
   /* One radius scale, so controls and the cards holding them agree. Before
      this, radii drifted between `sm` and `md` across screens. */
@@ -168,7 +189,7 @@
 body {
   background: var(--page);
   color: var(--ink);
-  font-family: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   /* Tabular figures everywhere by default: column-aligned digits are how a
      finance user scans a table for anomalies, and proportional digits defeat
      that scan entirely. */
@@ -218,6 +239,30 @@ body::before {
  */
 :root[data-theme='dark'] body::before {
   opacity: 0.019;
+}
+
+/*
+ * Headings take the display face.
+ *
+ * Applied by element rather than as a utility class, so all eight screens get
+ * it without eight edits — and so a heading that should *not* take it has to
+ * say so explicitly, which is the rarer case.
+ */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * The eyebrow is a label, not a heading, even when it sits on an `h2`.
+ * It keeps the body face: Space Grotesk at 11px, uppercase and tracked out, is
+ * noticeably harder to read than Inter at the same size.
+ */
+.eyebrow {
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.14em;
 }
 
 /*
@@ -288,7 +333,7 @@ body::before {
  * Pair with `appearance-none` and right padding wide enough to clear it.
  */
 .select-chevron {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%236b6c70' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%2355606e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 12px 12px;
@@ -297,7 +342,7 @@ body::before {
 /* The chevron's stroke is baked into the data URI, so the dark theme needs its
    own copy rather than a colour override. */
 :root[data-theme='dark'] .select-chevron {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23a3a4a9' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%239aa4b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {

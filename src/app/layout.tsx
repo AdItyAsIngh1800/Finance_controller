@@ -1,17 +1,27 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
+import { Inter, Space_Grotesk } from 'next/font/google';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 /**
  * Root layout.
  *
- * IBM Plex, in two roles. Plex was drawn for IBM's engineering and data
- * contexts, which is the register this tool operates in — an instrument rather
- * than a brand. Plex Mono carries every monetary and reference value: column-
- * aligned digits are how a finance user scans a reconciliation table for
- * anomalies, so the monospace face is load-bearing rather than decorative.
+ * Two faces, and only two, since 3 September 2026: Space Grotesk for headings
+ * and Inter for everything else, replacing IBM Plex Sans and Plex Mono.
+ *
+ * The load-bearing property is not the monospace face itself but *column-
+ * aligned digits* — a finance user scans a reconciliation table by running an
+ * eye down a column, and proportional figures defeat that scan. Inter ships
+ * true tabular figures, and `font-variant-numeric: tabular-nums` is set on
+ * `body`, so the alignment survives the change.
+ *
+ * What is lost is the visual signal that a value is a code rather than prose:
+ * `--font-mono` now resolves to Inter, so every existing `font-mono` class
+ * keeps its tabular alignment but no longer looks typewritten. That is the
+ * accepted cost of a two-face system; the token name is kept so the call sites
+ * do not all have to change, and so a third face could be reintroduced in one
+ * place if the codes turn out to need it.
  *
  * Also carries the theme-resolution script, which must execute before the first
  * paint rather than in a React effect.
@@ -19,16 +29,16 @@ import './globals.css';
  * @see docs/DESIGN.md §2 — visual language, §7.1 — dark theme
  */
 
-const plexSans = IBM_Plex_Sans({
-  variable: '--font-plex-sans',
+const displayFont = Space_Grotesk({
+  variable: '--font-display',
   subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['500', '600', '700'],
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: '--font-plex-mono',
+const bodyFont = Inter({
+  variable: '--font-body',
   subsets: ['latin'],
-  weight: ['400', '500'],
+  weight: ['400', '500', '600'],
 });
 
 /**
@@ -74,7 +84,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${plexSans.variable} ${plexMono.variable} h-full antialiased`}
+      className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}
     >
       <head>
         {/*
