@@ -17,7 +17,8 @@
 
 import { useMemo, useState } from 'react';
 import { SeverityBadge } from './severity';
-import { Card, EmptyState, InlineSelect, SectionHeading } from './ui';
+import { Button, Card, EmptyState, InlineSelect, SectionHeading } from './ui';
+import { toCsv } from '@/core/generate/csv';
 import type { Severity } from '@/core/taxonomy';
 
 /** One line of the side-by-side comparison, already formatted for display. */
@@ -43,6 +44,46 @@ export interface ExceptionView {
 /** Filter value meaning "no filter applied". */
 const ALL = '__all__';
 
+/**
+ * Hands the reader the rows they are looking at, as a file.
+ *
+ * Clearing a queue continues in a spreadsheet — assigning owners, chasing the
+ * counterparty, marking off what has been resolved — and none of that belongs
+ * in a one-week build. Exporting is the seam: it ends this tool's
+ * responsibility at the point where the work leaves it. It is not write-back
+ * (`PRD.md` §6), which is about modifying accounting systems.
+ *
+ * Takes the *filtered* rows, never the full set. Someone who has narrowed to
+ * high-severity amount mismatches and clicks export means those, and a file
+ * that silently contained everything would be discovered as wrong only after
+ * the numbers had been used.
+ *
+ * The evidence lines are flattened to one column rather than exploded into rows
+ * per line: a spreadsheet user wants one row per exception to sort and filter,
+ * and the evidence is context they read once they have found the row.
+ *
+ * @param rows - The exceptions currently visible, in display order.
+ * @returns CSV text with a header row.
+ */
+function exceptionsToCsv(rows: readonly ExceptionView[]): string {
+  return toCsv([
+    ['reference', 'type', 'severity', 'stated_reason', 'suggested_action', 'evidence'],
+    ...rows.map((row) => [
+      row.reference,
+      row.type,
+      row.severity,
+      row.statedReason,
+      row.suggestedAction ?? '',
+      row.evidence
+        .map((line) =>
+          [line.label, line.source ?? '—', line.ledger ?? '—'].join(' ')
+            + (line.note === undefined ? '' : ` (${line.note})`),
+        )
+        .join('; '),
+    ]),
+  ]);
+}
+
 export function ExceptionList({ exceptions }: { readonly exceptions: readonly ExceptionView[] }) {
   const [type, setType] = useState<string>(ALL);
   const [severity, setSeverity] = useState<string>(ALL);
@@ -58,6 +99,23 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
       (type === ALL || exception.type === type) &&
       (severity === ALL || exception.severity === severity),
   );
+
+  /**
+   * Downloads the visible rows.
+   *
+   * Built and revoked in the handler rather than held in state: the blob is
+   * only alive for the length of one click, and an object URL kept across
+   * renders is a leak that never announces itself.
+   */
+  const downloadCsv = (): void => {
+    const blob = new Blob([exceptionsToCsv(visible)], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'exceptions.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  };
 
   if (exceptions.length === 0) {
     // A genuine success state, not an empty table.
@@ -97,6 +155,12 @@ export function ExceptionList({ exceptions }: { readonly exceptions: readonly Ex
               <option value="medium">Medium</option>
               <option value="low">Low</option>
             </InlineSelect>
+            {/* Labelled by what lands on disk, not by the mechanism: the count
+                is the whole question a reader has before clicking, and it
+                changes with the filters beside it. */}
+            <Button variant="quiet" size="sm" onClick={downloadCsv} disabled={visible.length === 0}>
+              Export {visible.length} to CSV
+            </Button>
           </div>
         }
       >

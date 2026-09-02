@@ -37,10 +37,16 @@ function escapeField(value: string): string {
 /**
  * Joins rows into CSV text.
  *
+ * Exported so the exception queue's download uses this escaper rather than a
+ * second one written alongside it: a `stated_reason` is a sentence and will
+ * contain commas, and two escapers is one more than can be kept correct. The
+ * app layer may import from core (the dependency rule runs one way only), and
+ * this adds nothing to core's own dependencies.
+ *
  * @param rows - Header row followed by data rows.
  * @returns CSV text with a trailing newline.
  */
-function toCsv(rows: readonly (readonly string[])[]): string {
+export function toCsv(rows: readonly (readonly string[])[]): string {
   return `${rows.map((row) => row.map(escapeField).join(',')).join('\n')}\n`;
 }
 

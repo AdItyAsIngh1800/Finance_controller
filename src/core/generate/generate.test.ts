@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { subMinor, sumMinor, type Minor } from '../money';
 import type { NormalizedRecord, SettlementDetail } from '../types';
 import { DEFAULT_BANK_OPTIONS, generateBankDataset } from './bank';
-import { bankToCsv, settlementToCsv } from './csv';
+import { bankToCsv, settlementToCsv, toCsv } from './csv';
 import type { GeneratedDataset } from './manifest';
 import {
   DEFAULT_SETTLEMENT_OPTIONS,
@@ -303,5 +303,30 @@ describe('csv serialization', () => {
       const credit = columns[5] ?? '';
       expect(debit === '' ? credit !== '' : credit === '').toBe(true);
     }
+  });
+
+  /*
+   * `toCsv` is exported for the exception queue's download, whose payload is a
+   * `stated_reason` — a sentence, so commas are the normal case rather than the
+   * edge case. An unescaped one shifts every later column by a field, which a
+   * spreadsheet opens without complaint and a reader discovers only after
+   * trusting the numbers.
+   */
+  it('escapes commas, quotes and newlines in CSV fields', () => {
+    const csv = toCsv([
+      ['reference', 'reason'],
+      ['ORD-1', 'Netted a refund, which the ledger never recorded'],
+      ['ORD-2', 'Marked "duplicate" by the processor'],
+      ['ORD-3', 'First line\nsecond line'],
+    ]);
+    const [, comma, quoted, newline] = csv.trimEnd().split('\n');
+
+    // The comma is inside the quoted field, so the row still has two columns.
+    expect(comma).toBe('ORD-1,"Netted a refund, which the ledger never recorded"');
+    // Embedded quotes are doubled, per RFC 4180.
+    expect(quoted).toBe('ORD-2,"Marked ""duplicate"" by the processor"');
+    // A newline inside a field is quoted, so the record spans two physical
+    // lines and the split above sees only the first of them.
+    expect(newline).toBe('ORD-3,"First line');
   });
 });
