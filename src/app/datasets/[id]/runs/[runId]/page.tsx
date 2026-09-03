@@ -383,7 +383,7 @@ export default async function RunPage({
           below is for interrogating, and the same number serving both is
           cheaper than teaching a reader that they differ.
         */}
-        <div className="mt-4">
+        <div className="mt-4 print:hidden">
           <SummaryCards
             figures={[
               {
@@ -417,7 +417,7 @@ export default async function RunPage({
 
         {/* The closing figure, under a double rule — the accounting convention
             for a final total rather than a subtotal. */}
-        <Card className="mt-6 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
+        <Card className="mt-6 grid gap-6 p-5 print:hidden sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
           <div>
             <p className="eyebrow">Match rate</p>
             <p className="rule-closing pb-2 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
@@ -481,13 +481,22 @@ export default async function RunPage({
           </div>
         </Card>
 
-        <RunCharts byType={chartByType} trend={chartTrend} confidence={chartConfidence} />
+        {/*
+          Everything above and inside here is the screen instrument, and none of
+          it belongs on paper: the cards and the queue restate what the report
+          already says, and the charts bake their colours into SVG attributes at
+          mount, so the print palette cannot reach them and they arrive as muddy
+          mid-tones on a monochrome printer.
+        */}
+        <div className="print:hidden">
+          <RunCharts byType={chartByType} trend={chartTrend} confidence={chartConfidence} />
 
-        <RunWorkspace
-          runId={runId}
-          exceptions={exceptions}
-          initialExpanded={initialExpanded}
-        />
+          <RunWorkspace
+            runId={runId}
+            exceptions={exceptions}
+            initialExpanded={initialExpanded}
+          />
+        </div>
 
         {/* Hidden on screen, and the only thing that prints. */}
         <RunReport
