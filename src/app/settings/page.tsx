@@ -114,6 +114,42 @@ export default async function SettingsPage() {
             </dl>
           </Card>
         </section>
+        <section className="mt-10">
+          <SectionHeading>Data and retention</SectionHeading>
+          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
+            Stated plainly because this is a finance tool and the question is reasonable. Nothing
+            below is aspirational — it describes what the code does today.
+          </p>
+          <Card className="mt-3 px-5 py-1">
+            <dl>
+              <Row
+                label="What is stored"
+                value="Files, records, results"
+                detail="The statement or CSV you upload, the records parsed or extracted from it, and the output of each reconciliation run."
+              />
+              <Row
+                label="Who can read it"
+                value="Only this account"
+                detail="Row-level security scopes every table and every storage object to the owning user. There is deliberately no service-role key anywhere in this project — not in the repository, not in the deployment — because that key bypasses RLS entirely."
+              />
+              <Row
+                label="Deleting a dataset"
+                value="Immediate, irreversible"
+                detail="Removes the uploaded files from storage first, then the dataset row; every record, run, match and exception is removed with it by cascade. No copy is kept."
+              />
+              <Row
+                label="Automatic expiry"
+                value="None"
+                detail="An honest limitation rather than a feature: nothing is deleted on a schedule, so a document stays until you delete its dataset. A retention window is the obvious next step and is not built."
+              />
+              <Row
+                label="Sent to the model"
+                value="Documents, at extraction"
+                detail="Only when you upload a PDF or image for extraction, and only the file itself. Reconciliation runs entirely on this server with no model involved, and the Q&A agent sees only results that have already been computed."
+              />
+            </dl>
+          </Card>
+        </section>
       </PageShell>
     </AppShell>
   );
