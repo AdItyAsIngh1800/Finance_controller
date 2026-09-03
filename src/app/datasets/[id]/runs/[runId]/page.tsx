@@ -222,14 +222,36 @@ export default async function RunPage({
    * doing it in `number` is exactly the float drift the money type exists to
    * prevent.
    */
-  const matchedSourceIds = new Set(
-    (matches ?? []).flatMap((match) => (match as { source_record_ids: string[] }).source_record_ids),
-  );
+  const matchedSourceIds = [
+    ...new Set(
+      (matches ?? []).flatMap(
+        (match) => (match as { source_record_ids: string[] }).source_record_ids,
+      ),
+    ),
+  ];
+
+  /*
+   * Fetched separately rather than read out of `recordById`.
+   *
+   * That map is built from the ids the *exceptions* reference, so looking the
+   * matched records up in it silently returned only the handful that happen to
+   * appear in both — the total came out at roughly a thirtieth of the real
+   * figure, which is small enough to look plausible and is therefore the worst
+   * kind of wrong. Found on 4 September by reading the number on a seeded run
+   * and comparing it against the per-record amounts in the queue beneath it.
+   *
+   * Only two columns, and no `extractions` join: this query exists to add up
+   * money, not to render anything.
+   */
+  const { data: matchedAmounts } =
+    matchedSourceIds.length === 0
+      ? { data: [] }
+      : await client.from('source_records').select('amount_minor').in('id', matchedSourceIds);
+
   const reconciledMinor = sumMinor(
-    [...matchedSourceIds]
-      .map((recordId) => recordById.get(recordId)?.amountMinor)
-      .filter((amount): amount is bigint => amount !== undefined)
-      .map((amount) => toMinor(amount)),
+    (matchedAmounts ?? []).map((row) =>
+      toMinor(BigInt((row as { amount_minor: number | string }).amount_minor)),
+    ),
   );
 
   /** Exceptions still awaiting a reviewer — the actionable count. */
