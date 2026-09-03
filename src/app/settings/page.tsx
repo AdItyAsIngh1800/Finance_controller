@@ -35,8 +35,12 @@ function Row({
   return (
     <div className="border-b border-rule py-3 last:border-0">
       <div className="flex items-baseline justify-between gap-4">
-        <dt className="text-sm">{label}</dt>
-        <dd className="shrink-0 font-mono text-sm">{value}</dd>
+        <dt className="shrink-0 text-sm">{label}</dt>
+        {/* `min-w-0 break-all` rather than `shrink-0`: the values here are
+            mostly short (`±3 days`, `≥ 0.85`) and would never wrap, but the
+            signed-in address is arbitrary-length and pushed the page 6px wider
+            than a 320px viewport. The label is the fixed side instead. */}
+        <dd className="min-w-0 break-all text-right font-mono text-sm">{value}</dd>
       </div>
       <p className="prose-measure mt-1 text-xs leading-relaxed text-ink-muted">{detail}</p>
     </div>
