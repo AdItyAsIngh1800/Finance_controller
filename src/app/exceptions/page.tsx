@@ -16,7 +16,7 @@ import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-sidebar';
 import { SeverityBadge } from '@/components/severity';
 import { SummaryCards } from '@/components/summary-cards';
-import { Card, EmptyState, PageShell, SectionHeading } from '@/components/ui';
+import { Card, EmptyState, PageShell, SectionHeading, TableScroller } from '@/components/ui';
 import { SEVERITY_RANK, type Severity } from '@/core/taxonomy';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
@@ -109,7 +109,7 @@ export default async function ExceptionsPage() {
               All findings
             </SectionHeading>
             <Card className="mt-3 overflow-hidden">
-              <div className="overflow-x-auto">
+              <TableScroller label="All exceptions across runs">
                 <table className="w-full min-w-[44rem] text-sm">
                   <thead>
                     <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -165,7 +165,7 @@ export default async function ExceptionsPage() {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </TableScroller>
             </Card>
           </section>
         )}

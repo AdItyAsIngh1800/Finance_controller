@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Card, PageShell, SectionHeading } from '@/components/ui';
+import { Card, PageShell, SectionHeading, TableScroller } from '@/components/ui';
 import {
   computeScorecards,
   EXTRACTION_RESULTS,
@@ -175,7 +175,7 @@ function Scorecard({ card }: { readonly card: DomainScorecard }) {
           apart from each other, so it scrolls within its card below the width
           they fit in rather than reflowing into stacked pairs. */}
       <Card className="mt-3 overflow-hidden">
-        <div className="overflow-x-auto">
+        <TableScroller label={`${card.domain} domain scorecard`}>
           <table className="w-full min-w-[34rem] text-sm">
             <thead>
               <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -229,7 +229,7 @@ function Scorecard({ card }: { readonly card: DomainScorecard }) {
               </tr>
             </tfoot>
           </table>
-        </div>
+        </TableScroller>
       </Card>
 
       <p className="mt-3 text-xs text-ink-muted">

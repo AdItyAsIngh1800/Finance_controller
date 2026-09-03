@@ -23,28 +23,43 @@ import { Mark } from './ui';
 export function PublicHeader() {
   return (
     <header className="sticky top-0 z-30 border-b border-rule bg-page/85 backdrop-blur-md">
-      <div className="mx-auto flex w-full max-w-4xl items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6 lg:px-8">
+      {/*
+        Wraps rather than overflows. Four links plus the theme control exceed a
+        320px viewport, and before this the whole page scrolled sideways by 72px
+        — the bar simply pushed past the edge. Wrapping costs a second row on a
+        narrow phone and keeps every destination reachable, which is the better
+        trade than hiding links that only exist to be found.
+      */}
+      <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:gap-x-3 sm:py-3 sm:px-6 lg:px-8">
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 rounded-control transition-opacity duration-150 ease-ui hover:opacity-80 sm:gap-2.5"
         >
           <Mark />
-          {/* Drops below 360px so the three links and the theme control still
-              fit; the mark alone still identifies the product. */}
-          <span className="hidden whitespace-nowrap text-sm font-semibold tracking-tight min-[360px]:inline">
+          {/*
+            Visually dropped below 360px so the nav links and the theme control
+            still fit — but `sr-only`, not `hidden`. The mark beside it is
+            decorative and `aria-hidden`, so `display: none` here left the link
+            with no accessible name at all: axe reports `link-name` at 320px, and
+            a screen reader announces an unlabelled link to the home page.
+          */}
+          <span className="sr-only whitespace-nowrap text-sm font-semibold tracking-tight min-[360px]:not-sr-only min-[360px]:inline">
             Finance Controller
           </span>
         </Link>
 
-        <nav aria-label="Main" className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+        <nav aria-label="Main" className="order-3 -ml-1.5 flex w-full flex-wrap items-center gap-0.5 sm:order-none sm:ml-auto sm:w-auto sm:flex-nowrap sm:shrink-0 sm:gap-1">
           <PublicNavLink href="/#how-it-works">How it works</PublicNavLink>
+          <PublicNavLink href="/docs">Docs</PublicNavLink>
           <PublicNavLink href="/formats">Formats</PublicNavLink>
           <PublicNavLink href="/evaluation">Accuracy</PublicNavLink>
           <PublicNavLink href="/signin">Sign in</PublicNavLink>
         </nav>
 
         <span aria-hidden="true" className="hidden h-5 w-px bg-rule sm:block" />
-        <ThemeToggle />
+        <span className="ml-auto sm:ml-0">
+          <ThemeToggle />
+        </span>
       </div>
     </header>
   );
@@ -76,11 +91,12 @@ export function PublicFooter() {
         <p>
           AI Finance Controller — built by Aditya Singh for the 2026 buildathon, Track 04.
         </p>
+        {/* No source link: the repository is private, so it 404s for everyone
+            but the owner, and a footer link that fails is worse than an absent
+            one. Restore it if the repository is ever made public. */}
         <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <FooterLink href="https://github.com/AdItyAsIngh1800/Finance_controller">
-            Source on GitHub
-          </FooterLink>
           <FooterLink href="/formats">What it reads</FooterLink>
+          <FooterLink href="/docs">How matching works</FooterLink>
           <FooterLink href="/evaluation">Accuracy report</FooterLink>
         </nav>
       </div>

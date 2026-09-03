@@ -21,7 +21,7 @@
 
 import Link from 'next/link';
 import { PublicFooter, PublicHeader } from '@/components/public-chrome';
-import { buttonClasses, Card, PageShell, SectionHeading } from '@/components/ui';
+import { Card, PageShell, SectionHeading, TableScroller, buttonClasses } from '@/components/ui';
 
 /** One column, and what the engine does with it. */
 interface Column {
@@ -57,7 +57,7 @@ const BANK_COLUMNS: readonly Column[] = [
 function Columns({ columns }: { readonly columns: readonly Column[] }) {
   return (
     <Card className="mt-3 overflow-hidden">
-      <div className="overflow-x-auto">
+      <TableScroller label="Accepted columns">
         <table className="w-full min-w-[36rem] text-sm">
           <thead>
             <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -84,7 +84,7 @@ function Columns({ columns }: { readonly columns: readonly Column[] }) {
             ))}
           </tbody>
         </table>
-      </div>
+      </TableScroller>
     </Card>
   );
 }

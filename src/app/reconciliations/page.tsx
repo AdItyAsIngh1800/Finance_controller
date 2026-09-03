@@ -12,7 +12,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { AppShell } from '@/components/app-sidebar';
-import { Card, EmptyState, PageShell, SectionHeading } from '@/components/ui';
+import { Card, EmptyState, PageShell, SectionHeading, TableScroller } from '@/components/ui';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** One run, joined to the dataset it belongs to. */
@@ -69,7 +69,7 @@ export default async function ReconciliationsPage() {
               All runs
             </SectionHeading>
             <Card className="mt-3 overflow-hidden">
-              <div className="overflow-x-auto">
+              <TableScroller label="All reconciliation runs">
                 <table className="w-full min-w-[46rem] text-sm">
                   <thead>
                     <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
@@ -117,7 +117,7 @@ export default async function ReconciliationsPage() {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </TableScroller>
             </Card>
           </section>
         )}

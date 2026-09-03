@@ -97,6 +97,46 @@ export function Mark({ size = 'sm' }: { readonly size?: 'sm' | 'md' }) {
 }
 
 /**
+ * A horizontally scrolling wrapper for a wide table.
+ *
+ * Every dense table in this interface is wider than a phone and scrolls inside
+ * its card rather than reflowing — five numeric columns mean nothing apart from
+ * each other. That scrolling brings two requirements a plain `overflow-x-auto`
+ * div does not satisfy, and both were found by running axe at 320px:
+ *
+ * - **`tabIndex={0}`.** A scrollable region has to be reachable by keyboard, or
+ *   someone not using a pointer cannot see the columns that are off-screen.
+ *   `role="region"` plus a label is what makes that stop instead of an
+ *   unexplained tab stop.
+ * - **`relative`.** Tailwind's `sr-only` is `position: absolute`, and an
+ *   absolutely-positioned element is clipped by an ancestor's overflow only
+ *   when that ancestor is its containing block. Without this the screen-reader
+ *   labels inside table buttons escape the clip and scroll the whole document
+ *   sideways.
+ *
+ * @param props.label - Names the region for assistive technology. Say what the
+ *   table contains, not that it scrolls.
+ */
+export function TableScroller({
+  label,
+  children,
+}: {
+  readonly label: string;
+  readonly children: ReactNode;
+}) {
+  return (
+    <div
+      role="region"
+      aria-label={label}
+      tabIndex={0}
+      className="relative overflow-x-auto focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ink"
+    >
+      {children}
+    </div>
+  );
+}
+
+/**
  * A section heading with its rule.
  *
  * @param props.trailing - Optional right-aligned content, such as a count or a
