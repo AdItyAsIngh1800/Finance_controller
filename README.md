@@ -12,6 +12,43 @@ The valuable output of reconciliation is not the list of things that matched. It
 
 The system does three jobs. Two use AI. One deliberately does not, and that is the point.
 
+```mermaid
+flowchart LR
+    subgraph S1["Stage 1 · Extract"]
+        direction TB
+        DOC["PDF / scan / photo"] --> GEM["Gemini, multimodal<br/>per-field confidence"]
+        GEM -->|"&lt; 0.85"| Q["Review queue<br/>a person confirms"]
+    end
+
+    subgraph S2["Stage 2 · Reconcile"]
+        direction TB
+        T1["Tier 1 · exact reference"] --> T2["Tier 2 · amount + date"]
+        T2 --> T3["Tier 3 · fuzzy reference"]
+        T3 --> T4["Tier 4 · combined payments"]
+        T4 --> RES["residue"]
+        RES --> EXC["8 typed exceptions<br/>each with a stated reason"]
+    end
+
+    subgraph S3["Stage 3 · Explain"]
+        direction TB
+        ASK["A question"] --> AG["Gemini, function calling<br/>read-only lookups"]
+        AG --> ANS["Answer + visible call trace<br/>quotes figures, never computes them"]
+    end
+
+    CSV["CSV upload"] --> S2
+    GEM -->|"&ge; 0.85"| S2
+    S1 --> S2 --> S3
+
+    classDef ai fill:#2a2116,stroke:#f5a623,color:#f5a623
+    classDef noai fill:#10241f,stroke:#2dd4a8,color:#2dd4a8
+    class S1,S3 ai
+    class S2 noai
+```
+
+**Amber stages use a model. The teal one does not, and that is the whole argument.**
+Identical input to Stage 2 produces byte-identical output: no scoring to tune, no
+model to have an off day, and every match records the tier that claimed it.
+
 | Stage | Job | AI? | Why |
 |---|---|---|---|
 | **1 — Extract** | Messy PDFs and scans → structured records | **Yes** | Reading unstructured documents is hard for rules and easy for a multimodal model. Every field carries a confidence score; anything under 85% is **quarantined**, never silently guessed. |
