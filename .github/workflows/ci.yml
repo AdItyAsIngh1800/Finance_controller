@@ -1,0 +1,71 @@
+# Runs the checks that were previously only run by hand before each commit.
+#
+# CLAUDE.md recorded "No CI" as a deliberate choice for a six-day solo build:
+# the loop was fast enough locally that a hosted runner added latency and no
+# information. That held while one person was the only committer. It stops
+# holding the moment the repository is read by someone deciding whether to
+# trust it, because a green check is evidence they can see and a local `npm
+# test` is not.
+#
+# Deliberately narrow. No deploy step: Vercel already builds every push to
+# main, and a second pipeline that can disagree with the first is worse than
+# one. No fixture regeneration either — the generators are seeded and
+# `generate.test.ts` is the guard, so regenerating here would only prove the
+# runner can run Node.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push makes the previous run's answer irrelevant, so cancel it rather
+# than paying for both.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # `npm ci` rather than `npm install`: it installs exactly the lockfile and
+      # fails if package.json and the lock have drifted, which is a real defect
+      # to catch rather than to silently repair.
+      - run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      # The honest check. Green assertions cannot tell "recall 1.00 because
+      # everything was found" from "recall 1.00 because nothing was planted", so
+      # the scorecard's actual counts are printed into the run log where a
+      # reviewer can read them.
+      - name: Accuracy scorecard
+        run: npm run scorecard
+
+      # Catches build-only failures the dev server never sees — the Tailwind
+      # class scanner silently dropping a data URI is the one that has actually
+      # bitten this project.
+      - name: Production build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: placeholder-key
+          GEMINI_API_KEY: placeholder-key
+          GEMINI_MODEL_ID: gemini-3.6-flash

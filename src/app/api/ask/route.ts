@@ -11,11 +11,31 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { askAboutRun } from '@/ai/agent';
 import { createSupabaseDataSource } from '@/lib/recon-source';
+import { consume } from '@/lib/rate-limit';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getCurrentUser();
   if (user === null) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+
+  /*
+   * Budget check, immediately after authentication and before any work.
+   *
+   * Placed here rather than deeper in the handler so a refused call costs a map
+   * lookup instead of a file read, a storage write and a model round trip.
+   * `Retry-After` is set because a 429 without it tells a client to guess.
+   */
+  const budget = consume('ask', user.id);
+  if (!budget.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          'Too many requests. This limit exists to keep one runaway loop from ' +
+          'spending the project\'s model budget; wait a moment and try again.',
+      },
+      { status: 429, headers: { 'Retry-After': String(budget.retryAfterSeconds) } },
+    );
+  }
 
   let body: { runId?: unknown; question?: unknown; history?: unknown };
   try {

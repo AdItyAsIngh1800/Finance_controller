@@ -10,7 +10,10 @@ import { fileURLToPath } from 'node:url';
  */
 export default defineConfig({
   test: {
-    include: ['src/core/**/*.test.ts'],
+    // `src/lib` joined `src/core` on 3 September 2026 for the rate limiter.
+    // This is not a loosening of "no component or E2E tests": both globs still
+    // collect only pure-function unit tests, with no DOM and no network.
+    include: ['src/core/**/*.test.ts', 'src/lib/**/*.test.ts'],
     environment: 'node',
   },
   resolve: {

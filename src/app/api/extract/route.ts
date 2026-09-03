@@ -14,6 +14,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { extractSettlementDocument } from '@/ai/extract';
 import { isRecordSide } from '@/core/taxonomy';
 import { promoteExtraction } from '@/lib/pipeline';
+import { consume } from '@/lib/rate-limit';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
 
 /** Ceiling on an uploaded document. */
@@ -31,6 +32,25 @@ const ACCEPTED_TYPES = new Set([
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const user = await getCurrentUser();
   if (user === null) return NextResponse.json({ error: 'Not signed in.' }, { status: 401 });
+
+  /*
+   * Budget check, immediately after authentication and before any work.
+   *
+   * Placed here rather than deeper in the handler so a refused call costs a map
+   * lookup instead of a file read, a storage write and a model round trip.
+   * `Retry-After` is set because a 429 without it tells a client to guess.
+   */
+  const budget = consume('extract', user.id);
+  if (!budget.allowed) {
+    return NextResponse.json(
+      {
+        error:
+          'Too many requests. This limit exists to keep one runaway loop from ' +
+          'spending the project\'s model budget; wait a moment and try again.',
+      },
+      { status: 429, headers: { 'Retry-After': String(budget.retryAfterSeconds) } },
+    );
+  }
 
   const form = await request.formData();
   const datasetId = String(form.get('datasetId') ?? '');
