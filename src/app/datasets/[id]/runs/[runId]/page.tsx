@@ -188,22 +188,33 @@ export default async function RunPage({
    * after `flagged`-style values by accident of spelling rather than by
    * meaning. Amount descends so the costliest unexplained gap is first.
    */
+  /*
+   * Resolves the record a finding is *about*, source side first.
+   *
+   * Shared by the sort and the row rendering, and it has to be: an
+   * UNMATCHED_LEDGER exception has no source record, so a sort that looked only
+   * at `source_record_ids` scored it zero while the row displayed the ledger
+   * amount — putting a ₹1,935 finding below an ₹800 one and making the column
+   * look unsorted. One lookup, used twice, cannot disagree with itself.
+   */
+  const recordFor = (row: ExceptionRow): ResolvedRecord | undefined =>
+    recordById.get(row.source_record_ids[0] ?? '') ??
+    recordById.get(row.ledger_entry_ids[0] ?? '');
+
   const sortedRows = [...rows].sort((a, b) => {
     const bySeverity = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
     if (bySeverity !== 0) return bySeverity;
-    const amountA = recordById.get(a.source_record_ids[0] ?? '')?.amountMinor ?? 0n;
-    const amountB = recordById.get(b.source_record_ids[0] ?? '')?.amountMinor ?? 0n;
-    // bigint comparison, then narrowed to a number: subtracting bigints and
-    // coercing would overflow for large amounts and lose the sign for small.
+    const amountA = recordFor(a)?.amountMinor ?? 0n;
+    const amountB = recordFor(b)?.amountMinor ?? 0n;
+    // Compared rather than subtracted: bigint subtraction coerced to a number
+    // overflows for large amounts and loses the sign for sub-rupee differences.
     if (amountA === amountB) return 0;
     return amountB > amountA ? 1 : -1;
   });
 
   const exceptions: ExceptionView[] = sortedRows.map((row) => {
     const evidence = (decodeFromJsonb(row.evidence) ?? []) as EvidenceLine[];
-    const record =
-      recordById.get(row.source_record_ids[0] ?? '') ??
-      recordById.get(row.ledger_entry_ids[0] ?? '');
+    const record = recordFor(row);
 
     return {
       id: row.id,
