@@ -13,7 +13,9 @@ import { notFound, redirect } from 'next/navigation';
 import { Breadcrumb } from '@/components/app-header';
 import { AppShell } from '@/components/app-sidebar';
 import type { ExceptionStatus, ExceptionView } from '@/components/exception-list';
+import { PrintButton } from '@/components/print-button';
 import { RunCharts, type ConfidenceDatum } from '@/components/run-charts';
+import { RunReport } from '@/components/run-report';
 import { RunWorkspace } from '@/components/run-workspace';
 import { SummaryCards } from '@/components/summary-cards';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
@@ -279,6 +281,28 @@ export default async function RunPage({
 
   const params_ = summary.params;
   const datasetName = (dataset as { name?: string } | null)?.name ?? 'Dataset';
+  const datasetDomain = (dataset as { domain?: string } | null)?.domain ?? 'settlement';
+
+  /*
+   * The run's thresholds, formatted once.
+   *
+   * Read from `recon_runs.params` rather than from the current defaults: the
+   * point of snapshotting them is that an old report stays explicable after a
+   * default is retuned, and formatting them twice would let the screen and the
+   * printed page drift apart.
+   */
+  const thresholdRows = [
+    { label: 'Date window', value: `±${String(params_.dateWindowDays ?? '—')} days` },
+    {
+      label: 'Amount tolerance',
+      value: `±${(Number(params_.amountToleranceBps ?? 0) / 100).toFixed(2)}%`,
+    },
+    { label: 'Reference match', value: `≥ ${String(params_.refSimilarityThreshold ?? '—')}` },
+    {
+      label: 'Combined payments',
+      value: `≤ ${String(params_.maxPartialSetSize ?? '—')} records`,
+    },
+  ];
 
   return (
     <AppShell email={user?.email}>
@@ -290,6 +314,10 @@ export default async function RunPage({
             { label: summary.created_at.slice(0, 16).replace('T', ' ') },
           ]}
         />
+
+        <div className="mt-3 flex justify-end">
+          <PrintButton />
+        </div>
 
         {/*
           The four figures a controller looks for first. The match rate appears
@@ -384,20 +412,12 @@ export default async function RunPage({
                 cannot see is a magic number they cannot trust. */}
             <section className="sm:col-span-2 lg:col-span-1">
               <SectionHeading>Thresholds applied</SectionHeading>
+              {/* Same array the printed report reads, so a threshold cannot
+                  show one value on screen and another on paper. */}
               <dl className="mt-1">
-                <Row label="Date window" value={`±${String(params_.dateWindowDays ?? '—')} days`} />
-                <Row
-                  label="Amount tolerance"
-                  value={`±${(Number(params_.amountToleranceBps ?? 0) / 100).toFixed(2)}%`}
-                />
-                <Row
-                  label="Reference match"
-                  value={`≥ ${String(params_.refSimilarityThreshold ?? '—')}`}
-                />
-                <Row
-                  label="Combined payments"
-                  value={`≤ ${String(params_.maxPartialSetSize ?? '—')} records`}
-                />
+                {thresholdRows.map((threshold) => (
+                  <Row key={threshold.label} label={threshold.label} value={threshold.value} />
+                ))}
               </dl>
             </section>
           </div>
@@ -409,6 +429,21 @@ export default async function RunPage({
           runId={runId}
           exceptions={exceptions}
           initialExpanded={initialExpanded}
+        />
+
+        {/* Hidden on screen, and the only thing that prints. */}
+        <RunReport
+          datasetName={datasetName}
+          domain={datasetDomain}
+          runAt={summary.created_at.slice(0, 16).replace('T', ' ')}
+          sourceCount={summary.source_count}
+          ledgerCount={summary.ledger_count}
+          matchedCount={summary.matched_count}
+          matchRate={summary.match_rate}
+          reconciledValue={formatMinor(reconciledMinor)}
+          exceptions={exceptions}
+          tiers={tierCounts.map(({ tier, count }) => ({ label: TIER_LABELS[tier], count }))}
+          thresholds={thresholdRows}
         />
       </PageShell>
     </AppShell>

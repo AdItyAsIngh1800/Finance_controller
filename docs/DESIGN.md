@@ -63,6 +63,7 @@ That low/high split is the queue's most useful property: a timing difference and
 | S-9 | Reconciliations | `/reconciliations` | Every run, across datasets | P1 |
 | S-10 | Exceptions | `/exceptions` | Every finding, across runs | P1 |
 | S-11 | Settings | `/settings` | Account, and the published thresholds | P1 |
+| S-12 | Formats | `/formats` | The file shapes the adapters accept | P1 |
 
 ---
 
@@ -327,7 +328,17 @@ A second, larger pass, taken on external design review. Four exclusions lifted, 
 | **Exception assign/comment/close** — "no grading value in one week" | A three-state `status` on each exception | Only the state, not the workflow: no assignee, no comment thread, no audit trail. Severity stays the engine's and is never edited; status is the one field a person may change, and it is a separate column so the run's own output remains reproducible. Runs stay append-only — status is an annotation on a frozen result. |
 
 The signed-in surface moved from a top bar to a **sidebar** (S-9 to S-11) at the same time, and the run dashboard gained four summary cards including the reconciled *value*, which no screen previously showed.
-### 7.2 The dark theme
+
+
+### 7.1.3 Added 3 September 2026
+
+| Added | Why |
+|---|---|
+| **Printable reconciliation summary** (S-5) | The step after clearing a queue is sending someone a document. Rendered as separate static markup rather than by printing the live DOM, because the queue's expanded state is React state — printing the screen would produce a report containing whichever findings happened to be open, and a report that silently omits findings is worse than none. No PDF library: the browser's print-to-PDF gives selectable text, working links and the reader's own paper size. Colour is dropped in print, which is safe precisely because §2 requires a text label beside every severity colour. |
+| **`/formats`** (S-12) | Built *instead of* a proposed "Integrations" page carrying Stripe, Razorpay, PayPal and bank logos. There are no live API integrations — §6 of `PRD.md` excludes them deliberately — and a "Works with" wall of third-party marks would claim a capability and a relationship that do not exist, to an audience specifically judging what is real. The honest version answers the same question better: the exact columns each adapter requires, what each is used for, and the limits. |
+| **Per-user rate limiting** on the two model routes | Extraction and Q&A were reachable as fast as a key could be held down. In-memory and therefore per-instance — a stated ceiling, not a hidden one. |
+| **Data-retention statement** on Settings | Says what is stored, who can read it, that deleting a dataset removes the files and cascades, and — honestly — that there is no automatic expiry. |
+| **CI** | `README`/`CLAUDE.md` recorded "no CI" as right for a solo six-day build. That held while one person was the only committer; it stops holding when the repository is being read by someone deciding whether to trust it, because a green check is evidence they can see. |### 7.2 The dark theme
 
 **Preference model.** Three states. `system` follows `prefers-color-scheme` and is the default; `light` and `dark` pin the choice. A two-state toggle was rejected because once clicked it can never return to following the OS — a viewer who flips it to look at something has silently opted out of their machine's evening switch, with no way back. The stored value is the *preference*, never the resolved theme, so someone who chose `system` in daylight still gets dark at night. `system` is stored as the absence of a key, so "never touched the control" and "explicitly chose to follow the OS" are the same state.
 

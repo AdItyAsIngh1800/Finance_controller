@@ -17,14 +17,16 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { supabasePublishableKey, supabaseUrl } from './env';
 
 /** Routes reachable without a session. Everything else requires sign-in. */
-const PUBLIC_ROUTES = ['/', '/signin', '/auth', '/evaluation', '/opengraph-image'] as const;
+const PUBLIC_ROUTES = ['/', '/signin', '/auth', '/evaluation', '/formats', '/opengraph-image'] as const;
 
 /**
  * Is this path publicly reachable?
  *
  * `/evaluation` is deliberately public: it reports accuracy against synthetic
  * ground truth, exposes no user data, and saves a reviewer from having to
- * create an account to see it.
+ * create an account to see it. `/formats` is public for the same reason — it
+ * documents the file shapes the adapters accept and contains nothing but
+ * static prose.
  *
  * `/opengraph-image` must be public for a different reason: the client
  * unfurling a shared link is a scraper with no cookies, so gating it means the

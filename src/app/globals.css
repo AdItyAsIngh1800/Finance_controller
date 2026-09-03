@@ -354,3 +354,70 @@ h3 {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * Print.
+ *
+ * The screen surface is an instrument; the printed page is a document. They
+ * want different things, so almost none of the interface comes through — the
+ * sidebar, the charts, every control and the interactive queue are all
+ * suppressed, and `RunReport` (hidden on screen) is what actually prints.
+ *
+ * Colour is forced back to the light palette regardless of the viewer's theme.
+ * Printing the dark theme would empty a toner cartridge to produce a page a
+ * finance team cannot read, and no browser's "background graphics" default
+ * would render it correctly anyway. Severity survives the loss of colour
+ * because §2 requires a text label beside it — which is the reason that rule
+ * exists rather than a happy accident.
+ */
+@media print {
+  :root,
+  :root[data-theme='dark'] {
+    --page: #ffffff;
+    --paper: #ffffff;
+    --paper-raised: #ffffff;
+    --paper-sunk: #ffffff;
+    --ink: #000000;
+    --ink-muted: #333333;
+    --ink-faint: #666666;
+    --rule: #cccccc;
+    --rule-strong: #888888;
+    --unaccounted: #000000;
+    --undecided: #000000;
+    --explained: #333333;
+    --settled: #000000;
+    --accent: #000000;
+    --lift-sm: none;
+    --lift-md: none;
+    --lift-lg: none;
+    color-scheme: light;
+  }
+
+  /* The paper grain is a screen affordance; on paper it is just toner. */
+  body::before {
+    display: none !important;
+  }
+
+  /* Chrome that has no meaning on a page. */
+  header,
+  nav,
+  footer,
+  button,
+  select {
+    display: none !important;
+  }
+
+  /* The report puts these back for its own header and footer. */
+  article header,
+  article footer {
+    display: block !important;
+  }
+
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #ffffff;
+  }
+}

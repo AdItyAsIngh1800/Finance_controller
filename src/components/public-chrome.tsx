@@ -38,6 +38,7 @@ export function PublicHeader() {
 
         <nav aria-label="Main" className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
           <PublicNavLink href="/#how-it-works">How it works</PublicNavLink>
+          <PublicNavLink href="/formats">Formats</PublicNavLink>
           <PublicNavLink href="/evaluation">Accuracy</PublicNavLink>
           <PublicNavLink href="/signin">Sign in</PublicNavLink>
         </nav>
@@ -79,6 +80,7 @@ export function PublicFooter() {
           <FooterLink href="https://github.com/AdItyAsIngh1800/Finance_controller">
             Source on GitHub
           </FooterLink>
+          <FooterLink href="/formats">What it reads</FooterLink>
           <FooterLink href="/evaluation">Accuracy report</FooterLink>
         </nav>
       </div>
