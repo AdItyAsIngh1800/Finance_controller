@@ -300,8 +300,19 @@ export function ExceptionList({
         <Card className="mt-3 overflow-hidden">
           {/* Seven columns that mean nothing apart from each other, so the table
               scrolls within its card below the width they fit in rather than
-              reflowing into stacked pairs. */}
-          <div className="overflow-x-auto">
+              reflowing into stacked pairs.
+
+              `relative` is load-bearing, not decoration. Tailwind's `sr-only`
+              is `position: absolute`, and an absolutely-positioned element is
+              only clipped by an ancestor's overflow when that ancestor is its
+              containing block — which a `static` element is not. Without this,
+              the screen-reader labels on the disclosure and status buttons were
+              positioned against the page instead of this box, escaped the
+              clip, and dragged the document's scroll width to 772px at a 320px
+              viewport: the whole page scrolled sideways, which §7.1 forbids.
+              Found on 4 September by measuring `scrollingElement.scrollWidth`
+              on a seeded run. */}
+          <div className="relative overflow-x-auto">
             <table className="w-full min-w-[54rem] text-sm">
               <thead>
                 <tr className="border-b border-rule bg-paper-sunk/60 text-[11px] uppercase tracking-wider text-ink-muted">
