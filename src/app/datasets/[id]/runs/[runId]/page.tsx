@@ -20,7 +20,7 @@ import { RunWorkspace } from '@/components/run-workspace';
 import { SummaryCards } from '@/components/summary-cards';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
 import { formatMinor, sumMinor, toMinor } from '@/core/money';
-import { EXCEPTION_SEVERITY, MATCH_TIERS, type ExceptionType, type MatchTier, type Severity } from '@/core/taxonomy';
+import { EXCEPTION_SEVERITY, MATCH_TIERS, SEVERITY_RANK, type ExceptionType, type MatchTier, type Severity } from '@/core/taxonomy';
 import { Card, PageShell, SectionHeading } from '@/components/ui';
 import { decodeFromJsonb } from '@/lib/serialize';
 import { createClient, getCurrentUser } from '@/lib/supabase/server';
@@ -174,7 +174,32 @@ export default async function RunPage({
   // Money is formatted here, on the server: `Minor` is a bigint and cannot
   // cross into a Client Component, and converting it to `number` would
   // reintroduce floats into the money path.
-  const exceptions: ExceptionView[] = rows.map((row) => {
+  /*
+   * Severity first, then largest amount — the order §S-6 specifies.
+   *
+   * This was never actually applied. The query has no ORDER BY, and the queue
+   * looked correctly sorted only because the engine happened to insert in that
+   * order and Postgres happened to return it. Changing a row's status broke the
+   * illusion: an updated row is rewritten and comes back in a different place,
+   * so a reviewer marking a finding watched it jump down the table.
+   *
+   * Sorted here rather than in SQL because severity's *rank* is defined in the
+   * taxonomy — Postgres would order the enum alphabetically, putting `high`
+   * after `flagged`-style values by accident of spelling rather than by
+   * meaning. Amount descends so the costliest unexplained gap is first.
+   */
+  const sortedRows = [...rows].sort((a, b) => {
+    const bySeverity = SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity];
+    if (bySeverity !== 0) return bySeverity;
+    const amountA = recordById.get(a.source_record_ids[0] ?? '')?.amountMinor ?? 0n;
+    const amountB = recordById.get(b.source_record_ids[0] ?? '')?.amountMinor ?? 0n;
+    // bigint comparison, then narrowed to a number: subtracting bigints and
+    // coercing would overflow for large amounts and lose the sign for small.
+    if (amountA === amountB) return 0;
+    return amountB > amountA ? 1 : -1;
+  });
+
+  const exceptions: ExceptionView[] = sortedRows.map((row) => {
     const evidence = (decodeFromJsonb(row.evidence) ?? []) as EvidenceLine[];
     const record =
       recordById.get(row.source_record_ids[0] ?? '') ??
