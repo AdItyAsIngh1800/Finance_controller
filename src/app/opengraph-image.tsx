@@ -12,8 +12,10 @@
  * Rendered by Next's `ImageResponse` at build time via Satori, which is not a
  * browser: it supports flexbox and a subset of CSS only, resolves no CSS
  * variables, and needs every colour written out as a literal. The values below
- * are the light-theme tokens from `globals.css` copied by hand — a social card
- * has no viewer preference to read, so it is always the light one.
+ * are the **dark** tokens from `globals.css` copied by hand. A social card has
+ * no viewer preference to read, and Midnight Ink with brass is the register the
+ * palette is designed from — a cream card would be the derived theme standing
+ * in for the brand.
  *
  * @see docs/DESIGN.md §2 — the palette these literals come from
  */
@@ -30,11 +32,13 @@ export const contentType = 'image/png';
 export const alt =
   'AI Finance Controller — zero false matches across both reconciliation domains';
 
-/* Light-theme tokens, inlined because Satori cannot resolve CSS variables. */
-const PAGE = '#f6f6f2';
-const INK = '#16171a';
-const INK_MUTED = '#6b6c70';
-const RULE_STRONG = '#c9c9c2';
+/* Dark-theme tokens, inlined because Satori cannot resolve CSS variables. */
+const PAGE = '#11130f';
+const INK = '#e9dfc9';
+const INK_MUTED = '#a69e8b';
+const RULE_STRONG = '#3f5245';
+/** The signature accent — the one place the card is allowed to shine. */
+const BRASS = '#c5a15b';
 
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -54,24 +58,26 @@ export default function OpengraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* The mark, redrawn as plain divs: Satori renders no inline SVG
-              paths, and two rules above a double rule is the whole glyph. */}
+              paths. Same rhythm as the real glyph — two entries, a gap, then
+              the heavier closing pair. */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              gap: 5,
+              gap: 6,
               width: 56,
               height: 56,
               padding: 12,
               borderRadius: 8,
-              background: INK,
+              background: '#11130f',
+              border: `1px solid ${RULE_STRONG}`,
             }}
           >
-            <div style={{ height: 3, width: 32, background: PAGE }} />
-            <div style={{ height: 3, width: 22, background: PAGE }} />
-            <div style={{ height: 3, width: 32, background: PAGE, marginTop: 5 }} />
-            <div style={{ height: 3, width: 32, background: PAGE }} />
+            <div style={{ height: 2, width: 32, background: BRASS }} />
+            <div style={{ height: 2, width: 20, background: BRASS }} />
+            <div style={{ height: 3, width: 32, background: BRASS, marginTop: 6 }} />
+            <div style={{ height: 3, width: 32, background: BRASS }} />
           </div>
           <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>
             AI Finance Controller
@@ -92,12 +98,13 @@ export default function OpengraphImage() {
                 fontWeight: 600,
                 letterSpacing: -6,
                 lineHeight: 1,
+                color: BRASS,
               }}
             >
               0
             </div>
-            <div style={{ height: 3, background: RULE_STRONG, marginTop: 14 }} />
-            <div style={{ height: 3, background: RULE_STRONG, marginTop: 4 }} />
+            <div style={{ height: 3, background: BRASS, marginTop: 14 }} />
+            <div style={{ height: 3, background: BRASS, marginTop: 4 }} />
           </div>
         </div>
 

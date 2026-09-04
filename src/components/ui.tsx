@@ -68,29 +68,49 @@ export function Card({
 /**
  * The product mark.
  *
- * Two rules and a double rule — the bookkeeping notation for a closing figure,
- * which is what this tool produces. Drawn inline so it inherits `currentColor`
- * and needs no asset request.
+ * Two ledger entries closing to a double rule — the bookkeeping notation for a
+ * final figure, which is exactly what this tool emits. Kept and redrawn rather
+ * than replaced on 4 September 2026, because it already means something about
+ * the product instead of being a decorative glyph.
  *
- * Lives here rather than beside the header because three screens draw it: the
- * signed-in header, the sign-in card and the public overview. The first two had
- * already diverged into separate copies at different sizes, which is exactly the
- * drift this module exists to stop.
+ * What changed: the four strokes used to be evenly spaced and near-equal in
+ * length, which read as a hamburger menu. Now the two entries are light and of
+ * different lengths — the second is short, as a subtotal is — a clear gap
+ * follows, and the closing pair is heavier and tight. The eye reads "some
+ * lines, then a total" rather than "a menu".
  *
- * @param props.size - `sm` for the header bar, `md` where the mark opens a page
- *   and carries the wordmark beside it at heading weight.
+ * A brass plate with the glyph cut out of it, in **both** themes, via
+ * `--brand-mark` and `--brand-ground`, which deliberately do not flip. A logo
+ * that inverts is two logos; this one is the same object on a card, a favicon
+ * and either surface.
+ *
+ * The plate is brass and the strokes are Midnight Ink, rather than the reverse.
+ * Drawn the other way round the tile was Midnight Ink on a Midnight Ink page
+ * and simply disappeared — there was no object, only four dim lines. Solid
+ * brass also survives being 16px in a browser tab, which fine strokes do not.
+ * Midnight Ink on Antique Gold measures 7.67:1, so the glyph stays crisp.
+ *
+ * Drawn inline so it needs no asset request. `aria-hidden` because the wordmark
+ * beside it carries the name — see `PublicHeader`, where that text stays
+ * `sr-only` rather than `hidden` at narrow widths for exactly this reason.
+ *
+ * @param props.size - `sm` for a navigation bar, `md` where the mark opens a
+ *   page beside the wordmark at heading weight.
  */
 export function Mark({ size = 'sm' }: { readonly size?: 'sm' | 'md' }) {
-  const box = size === 'md' ? 'h-8 w-8' : 'h-6 w-6';
-  const glyph = size === 'md' ? 'h-4 w-4' : 'h-3.5 w-3.5';
+  const box = size === 'md' ? 'h-9 w-9' : 'h-7 w-7';
+  const glyph = size === 'md' ? 'h-5 w-5' : 'h-4 w-4';
   return (
     <span
       aria-hidden="true"
-      className={`flex ${box} items-center justify-center rounded-control bg-ink text-paper`}
+      className={`flex ${box} shrink-0 items-center justify-center rounded-control bg-brand-mark text-brand-ground`}
     >
       <svg viewBox="0 0 16 16" className={glyph} fill="none" stroke="currentColor">
-        <path d="M3 4.5h10M3 8h7" strokeWidth="1.5" strokeLinecap="round" />
-        <path d="M3 11h10M3 12.75h10" strokeWidth="1.25" strokeLinecap="round" />
+        {/* Two entries. The short one is a subtotal. */}
+        <path d="M3.25 4.4h9.5M3.25 7h6" strokeWidth="1.1" strokeLinecap="round" />
+        {/* The closing double rule: heavier, and tight enough to read as one
+            mark rather than as two more entries. */}
+        <path d="M3.25 10.9h9.5M3.25 12.9h9.5" strokeWidth="1.5" strokeLinecap="round" />
       </svg>
     </span>
   );

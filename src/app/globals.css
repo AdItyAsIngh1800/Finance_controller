@@ -25,123 +25,148 @@
 :root {
   color-scheme: light;
 
-  /* Surfaces. A cool near-white rather than the warm ledger stock this
-     interface used until 3 September 2026: the palette is now anchored on the
-     dark theme (see below), and a warm paper under a cool dark counterpart made
-     the two themes read as two products. */
-  --page: #f4f6f8;
-  --paper: #fafbfc;
-  --paper-raised: #ffffff;
-  --paper-sunk: #eff2f5;
-  --ink: #0f1419;
-  --ink-muted: #55606e;
-  /* `--ink-faint` is for decorative marks only — disclosure arrows, breadcrumb
-     separators, the ⚙ before a call trace — every one of which is aria-hidden.
-     It sits deliberately below the 4.5:1 text floor (3.01:1 on the card);
+  /*
+   * Aged paper, not white.
+   *
+   * The palette is anchored on the dark theme below and this is derived from
+   * it, which is the reverse of how the two used to relate. Parchment is the
+   * ground and Antique Cream the card, so panels still lift *above* the desk
+   * exactly as they do in dark — inverting that relationship would sink the
+   * cards and read as holes.
+   *
+   * Every accent here is the dark theme's hue darkened until it clears 4.8:1 on
+   * both the page and the card. 4.8 rather than 4.5 because this project has
+   * already had a badge land on exactly 4.50 and flicker under sub-pixel
+   * rounding; the margin is deliberate.
+   */
+  --page: #d8ccb2;
+  --paper: #e9dfc9;
+  --paper-raised: #f2ebda;
+  --paper-sunk: #d0c3a6;
+  --ink: #11130f;
+  --ink-muted: #4a5647;
+  /* Decorative marks only — disclosure arrows, separators, the ⚙ before a call
+     trace, every one of which is aria-hidden. Below the text floor on purpose;
      readable text takes `--ink-muted`. */
-  --ink-faint: #8a96a5;
+  --ink-faint: #8a8570;
 
-  /* Hairlines. Two weights: a rule between rows, a heavier one between blocks. */
-  --rule: #dfe4ea;
-  --rule-strong: #c3cbd5;
-
-  /*
-   * Severity, re-hued on 3 September 2026.
-   *
-   * Red is gone from the palette. The argument for removing it: an exception is
-   * a normal part of this workflow rather than a fault, and a queue of red rows
-   * reads as a system in trouble instead of a day's work. What replaces it is
-   * *not* one amber for everything — that would collapse the high/low split
-   * §1 calls the queue's most useful property — but the three-way encoding
-   * below, which is the same one the dashboard uses for status.
-   *
-   * Every value is darkened from its dark-theme counterpart to clear 4.5:1 on
-   * this theme's lighter planes; the hues are unchanged.
-   */
-
-  /* Money unaccounted for. Amber, flagged for attention. */
-  --unaccounted: #8a5206;
-  --unaccounted-wash: #fdf4e6;
-
-  /* Awaiting a human decision. Blue, the dashboard's "pending review". */
-  --undecided: #2c5fc4;
-  --undecided-wash: #edf2fd;
-
-  /* Explained — the money is accounted for, it simply moved differently. */
-  --explained: #55606e;
-  --explained-wash: #eff2f5;
-
-  /* "In the black": matched, reconciled, resolved. */
-  --settled: #0b6b55;
-  --settled-wash: #e6f7f2;
-
-  /* Links and the primary action. Carried as its own token rather than reusing
-     `--undecided`, which happens to share the hue: one is a severity and the
-     other is an affordance, and a future change to either must not move both. */
-  --accent: #2c5fc4;
+  --rule: #c4b79b;
+  --rule-strong: #a89a7e;
 
   /*
-   * Elevation.
+   * Severity, re-hued on 4 September 2026.
    *
-   * Two steps only, both barely-there. On a dense table a pronounced shadow
-   * becomes visual noise repeated forty times down the page, so these are tuned
-   * to separate planes rather than to be noticed.
+   * Oxblood carries high severity and is the one colour that needs no
+   * adjustment between themes: it clears 7.63:1 on this ground as text, and on
+   * the dark ground it is used as a fill instead, where cream on it clears
+   * 9.17:1. The same pigment, used two ways.
    */
-  --lift-sm: 0 1px 2px rgb(15 20 25 / 0.04), 0 1px 1px rgb(15 20 25 / 0.03);
-  --lift-md: 0 1px 2px rgb(15 20 25 / 0.04), 0 4px 12px -2px rgb(15 20 25 / 0.06);
-  --lift-lg: 0 2px 4px rgb(15 20 25 / 0.04), 0 12px 28px -6px rgb(15 20 25 / 0.10);
+  --unaccounted: #5a2528;
+  --unaccounted-wash: #ead9c9;
+
+  --undecided: #62502d;
+  --undecided-wash: #e6dcc0;
+
+  --explained: #4a5647;
+  --explained-wash: #ded2b8;
+
+  --settled: #4a5746;
+  --settled-wash: #d9d7bc;
+
+  /*
+   * Brass. Darkened from #B08A4A, which scores only 2.41:1 on Antique Cream and
+   * cannot carry text on a light ground.
+   *
+   * Note that the dark theme's two golds — Brass and Antique Gold Highlight —
+   * both land here once darkened for AA: they differ by a value the light
+   * planes cannot express. Light therefore has one brass, and the
+   * brass/highlight distinction is a dark-theme affordance only.
+   */
+  --accent: #66502b;
+  --accent-strong: #62502d;
+
+  /*
+   * The mark's own colours, which do NOT flip with the theme.
+   *
+   * A logo that inverts is two logos. These stay Midnight Ink and brass in both
+   * themes so the tile reads the same on a business card, a favicon and either
+   * surface.
+   */
+  --brand-ground: #11130f;
+  --brand-mark: #c5a15b;
+
+  --lift-sm: 0 1px 2px rgb(17 19 15 / 0.06), 0 1px 1px rgb(17 19 15 / 0.04);
+  --lift-md: 0 1px 2px rgb(17 19 15 / 0.06), 0 4px 12px -2px rgb(17 19 15 / 0.09);
+  --lift-lg: 0 2px 4px rgb(17 19 15 / 0.06), 0 12px 28px -6px rgb(17 19 15 / 0.14);
 }
 
 /*
- * Dark — and, since 3 September 2026, the theme the palette is designed *from*.
- * The light theme above is derived from these hues rather than the reverse.
+ * Dark — the theme the palette is designed *from*, and the product's real
+ * register: a ledger read by lamplight rather than a spreadsheet under strip
+ * lighting.
  *
- * Anchors: a deep charcoal-navy ground rather than pure black, and a soft white
- * rather than #fff — pure white on near-black haloes at the small sizes this
- * interface uses for figures.
+ * Midnight Ink is almost black but carries a green undertone, so the forest
+ * planes above it read as the same material rather than as grey panels on black.
  *
- * The ground stays the darkest plane and cards lift above it, preserving the
- * "panels are objects on a desk" relationship; inverting that would sink the
- * cards and read as holes.
+ * Measured against the card plane: Antique Cream 12.24:1, muted 6.08:1, Antique
+ * Gold 6.65:1, brass 5.08:1, settled 4.58:1 — every text pair clears AA on the
+ * page, the card and its own wash.
  *
- * Measured against the card plane: ink 13.3:1, ink-muted 6.4:1, unaccounted
- * 7.9:1, undecided 5.0:1, settled 8.5:1, accent 5.0:1 — every text pair clears
- * AA on the card, on the page and on its own wash. Hairlines sit at 1.2:1 and
- * 1.6:1: a rule is meant to be felt rather than read.
+ * Two constraints this palette imposes, both found by measuring before building:
+ *
+ * 1. **Oxblood is never text here.** Against Midnight Ink it is 1.54:1 — it has
+ *    nearly the same luminance as the ground. It is a fill, and Antique Cream on
+ *    it clears 9.17:1. Severity is therefore a filled chip, not coloured text.
+ * 2. **Brass must not sit on Rich Forest** (3.97:1). On that plane use Antique
+ *    Cream or the gold highlight instead.
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --page: #0f1419;
-  --paper: #151b22;
-  --paper-raised: #1a222b;
-  --paper-sunk: #131920;
-  --ink: #e8eaed;
-  --ink-muted: #9aa4b2;
-  --ink-faint: #6b7684;
+  --page: #11130f;
+  --paper: #18231c;
+  --paper-raised: #24372b;
+  --paper-sunk: #151e19;
+  --ink: #e9dfc9;
+  --ink-muted: #a69e8b;
+  --ink-faint: #6f6f60;
 
-  --rule: #232d38;
-  --rule-strong: #35414f;
+  --rule: #2c3d31;
+  --rule-strong: #3f5245;
 
-  --unaccounted: #f5a623;
-  --unaccounted-wash: #2a2116;
+  /*
+   * Colour reads as text; wash is the fill behind it.
+   *
+   * Oxblood is the wash rather than the colour, which is the only arrangement
+   * that works: at 1.54:1 on this ground it cannot be text, but as a fill with
+   * a lighter sibling on it, it clears 5.20:1. So `--unaccounted` is a dusty
+   * rose derived from Oxblood by desaturating and lifting rather than by
+   * scaling it — scaling reaches AA around #ea6068, a bright coral that is
+   * exactly the "flashy" register this palette exists to avoid.
+   */
+  --unaccounted: #d99a94;
+  --unaccounted-wash: #5a2528;
 
-  --undecided: #5b8def;
-  --undecided-wash: #182131;
+  --undecided: #c5a15b;
+  --undecided-wash: #3a2f18;
 
-  --explained: #9aa4b2;
-  --explained-wash: #1b222a;
+  --explained: #d8ccb2;
+  --explained-wash: #24372b;
 
-  --settled: #2dd4a8;
-  --settled-wash: #10241f;
+  --settled: #8aa183;
+  --settled-wash: #1d2a20;
 
-  --accent: #5b8def;
+  --accent: #b08a4a;
+  --accent-strong: #c5a15b;
 
-  /* Shadows carry almost nothing on a dark ground, so they go deeper and the
-     card border does correspondingly more of the separating. */
-  --lift-sm: 0 1px 2px rgb(0 0 0 / 0.40);
-  --lift-md: 0 1px 2px rgb(0 0 0 / 0.40), 0 4px 12px -2px rgb(0 0 0 / 0.45);
-  --lift-lg: 0 2px 4px rgb(0 0 0 / 0.40), 0 12px 28px -6px rgb(0 0 0 / 0.55);
+  --brand-ground: #11130f;
+  --brand-mark: #c5a15b;
+
+  /* Shadows carry almost nothing on a ground this dark, so they go deeper and
+     the hairline does correspondingly more of the separating. */
+  --lift-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --lift-md: 0 1px 2px rgb(0 0 0 / 0.45), 0 4px 12px -2px rgb(0 0 0 / 0.5);
+  --lift-lg: 0 2px 4px rgb(0 0 0 / 0.45), 0 12px 28px -6px rgb(0 0 0 / 0.6);
 }
 
 @theme inline {
@@ -163,6 +188,9 @@
   --color-settled: var(--settled);
   --color-settled-wash: var(--settled-wash);
   --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-brand-ground: var(--brand-ground);
+  --color-brand-mark: var(--brand-mark);
 
   --font-sans: var(--font-body);
   /* Kept as `--font-mono` so the existing `font-mono` call sites still read as
@@ -227,7 +255,7 @@ body::before {
      The turbulence is monochrome, so it darkens the ground very slightly — the
      page token was not lightened to compensate, because at this opacity the
      shift is below a just-noticeable difference. */
-  opacity: 0.035;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='1' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
@@ -238,7 +266,7 @@ body::before {
  * it reaches the light theme's apparent strength.
  */
 :root[data-theme='dark'] body::before {
-  opacity: 0.019;
+  opacity: 0.014;
 }
 
 /*
@@ -333,7 +361,7 @@ h3 {
  * Pair with `appearance-none` and right padding wide enough to clear it.
  */
 .select-chevron {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%2355606e' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%234a5647' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 12px 12px;
@@ -342,7 +370,7 @@ h3 {
 /* The chevron's stroke is baked into the data URI, so the dark theme needs its
    own copy rather than a colour override. */
 :root[data-theme='dark'] .select-chevron {
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%239aa4b2' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23a69e8b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {
