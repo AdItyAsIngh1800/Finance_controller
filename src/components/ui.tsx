@@ -66,33 +66,27 @@ export function Card({
 }
 
 /**
- * The product mark.
+ * The product mark: two columns brought to one baseline.
  *
- * Two ledger entries closing to a double rule — the bookkeeping notation for a
- * final figure, which is exactly what this tool emits. Kept and redrawn rather
- * than replaced on 4 September 2026, because it already means something about
- * the product instead of being a decorative glyph.
+ * Two strokes of unequal height meeting a common rule. It is the most literal
+ * statement the product can make about itself — two sides reconciled to a single
+ * figure — and it is drawn vertically for a practical reason as much as a
+ * semantic one.
  *
- * What changed: the four strokes used to be evenly spaced and near-equal in
- * length, which read as a hamburger menu. Now the two entries are light and of
- * different lengths — the second is short, as a subtotal is — a clear gap
- * follows, and the closing pair is heavier and tight. The eye reads "some
- * lines, then a total" rather than "a menu".
+ * The mark it replaced was four stacked horizontal bars, which at the 28px it
+ * actually renders at was indistinguishable from a hamburger menu. Unequal line
+ * lengths were tried first and were far too subtle at that size. Nothing built
+ * from horizontal stacks escapes that read; a vertical form does.
  *
- * A brass plate with the glyph cut out of it, in **both** themes, via
- * `--brand-mark` and `--brand-ground`, which deliberately do not flip. A logo
- * that inverts is two logos; this one is the same object on a card, a favicon
- * and either surface.
+ * Stroke weight steps up as the mark gets smaller. A 1.6-unit stroke on a 16
+ * unit grid is correct at 96px and disappears in a browser tab, so the favicon
+ * size gets a heavier one. Optical correction, not a bug.
  *
- * The plate is brass and the strokes are Midnight Ink, rather than the reverse.
- * Drawn the other way round the tile was Midnight Ink on a Midnight Ink page
- * and simply disappeared — there was no object, only four dim lines. Solid
- * brass also survives being 16px in a browser tab, which fine strokes do not.
- * Midnight Ink on Antique Gold measures 7.67:1, so the glyph stays crisp.
+ * Brass plate with the glyph cut out of it, in both themes, via `--brand-mark`
+ * and `--brand-ground`, which deliberately do not flip. A logo that inverts is
+ * two logos.
  *
- * Drawn inline so it needs no asset request. `aria-hidden` because the wordmark
- * beside it carries the name — see `PublicHeader`, where that text stays
- * `sr-only` rather than `hidden` at narrow widths for exactly this reason.
+ * `aria-hidden` because the wordmark beside it carries the name.
  *
  * @param props.size - `sm` for a navigation bar, `md` where the mark opens a
  *   page beside the wordmark at heading weight.
@@ -100,17 +94,20 @@ export function Card({
 export function Mark({ size = 'sm' }: { readonly size?: 'sm' | 'md' }) {
   const box = size === 'md' ? 'h-9 w-9' : 'h-7 w-7';
   const glyph = size === 'md' ? 'h-5 w-5' : 'h-4 w-4';
+  // Heavier at the small size, so the columns still read in a browser tab.
+  const column = size === 'md' ? 1.7 : 2;
+  const rule = size === 'md' ? 1.7 : 2;
   return (
     <span
       aria-hidden="true"
       className={`flex ${box} shrink-0 items-center justify-center rounded-control bg-brand-mark text-brand-ground`}
     >
       <svg viewBox="0 0 16 16" className={glyph} fill="none" stroke="currentColor">
-        {/* Two entries. The short one is a subtotal. */}
-        <path d="M3.25 4.4h9.5M3.25 7h6" strokeWidth="1.1" strokeLinecap="round" />
-        {/* The closing double rule: heavier, and tight enough to read as one
-            mark rather than as two more entries. */}
-        <path d="M3.25 10.9h9.5M3.25 12.9h9.5" strokeWidth="1.5" strokeLinecap="round" />
+        {/* The two sides. Unequal on purpose: they are not the same figure until
+            the engine has said so. */}
+        <path d="M5.25 3.25v7.75M10.75 5.75v5.25" strokeWidth={column} strokeLinecap="round" />
+        {/* The baseline they are brought to. */}
+        <path d="M2.75 12.9h10.5" strokeWidth={rule} strokeLinecap="round" />
       </svg>
     </span>
   );

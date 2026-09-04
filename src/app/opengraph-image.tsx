@@ -36,7 +36,6 @@ export const alt =
 const PAGE = '#11130f';
 const INK = '#e9dfc9';
 const INK_MUTED = '#a69e8b';
-const RULE_STRONG = '#3f5245';
 /** The signature accent — the one place the card is allowed to shine. */
 const BRASS = '#c5a15b';
 
@@ -58,26 +57,25 @@ export default function OpengraphImage() {
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           {/* The mark, redrawn as plain divs: Satori renders no inline SVG
-              paths. Same rhythm as the real glyph — two entries, a gap, then
-              the heavier closing pair. */}
+              paths. Two columns of unequal height on a shared baseline, which
+              is the same figure the real glyph draws. */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 6,
+              justifyContent: 'flex-end',
               width: 56,
               height: 56,
-              padding: 12,
+              padding: 11,
               borderRadius: 8,
-              background: '#11130f',
-              border: `1px solid ${RULE_STRONG}`,
+              background: BRASS,
             }}
           >
-            <div style={{ height: 2, width: 32, background: BRASS }} />
-            <div style={{ height: 2, width: 20, background: BRASS }} />
-            <div style={{ height: 3, width: 32, background: BRASS, marginTop: 6 }} />
-            <div style={{ height: 3, width: 32, background: BRASS }} />
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, height: 26 }}>
+              <div style={{ width: 4, height: 26, background: PAGE, borderRadius: 2 }} />
+              <div style={{ width: 4, height: 17, background: PAGE, borderRadius: 2 }} />
+            </div>
+            <div style={{ width: 34, height: 4, background: PAGE, borderRadius: 2, marginTop: 4 }} />
           </div>
           <div style={{ fontSize: 30, fontWeight: 600, letterSpacing: -0.5 }}>
             AI Finance Controller
