@@ -90,7 +90,11 @@ function Stage({
 function Stat({ value, label }: { readonly value: string; readonly label: string }) {
   return (
     <div className="px-1">
-      <p className="text-2xl font-semibold tracking-tight sm:text-3xl">{value}</p>
+      {/* Antique Gold, reserved for figures that matter — the palette's one
+          "use sparingly" colour, spent here and on the match rate. */}
+      <p className="text-2xl font-semibold tracking-tight text-accent-strong sm:text-3xl">
+        {value}
+      </p>
       <p className="mt-1 text-xs leading-snug text-ink-muted">{label}</p>
     </div>
   );
@@ -150,14 +154,22 @@ export default async function HomePage() {
     <>
       <PublicHeader />
       <PageShell>
-        <h1 className="mt-2 text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-          Every discrepancy, and why.
+        {/*
+          The headline is the motto, and it is the largest thing on the page.
+          What used to sit beneath it was a paragraph explaining the product to a
+          stranger — accurate, but it introduced rather than declared, and a
+          visitor had to read four lines before learning anything they could not
+          have guessed. The explaining now happens further down, after the
+          figures have earned it.
+        */}
+        <h1 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+          Every discrepancy,
+          <br />
+          and why.
         </h1>
-        <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
-          Point it at a processor settlement or a bank statement alongside your own ledger. It pairs
-          the records that correspond, and for everything left over it names the reason — a fee that
-          came in higher than agreed, a refund the ledger never recorded, a payout that arrived two
-          days after the sale.
+        <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
+          Reconciliation you can audit line by line — with{' '}
+          <span className="text-accent-strong">no model anywhere near the matching</span>.
         </p>
 
         <MatchAnimation />
@@ -185,9 +197,15 @@ export default async function HomePage() {
         <section id="how-it-works" className="mt-14 scroll-mt-20">
           <SectionHeading>Where the AI is, and where it is not</SectionHeading>
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-            Three stages, and they are not trusted equally. The middle one decides what matches
-            what, which is the answer everything else is built on, so it is the one stage with no
-            model in it at all.
+            Point it at a processor settlement or a bank statement alongside your own ledger. It
+            pairs the records that correspond, and for everything left over it names the reason — a
+            fee that came in higher than agreed, a refund the ledger never recorded, a payout that
+            arrived two days after the sale.
+          </p>
+          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
+            Three stages do that work, and they are not trusted equally. The middle one decides what
+            matches what, which is the answer everything else is built on, so it is the one stage
+            with no model in it at all.
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">

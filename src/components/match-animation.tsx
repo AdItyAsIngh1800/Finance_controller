@@ -18,6 +18,10 @@
  * showing when motion is unwelcome, and it is also what the animation is
  * ultimately saying.
  *
+ * The closing double rule is brass, the same accent as the mark in the header —
+ * the animation resolves into the product's own glyph, which is what the mark
+ * has always meant.
+ *
  * Decorative: the surrounding section states the same thing in text, so the
  * whole figure is hidden from assistive technology rather than described.
  *
@@ -143,8 +147,8 @@ export function MatchAnimation() {
 
         {/* The closing rule: matched, and the figure is final. */}
         <g className="fc-rule">
-          <rect x="132" y="92" width="136" height="1.5" className="fill-rule-strong" />
-          <rect x="132" y="97" width="136" height="1.5" className="fill-rule-strong" />
+          <rect x="132" y="92" width="136" height="1.5" className="fill-accent" />
+          <rect x="132" y="97" width="136" height="1.5" className="fill-accent" />
         </g>
         <text x="200" y="118" textAnchor="middle" className="fill-ink-muted" fontSize="10">
           Matched on exact reference
