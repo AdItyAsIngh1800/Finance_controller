@@ -230,7 +230,7 @@ function SignInForm() {
         >
           See how accurate the engine is
         </Link>{' '}
-        — no account needed.
+        . No account needed.
       </p>
     </div>
   );

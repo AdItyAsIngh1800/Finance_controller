@@ -218,8 +218,8 @@ export default async function HomePage() {
             and why.
           </h1>
           <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
-            Reconciliation you can audit line by line — with{' '}
-            <span className="text-accent-strong">no model anywhere near the matching</span>.
+            Reconciliation you can audit line by line.{' '}
+            <span className="text-accent-strong">No model anywhere near the matching.</span>
           </p>
 
           <LedgerExtract />
@@ -235,46 +235,30 @@ export default async function HomePage() {
           <Stat value={String(EXCEPTION_TYPES.length)} label="Exception types detected" />
           <Stat value={String(scorecards.length)} label="Domains, one shared engine" />
         </Card>
-        <p className="prose-measure mt-3 text-xs leading-relaxed text-ink-muted">
-          Measured, not asserted: these come from running the engine against data whose
-          discrepancies were planted on purpose.{' '}
+        <p className="mt-3 text-xs text-ink-muted">
+          Measured, not claimed.{' '}
           <Link href="/evaluation" className="text-accent underline underline-offset-2">
-            See the full scorecard
+            See the scorecard
           </Link>
-          . Match rate is a coverage figure, not a correctness one — the figure that matters is the
-          zero beside it.
+          .
         </p>
 
         <section id="how-it-works" className="mt-14 scroll-mt-20">
           <SectionHeading>Where the AI is, and where it is not</SectionHeading>
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-            Point it at a processor settlement or a bank statement alongside your own ledger. It
-            pairs the records that correspond, and for everything left over it names the reason — a
-            fee that came in higher than agreed, a refund the ledger never recorded, a payout that
-            arrived two days after the sale.
-          </p>
-          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-            Three stages do that work, and they are not trusted equally. The middle one decides what
-            matches what, which is the answer everything else is built on, so it is the one stage
-            with no model in it at all.
+            Three stages. Only the middle one decides what matches what, and it has no model in it.
           </p>
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <Stage name="Extract" trust="AI — Gemini, confidence-gated" icon={ExtractIcon}>
-              Statements arrive as PDFs and photographs. A multimodal model reads them into
-              structured records and scores its own confidence field by field. Anything below 0.85
-              is held back for a person to confirm; it never enters the ledger unreviewed.
+            <Stage name="Extract" trust="AI, confidence-gated" icon={ExtractIcon}>
+              A model reads PDFs and photographs into records. Anything it is unsure of goes to a
+              person, never to the ledger.
             </Stage>
             <Stage name="Reconcile" trust="No AI, deliberately" icon={ReconcileIcon} emphasis>
-              Matching is ordinary code. Four tiers run strongest-evidence-first, and a pair is
-              accepted only when each record is the other&rsquo;s sole candidate — contested groups
-              become an exception rather than a guess. The same input produces byte-identical
-              output every time.
+              Ordinary code. Same input, same output, every time.
             </Stage>
-            <Stage name="Explain" trust="AI — grounded, read-only" icon={ExplainIcon}>
-              Ask why something did not match and a model answers, but it may only call read-only
-              lookups and quote what they return. It never computes a figure of its own, and every
-              answer shows the calls behind it.
+            <Stage name="Explain" trust="AI, read-only" icon={ExplainIcon}>
+              Answers come from lookups it must show you. It quotes figures. It never computes one.
             </Stage>
           </div>
         </section>

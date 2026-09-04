@@ -49,7 +49,7 @@ export default function EvaluationPage() {
       <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
         The data generator plants discrepancies deliberately and records exactly what it planted,
         so the engine&rsquo;s output is scored against a known answer rather than eyeballed. The
-        figures below come from actually running the engine, not from a stored number &mdash; the
+        figures below come from actually running the engine, not from a stored number. The
         generators are seeded, so the same run reproduces them exactly.
       </p>
 
@@ -67,8 +67,8 @@ export default function EvaluationPage() {
           A record pair the ground truth says should not match, which the engine matched anyway.
           This is the metric that matters most: a false exception costs a reviewer thirty seconds,
           whereas a false match silently hides the discrepancy this tool exists to catch. The two
-          errors are not symmetric, and the thresholds do not treat them as such — recall may miss
-          5%, this must be zero.
+          errors are not symmetric, and the thresholds do not treat them as such. Recall may miss 5%.
+          This must be zero.
         </p>
       </Card>
 
@@ -97,7 +97,7 @@ export default function EvaluationPage() {
         </dl>
         <p className="prose-measure mt-4 text-sm leading-relaxed">
           <span className="font-medium">The second column is the one that matters.</span> On a
-          deliberately degraded scan the model read every figure wrong — and reported{' '}
+          deliberately degraded scan the model read every figure wrong, and reported{' '}
           {EXTRACTION_RESULTS.degradedConfidence.toFixed(2)} confidence, below the{' '}
           {EXTRACTION_RESULTS.threshold} threshold, so the record was blocked from the ledger
           instead of entering reconciliation as plausible-looking wrong numbers. A model that were
@@ -110,8 +110,8 @@ export default function EvaluationPage() {
         <SectionHeading>Answer grounding</SectionHeading>
         <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
           Measured {GROUNDING_RESULTS.measuredOn}. {GROUNDING_RESULTS.questionsAsked} adversarial
-          questions — some the data supports, some it cannot, two phrased to bait arithmetic or a
-          forecast.
+          questions. Some the data supports, some it cannot, and two are phrased to bait arithmetic or
+          a forecast.
         </p>
         <dl className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
           <Figure label="Ungrounded figures" value={String(GROUNDING_RESULTS.ungroundedFigures)} />
@@ -120,8 +120,8 @@ export default function EvaluationPage() {
         <p className="prose-measure mt-4 text-sm leading-relaxed">
           Every monetary amount quoted in an answer is checked against a transcript of what the
           lookup functions actually returned. A figure the model produced but no function supplied
-          is caught however plausible it reads — which is the only way to catch a failure whose
-          whole character is looking correct.
+          is caught however plausible it reads. That is the only way to catch a failure whose whole
+          character is looking correct.
         </p>
       </section>
 

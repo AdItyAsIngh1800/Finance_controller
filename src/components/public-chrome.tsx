@@ -89,7 +89,7 @@ export function PublicFooter() {
     <footer className="mt-16 border-t border-rule">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-8 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <p>
-          AI Finance Controller — built by Aditya Singh for the 2026 buildathon, Track 04.
+          AI Finance Controller. Built by Aditya Singh for the 2026 buildathon, Track 04.
         </p>
         {/* No source link: the repository is private, so it 404s for everyone
             but the owner, and a footer link that fails is worse than an absent

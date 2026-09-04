@@ -37,7 +37,7 @@ const SETTLEMENT_COLUMNS: readonly Column[] = [
   { name: 'record_id', required: false, note: 'Your own identifier, carried through untouched so a finding can be traced back.' },
   { name: 'commission', required: false, note: 'Itemised fee. Surfaces in the evidence table on an exception.' },
   { name: 'gateway_fee', required: false, note: 'Itemised fee.' },
-  { name: 'fees_total', required: false, note: 'Stated total. Compared against the itemised lines — a total that exceeds its items is what FEE_VARIANCE catches.' },
+  { name: 'fees_total', required: false, note: 'Stated total, compared against the itemised lines. A total that exceeds its items is what FEE_VARIANCE catches.' },
   { name: 'refunds', required: false, note: 'Netted out of the payout. A refund the ledger never recorded is a common cause of AMOUNT_MISMATCH.' },
   { name: 'chargebacks', required: false, note: 'Netted out of the payout.' },
   { name: 'description', required: false, note: 'Free text, shown to the reader.' },
@@ -50,7 +50,7 @@ const BANK_COLUMNS: readonly Column[] = [
   { name: 'credit', required: true, note: 'Money in. Exactly one of debit and credit is filled per row.' },
   { name: 'narration', required: false, note: "The bank's own text for the line." },
   { name: 'record_id', required: false, note: 'Your own identifier.' },
-  { name: 'balance', required: false, note: 'Read but not reconciled against — a running balance is a derived figure, and checking it would report the same discrepancy twice.' },
+  { name: 'balance', required: false, note: 'Read but not reconciled against. A running balance is derived, so checking it would report the same discrepancy twice.' },
 ];
 
 /** A column list, rendered as a table. */
@@ -112,14 +112,14 @@ export default function FormatsPage() {
             Not built, and deliberately so: connecting to a processor or a bank means holding
             somebody&rsquo;s credentials, which is a security surface this project chose not to open.
             Everything below is file-based. Reconnecting these same adapters to a live API later is
-            a small change — the engine never learns where a record came from — but it has not been
+            a small change, because the engine never learns where a record came from. It has not been
             done, and a page of logos implying otherwise would be the wrong first impression for a
             tool whose entire argument is about not overstating what it knows.
           </p>
         </Card>
 
         <section className="mt-12">
-          <SectionHeading>Processor settlement — CSV</SectionHeading>
+          <SectionHeading>Processor settlement, CSV</SectionHeading>
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
             The primary domain. One row per settled payout, with fees itemised where the processor
             provides them.
@@ -128,7 +128,7 @@ export default function FormatsPage() {
         </section>
 
         <section className="mt-12">
-          <SectionHeading>Bank statement — CSV</SectionHeading>
+          <SectionHeading>Bank statement, CSV</SectionHeading>
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
             One row per line on the statement, in the debit-and-credit column layout Indian banks
             export. The same engine reconciles it, with no changes: the adapter normalises both
@@ -138,7 +138,7 @@ export default function FormatsPage() {
         </section>
 
         <section className="mt-12">
-          <SectionHeading>Ledger — CSV</SectionHeading>
+          <SectionHeading>Ledger, CSV</SectionHeading>
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
             Your own side takes the same shape as the external side it is being compared against, so
             a settlement dataset expects a settlement-shaped ledger and a bank dataset a
@@ -152,8 +152,8 @@ export default function FormatsPage() {
           <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
             PDF, PNG, JPEG, WebP and HEIC, up to 15 MB. These are the only files a model ever sees.
             Each field comes back with a confidence score, and anything below 0.85 is held in a
-            review queue rather than written to the ledger — so a bad scan degrades into work for a
-            person, never into a plausible wrong number.
+            review queue rather than written to the ledger. A bad scan degrades into work for a person,
+            never into a plausible wrong number.
           </p>
           <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
             CSV uploads are capped at 10 MB and are parsed deterministically, with no model

@@ -100,11 +100,11 @@ export const GROUNDING_RESULTS = {
  * @see docs/EVALUATION.md §6
  */
 export const KNOWN_LIMITATIONS: readonly string[] = [
-  'Validated on synthetic data only. This system has never seen a real bank statement, and every figure here is measured against data it generated itself. That tests whether the engine implements its own logic correctly — not whether the logic survives real-world mess.',
+  'Validated on synthetic data only. This system has never seen a real bank statement, and every figure here is measured against data it generated itself. That tests whether the engine implements its own logic correctly . It does not test whether the logic survives real-world mess.',
   'Planted discrepancies are cleanly typed. Real ones compound: a partial payment that is also late and also mis-keyed.',
   'Partial payments are matched across at most three records. A payment split four or more ways is missed rather than searched for, because subset-sum cost grows sharply with set size.',
   'Single currency per dataset. Cross-currency matching needs FX-rate-at-date and is out of scope.',
-  'Extraction confidence is self-reported by the model. It is measurably informative on the documents tested, but a confidently wrong reading remains possible — the gate reduces that risk, it does not eliminate it.',
+  'Extraction confidence is self-reported by the model. It is measurably informative on the documents tested, but a confidently wrong reading remains possible . The gate reduces that risk. It does not eliminate it.',
   'The agent answers only about persisted reconciliation results. It cannot compute a figure the engine did not, and it does not forecast.',
   'Tolerances are global, not per-counterparty. Real reconciliation often needs vendor-specific rules.',
 ] as const;
