@@ -331,10 +331,15 @@ h1,
  * edge. Drawn with gradients rather than an image so it costs no request and
  * scales to any viewport.
  *
- * **The rhythm is load-bearing.** The entries in `LedgerExtract` are each
- * exactly 2rem tall so that they sit *in* the ruled cells. Drawn without that
- * agreement the two are independent systems and it reads as lines behind text
- * rather than as a ledger — which is how this was first written.
+ * **The 2rem rhythm no longer has a partner, and that is fine.** It was chosen
+ * so the entries in `LedgerExtract` — each exactly 2rem tall — sat *in* the
+ * ruled cells rather than drifting across them. That component is gone: the
+ * hero now shows real engine output in a raised panel, which rests *on* this
+ * ground rather than being ruled by it, so there is nothing left to align to.
+ * The ruling stays as what it always was underneath the headline, a paper
+ * texture. Restore the agreement if anything is ever drawn directly on the
+ * ground again; do not assume the rhythm is arbitrary because nothing currently
+ * depends on it.
  *
  * There are deliberately no vertical column rules. They were tried, placed a
  * fixed distance from the right edge, and landed in empty space nowhere near

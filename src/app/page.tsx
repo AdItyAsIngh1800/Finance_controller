@@ -21,7 +21,7 @@ import type { ReactNode } from 'react';
 import { PublicFooter, PublicHeader } from '@/components/public-chrome';
 import { buttonClasses, Card, PageShell, SectionHeading } from '@/components/ui';
 import { EXCEPTION_TYPES } from '@/core/taxonomy';
-import { computeScorecards } from '@/lib/evaluation';
+import { computeScorecards, type Finding } from '@/lib/evaluation';
 import { getCurrentUser } from '@/lib/supabase/server';
 
 /**
@@ -51,13 +51,7 @@ function Stage({
   readonly children: ReactNode;
 }) {
   return (
-    <div
-      className={`flex flex-col rounded-card border p-5 ${
-        emphasis
-          ? 'border-ink bg-ink text-paper shadow-lift-md'
-          : 'border-rule bg-paper-raised shadow-lift-sm'
-      }`}
-    >
+    <Card plane={emphasis ? 'ink' : 'raised'} className="flex h-full flex-col p-5">
       <span
         aria-hidden="true"
         className={`flex h-9 w-9 items-center justify-center rounded-control ${
@@ -78,7 +72,7 @@ function Stage({
       >
         {children}
       </p>
-    </div>
+    </Card>
   );
 }
 
@@ -103,49 +97,63 @@ function Stat({ value, label }: { readonly value: string; readonly label: string
 }
 
 /**
- * A few lines of a ledger, closing on a double rule.
+ * The engine's actual output, beside the headline.
  *
- * Replaced the animated match demonstration on 4 September 2026. The animation
- * showed what the product does; this shows what the product is *for*, and it
- * does so without moving. On a page whose whole argument is that the matching is
- * ordinary deterministic code, a moving graphic was the wrong register.
+ * Replaces `LedgerExtract`, which was an *illustration* of a ledger page: four
+ * specimen entries that nothing computed, deliberately `aria-hidden` and
+ * carrying no label, so that no reader could mistake them for results.
  *
- * **These figures are specimen values, not results.** They are an illustration
- * of a ledger page and nothing computed them. The block is therefore
- * `aria-hidden` and carries no label that could be read as a claim — the four
- * genuinely measured figures live a few hundred pixels below, and a reader must
- * never confuse the two. Publishing a decorative number that reads as a measured
- * one is precisely the failure `/evaluation` exists to rule out.
+ * This panel needs none of those precautions, because every row in it is real.
+ * `computeScorecards()` already runs the engine over the seeded datasets on each
+ * render, and these are the highest-severity findings it returned: the record's
+ * own reference, the figures that actually disagreed, and the sentence the
+ * engine itself wrote. The generators are seeded and the engine is
+ * deterministic, so the panel is stable between renders without being
+ * hard-coded — the one property that lets a landing page show live output at
+ * all.
+ *
+ * It is therefore labelled, and labelled precisely. The dataset is synthetic and
+ * a visitor must not read these as somebody's books, so "synthetic demo data"
+ * sits on the panel rather than in a footnote. That is the same rule the old
+ * specimen block obeyed, pointed the other way: say exactly what the numbers are.
+ *
+ * Two findings from each domain, in the engine's own severity order. The rule is
+ * stated because an unstated selection from a larger set is indistinguishable
+ * from a flattering one.
  */
-function LedgerExtract() {
-  const entries = [
-    { date: '02 Aug', ref: 'ORD-4471', amount: '1,250.00' },
-    { date: '02 Aug', ref: 'ORD-4472', amount: '840.00' },
-    { date: '03 Aug', ref: 'ORD-4489', amount: '2,115.50' },
-    { date: '03 Aug', ref: 'ORD-4490', amount: '396.25' },
-  ];
+function FindingsPanel({ findings }: { readonly findings: readonly Finding[] }) {
   return (
-    <div aria-hidden="true" className="mt-10 max-w-sm select-none text-ink-muted sm:mt-14">
-      {/* Each row is exactly 2rem — the ruling rhythm in `.ledger-ground` — so
-          the entries sit in the ruled cells instead of drifting across them. */}
-      <dl className="text-sm">
-        {entries.map((entry) => (
-          <div key={entry.ref} className="flex h-8 items-center justify-between gap-6">
-            <dt className="flex items-center gap-3">
-              <span className="w-14 shrink-0 whitespace-nowrap text-ink-faint">{entry.date}</span>
-              <span className="font-mono">{entry.ref}</span>
-            </dt>
-            <dd className="font-mono">{entry.amount}</dd>
-          </div>
+    <Card className="overflow-hidden">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-rule px-4 py-3">
+        <h2 className="eyebrow">Exceptions found</h2>
+        <p className="text-xs text-ink-muted">Synthetic demo data, both domains</p>
+      </div>
+      <ul className="divide-y divide-rule">
+        {findings.map((finding) => (
+          <li key={`${finding.reference}-${finding.type}`} className="px-4 py-3">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="font-mono text-sm text-ink">{finding.reference}</span>
+              {/* The source figure, or the ledger's when only that side exists —
+                  an orphan has one amount and nothing to compare it against. */}
+              <span className="font-mono text-sm text-ink">
+                {finding.sourceAmount ?? finding.ledgerAmount ?? '—'}
+              </span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between gap-3">
+              <span className="text-xs text-ink-muted">{finding.type}</span>
+              {/* Only a genuine two-sided disagreement gets the comparison line.
+                  Printing "vs —" against an orphan would invent a counterpart
+                  the engine is reporting the absence of. */}
+              {finding.sourceAmount !== null && finding.ledgerAmount !== null && (
+                <span className="font-mono text-xs text-unaccounted">
+                  vs {finding.ledgerAmount}
+                </span>
+              )}
+            </div>
+          </li>
         ))}
-        {/* The closing double rule — the same notation the mark draws, at size —
-            and the total on the row beneath it, still on the 2rem rhythm. */}
-        <div className="rule-closing h-8" />
-        <div className="flex h-8 items-center justify-end">
-          <span className="font-mono text-ink">4,601.75</span>
-        </div>
-      </dl>
-    </div>
+      </ul>
+    </Card>
   );
 }
 
@@ -199,10 +207,23 @@ export default async function HomePage() {
       ? '—'
       : `${((settlement.matchedCount / settlement.sourceCount) * 100).toFixed(1)}%`;
 
+  /*
+   * Two findings per domain, in the engine's own severity order.
+   *
+   * Not simply the top four overall: settlement's highest-severity findings are
+   * all orphans, so a straight slice would fill the panel with rows that have
+   * one amount and no comparison, and never show the two-sided disagreement the
+   * product is most recognisable for. Two-per-domain is a rule that can be
+   * stated on the panel, which an unstated selection from a larger set cannot.
+   * It also happens to demonstrate the "one engine, two domains" claim the
+   * stats strip makes a few hundred pixels below.
+   */
+  const findings = scorecards.flatMap((card) => card.findings.slice(0, 2));
+
   return (
     <>
-      <PublicHeader />
-      <PageShell>
+      <PublicHeader width="wide" />
+      <PageShell width="wide">
         {/*
           The headline is the motto, and it is the largest thing on the page.
           What used to sit beneath it was a paragraph explaining the product to a
@@ -211,31 +232,53 @@ export default async function HomePage() {
           have guessed. The explaining now happens further down, after the
           figures have earned it.
         */}
-        <div className="ledger-ground relative -mx-4 mt-2 px-4 pb-10 pt-8 sm:-mx-6 sm:px-6 sm:pb-14 sm:pt-12">
-          <h1 className="text-4xl leading-[1.05] tracking-tight sm:text-6xl">
-            Every discrepancy,
-            <br />
-            and why.
-          </h1>
-          <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
-            Reconciliation you can audit line by line.{' '}
-            <span className="text-accent-strong">No model anywhere near the matching.</span>
-          </p>
+        {/*
+          A spread, not a column.
 
-          <LedgerExtract />
+          The headline argues and the panel beside it demonstrates, which is the
+          whole reason for the two-column form: a visitor used to be able to read
+          this entire page and never see the product. Asymmetric at `lg` — the
+          text column is the wider of the two, because the claim leads and the
+          evidence supports it — and a strict single column below that, where
+          side-by-side would squeeze both halves to nothing.
+
+          The stats stay *out* of this block deliberately. `.ledger-ground` draws
+          a gradient, axe cannot resolve a contrast ratio over one, and putting
+          four more figures on it would widen a "needs review" from the headline
+          alone to most of the hero.
+        */}
+        <div className="ledger-ground relative -mx-4 mt-2 grid items-start gap-10 px-4 pb-10 pt-8 sm:-mx-6 sm:px-6 sm:pb-14 sm:pt-12 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+          <div>
+            <h1 className="text-4xl leading-[1.05] tracking-tight sm:text-6xl">
+              Every discrepancy,
+              <br />
+              and why.
+            </h1>
+            <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
+              Reconciliation you can audit line by line.{' '}
+              <span className="text-accent-strong">No model anywhere near the matching.</span>
+            </p>
+          </div>
+
+          <FindingsPanel findings={findings} />
         </div>
 
         {/*
           Figures before argument. A reviewer who reads nothing else should still
           leave with the one number that cannot be faked.
+
+          Unboxed. A card here drew a border around four numbers that needed no
+          container to be read as a group — the rule beneath them separates them
+          from the argument that follows, and a panel is for elevation rather
+          than for grouping things that are already adjacent.
         */}
-        <Card className="mt-10 grid grid-cols-2 gap-y-6 p-5 sm:grid-cols-4 sm:p-6">
+        <div className="mt-12 grid grid-cols-2 gap-y-6 border-t border-rule-strong pt-6 sm:grid-cols-4">
           <Stat value={String(falseMatches)} label="False matches, both domains" />
           <Stat value={matchRate} label="Source records matched" />
           <Stat value={String(EXCEPTION_TYPES.length)} label="Exception types detected" />
           <Stat value={String(scorecards.length)} label="Domains, one shared engine" />
-        </Card>
-        <p className="mt-3 text-xs text-ink-muted">
+        </div>
+        <p className="mt-4 text-xs text-ink-muted">
           Measured, not claimed.{' '}
           <Link href="/evaluation" className="text-accent underline underline-offset-2">
             See the scorecard
@@ -249,17 +292,36 @@ export default async function HomePage() {
             Three stages. Only the middle one decides what matches what, and it has no model in it.
           </p>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <Stage name="Extract" trust="AI, confidence-gated" icon={ExtractIcon}>
-              A model reads PDFs and photographs into records. Anything it is unsure of goes to a
-              person, never to the ledger.
-            </Stage>
+          {/*
+            Three equal cards in a row was the wrong shape for this argument.
+            It gave the middle stage — the one claim the whole page exists to
+            make — exactly one third of the width, the same as the two stages
+            that merely qualify it.
+
+            So the stages zig-zag, and stage two takes the full band. Reading
+            order is still 1, 2, 3: the offset is horizontal, so a stage never
+            appears before the stage it follows. Below `md` the offsets collapse
+            and the three stack, which is the same sequence at one width.
+          */}
+          <div className="mt-5 space-y-4">
+            <div className="md:w-[58%]">
+              <Stage name="Extract" trust="AI, confidence-gated" icon={ExtractIcon}>
+                A model reads PDFs and photographs into records. Anything it is unsure of goes to
+                a person, never to the ledger.
+              </Stage>
+            </div>
+
             <Stage name="Reconcile" trust="No AI, deliberately" icon={ReconcileIcon} emphasis>
-              Ordinary code. Same input, same output, every time.
+              Ordinary code. Same input, same output, every time. No model decides what matches
+              what, so a pairing can always be traced to the rule that made it.
             </Stage>
-            <Stage name="Explain" trust="AI, read-only" icon={ExplainIcon}>
-              Answers come from lookups it must show you. It quotes figures. It never computes one.
-            </Stage>
+
+            <div className="md:ml-auto md:w-[58%]">
+              <Stage name="Explain" trust="AI, read-only" icon={ExplainIcon}>
+                Answers come from lookups it must show you. It quotes figures. It never computes
+                one.
+              </Stage>
+            </div>
           </div>
         </section>
 
@@ -272,7 +334,7 @@ export default async function HomePage() {
           </Link>
         </div>
       </PageShell>
-      <PublicFooter />
+      <PublicFooter width="wide" />
     </>
   );
 }

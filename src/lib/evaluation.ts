@@ -19,8 +19,34 @@ import { generateBankDataset } from '@/core/generate/bank';
 import { generateSettlementDataset } from '@/core/generate/settlement';
 import { DEFAULT_RECON_PARAMS } from '@/core/reconcile/config';
 import { reconcile } from '@/core/reconcile/engine';
+import { formatMinor } from '@/core/money';
 import { scoreAgainstGroundTruth, type ReconScore } from '@/core/score';
-import type { Domain, MatchTier } from '@/core/types';
+import type { Domain, ExceptionType, MatchTier, Severity } from '@/core/types';
+
+/**
+ * One finding from a run, resolved and formatted for display.
+ *
+ * Exists so the landing page can show the engine's *actual* output instead of
+ * an illustration of it. Every field here came out of `reconcile()` on the
+ * seeded dataset: the reference is a real record's, the amounts are the real
+ * figures that disagreed, and the sentence is the one the engine wrote.
+ *
+ * Amounts are pre-formatted strings because they originate as `Minor`, a
+ * branded `bigint`. Formatting here rather than at the call site keeps the
+ * conversion in one place and off the money path.
+ */
+export interface Finding {
+  readonly type: ExceptionType;
+  /** Typed rather than stringly so `SeverityBadge` can render it directly. */
+  readonly severity: Severity;
+  /** The record's own reference, as supplied — `ORD-4471`, not a uuid. */
+  readonly reference: string;
+  /** The two figures that disagree, where the finding is a disagreement. */
+  readonly sourceAmount: string | null;
+  readonly ledgerAmount: string | null;
+  /** The engine's plain-English sentence, verbatim. */
+  readonly statedReason: string;
+}
 
 /** A domain's scorecard, as rendered. */
 export interface DomainScorecard {
@@ -30,7 +56,22 @@ export interface DomainScorecard {
   readonly sourceCount: number;
   readonly matchesByTier: Readonly<Record<MatchTier, number>>;
   readonly durationMs: number;
+  /**
+   * The run's highest-severity findings, resolved for display.
+   *
+   * Carried on the scorecard rather than recomputed by the caller because the
+   * run that produces them already happens here — `reconcile()` returns its
+   * exceptions and this function used to throw them away. Reconciling a second
+   * time to read them back would double the work on every landing request.
+   *
+   * The engine already sorts exceptions severity-first, so these are the top of
+   * that order rather than an arbitrary slice.
+   */
+  readonly findings: readonly Finding[];
 }
+
+/** How many findings a scorecard carries. Enough to fill a panel, not a table. */
+const FINDING_SAMPLE_SIZE = 4;
 
 /**
  * Runs both domains through the engine and scores them against ground truth.
@@ -48,6 +89,34 @@ export function computeScorecards(): readonly DomainScorecard[] {
     });
     const durationMs = performance.now() - started;
 
+    // Resolve record ids back to the references and amounts a human reads. The
+    // engine deals in ids; a finding that says `a3f1-…` is one nobody can act on.
+    const recordById = new Map(
+      [...dataset.source, ...dataset.ledger].map((record) => [record.id, record]),
+    );
+
+    const findings: Finding[] = result.exceptions
+      .slice(0, FINDING_SAMPLE_SIZE)
+      .map((exception) => {
+        const record =
+          recordById.get(exception.sourceRecordIds[0] ?? '') ??
+          recordById.get(exception.ledgerEntryIds[0] ?? '');
+        // The first evidence line carries the figures behind the sentence. Not
+        // every exception is a disagreement about an amount — an orphan has one
+        // side and no comparison — so both halves are independently optional.
+        const evidence = exception.evidence[0];
+        return {
+          type: exception.type,
+          severity: exception.severity,
+          reference: record?.externalRef ?? '—',
+          sourceAmount:
+            evidence?.sourceMinor === undefined ? null : formatMinor(evidence.sourceMinor),
+          ledgerAmount:
+            evidence?.ledgerMinor === undefined ? null : formatMinor(evidence.ledgerMinor),
+          statedReason: exception.statedReason,
+        };
+      });
+
     return {
       domain: dataset.domain,
       score: scoreAgainstGroundTruth(result, dataset.manifest),
@@ -55,6 +124,7 @@ export function computeScorecards(): readonly DomainScorecard[] {
       sourceCount: result.stats.sourceCount,
       matchesByTier: result.stats.matchesByTier,
       durationMs,
+      findings,
     };
   });
 }

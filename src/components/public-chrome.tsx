@@ -19,8 +19,14 @@ import { Mark } from './ui';
  * The accuracy report is in the bar rather than only at the foot of the page:
  * it answers the question a reviewer arrives with, and burying it below a
  * scroll meant most visitors never learned it existed.
+ *
+ * @param props.width - Must match the `PageShell` width of the page below it.
+ *   The bar spans the viewport but its contents are centred in a container, and
+ *   if that container is narrower than the content it sits above, the mark ends
+ *   up inset from the headline it introduces. Defaults to `content`, which is
+ *   what every public page except the landing uses.
  */
-export function PublicHeader() {
+export function PublicHeader({ width = 'content' }: { readonly width?: 'content' | 'wide' }) {
   return (
     <header className="sticky top-0 z-30 border-b border-rule bg-page/85 backdrop-blur-md">
       {/*
@@ -30,7 +36,7 @@ export function PublicHeader() {
         narrow phone and keeps every destination reachable, which is the better
         trade than hiding links that only exist to be found.
       */}
-      <div className="mx-auto flex w-full max-w-4xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:gap-x-3 sm:py-3 sm:px-6 lg:px-8">
+      <div className={`mx-auto flex w-full ${width === 'wide' ? 'max-w-6xl' : 'max-w-4xl'} flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:flex-nowrap sm:gap-x-3 sm:py-3 sm:px-6 lg:px-8`}>
         <Link
           href="/"
           className="flex shrink-0 items-center gap-2 rounded-control transition-opacity duration-150 ease-ui hover:opacity-80 sm:gap-2.5"
@@ -83,11 +89,14 @@ function PublicNavLink({ href, children }: { readonly href: string; readonly chi
  * Deliberately plain: an author line, the source, and the two links that matter.
  * A submission with no visible author reads as unfinished, and a reviewer who
  * wants to check the engine should not have to guess where it lives.
+ *
+ * @param props.width - Must match the page's `PageShell` width, for the reason
+ *   given on {@link PublicHeader}.
  */
-export function PublicFooter() {
+export function PublicFooter({ width = 'content' }: { readonly width?: 'content' | 'wide' }) {
   return (
     <footer className="mt-16 border-t border-rule">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-8 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className={`mx-auto flex w-full ${width === 'wide' ? 'max-w-6xl' : 'max-w-4xl'} flex-col gap-4 px-4 py-8 text-xs text-ink-muted sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8`}>
         <p>
           AI Finance Controller. Built by Aditya Singh for the 2026 buildathon, Track 04.
         </p>
