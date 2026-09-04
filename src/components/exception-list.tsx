@@ -447,6 +447,10 @@ function ExceptionRow({
       {isOpen && (
         <tr className="border-b border-rule">
           <td colSpan={8} className="bg-paper-sunk/50 px-4 py-5 sm:px-8">
+            {/* The animated element is this div rather than the cell: a
+                `transform` on a table cell is not reliably honoured, and the
+                reveal depends on one. */}
+            <div className="reveal">
             <p className="prose-measure text-sm leading-relaxed">{exception.statedReason}</p>
 
             {exception.evidence.length > 0 && (
@@ -488,6 +492,7 @@ function ExceptionRow({
                 {exception.suggestedAction}
               </p>
             )}
+            </div>
           </td>
         </tr>
       )}

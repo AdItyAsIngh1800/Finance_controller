@@ -151,7 +151,7 @@ export function SummaryPanels({
   readonly onFilter: (filter: PanelFilter | null) => void;
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr] lg:grid-rows-2 lg:items-start lg:gap-4">
+    <div className="enter-stagger grid gap-3 sm:grid-cols-2 lg:grid-cols-[1.6fr_1fr_1fr] lg:grid-rows-2 lg:items-start lg:gap-4">
       {panels.map((panel, index) => {
         const slot = ARRANGEMENT[index];
         if (slot === undefined) return null;

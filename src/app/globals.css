@@ -449,11 +449,95 @@ h1,
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='none' stroke='%23a69e8b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M2.5 4.5 6 8l3.5-3.5'/%3E%3C/svg%3E");
 }
 
+/*
+ * Entry.
+ *
+ * One keyframe, used by both motions below: come up half a step and fade in.
+ * Only `opacity` and `transform`, so it composites on the GPU and never
+ * triggers layout — animating height or top on a page of tables is how a
+ * reveal turns into a stutter.
+ */
+@keyframes lift-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/*
+ * A staggered group.
+ *
+ * Children arrive in sequence rather than all at once, which is what makes a
+ * group read as *arranged* rather than as painted. Applied to the summary
+ * panels, the stats strip and the pipeline stages.
+ *
+ * `backwards` fill is not optional. Without it a child is fully visible during
+ * its own delay and then jumps to the start of its animation, so the group
+ * flashes complete before playing — the exact opposite of the intended effect.
+ *
+ * Delays are `nth-child` rather than a `--i` custom property set per element:
+ * these groups are three to five items and known at authoring time, and a
+ * per-element inline style would mean every one of them needing a `style`
+ * attribute for a value CSS can already derive from position.
+ *
+ * The cap at the fifth child is deliberate. Delay must not grow without bound —
+ * on a longer list the last item would arrive late enough to read as a bug.
+ */
+.enter-stagger > * {
+  animation: lift-in 320ms var(--ease-ui) backwards;
+}
+.enter-stagger > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+.enter-stagger > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+.enter-stagger > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+.enter-stagger > *:nth-child(n + 5) {
+  animation-delay: 240ms;
+}
+
+/*
+ * A single revealed block.
+ *
+ * Used by the expanded row in the exception queue, which until now appeared
+ * instantly. Shorter than the stagger because it is a direct response to a
+ * click: the reviewer already knows what they asked for, and the animation only
+ * has to say *where* the new content came from.
+ *
+ * Deliberately not `--ease-spring`. That curve is reserved for the summary
+ * panel being picked up, which is the one interaction meant to feel like moving
+ * a physical object; a disclosure is a reveal, not a lift.
+ *
+ * There is no matching exit. The row unmounts on close, and keeping it mounted
+ * purely to animate its removal would mean a collapsed row sitting in the table
+ * for assistive technology to find. A disclosure that closes instantly is not a
+ * defect; a phantom row is.
+ */
+.reveal {
+  animation: lift-in 200ms var(--ease-ui) backwards;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    /*
+     * Delay has to be flattened too, not just duration. `.enter-stagger` holds
+     * a child invisible (`backwards`) until its delay elapses, so a duration of
+     * nearly zero with a 240ms delay still produces a quarter-second of blank
+     * space marching down the group — a stagger, which is precisely what was
+     * asked to be turned off.
+     */
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }

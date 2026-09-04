@@ -272,7 +272,7 @@ export default async function HomePage() {
           from the argument that follows, and a panel is for elevation rather
           than for grouping things that are already adjacent.
         */}
-        <div className="mt-12 grid grid-cols-2 gap-y-6 border-t border-rule-strong pt-6 sm:grid-cols-4">
+        <div className="enter-stagger mt-12 grid grid-cols-2 gap-y-6 border-t border-rule-strong pt-6 sm:grid-cols-4">
           <Stat value={String(falseMatches)} label="False matches, both domains" />
           <Stat value={matchRate} label="Source records matched" />
           <Stat value={String(EXCEPTION_TYPES.length)} label="Exception types detected" />
@@ -303,7 +303,7 @@ export default async function HomePage() {
             appears before the stage it follows. Below `md` the offsets collapse
             and the three stack, which is the same sequence at one width.
           */}
-          <div className="mt-5 space-y-4">
+          <div className="enter-stagger mt-5 space-y-4">
             <div className="md:w-[58%]">
               <Stage name="Extract" trust="AI, confidence-gated" icon={ExtractIcon}>
                 A model reads PDFs and photographs into records. Anything it is unsure of goes to
