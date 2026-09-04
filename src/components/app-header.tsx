@@ -167,7 +167,7 @@ export function PageHeading({
   return (
     <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">{title}</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">{title}</h1>
         {description !== undefined && (
           <p className="prose-measure mt-1.5 text-sm leading-relaxed text-ink-muted">
             {description}

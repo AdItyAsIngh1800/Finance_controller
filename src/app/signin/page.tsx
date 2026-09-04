@@ -112,7 +112,7 @@ function SignInForm() {
           to it, and a wordmark that does not go home reads as broken. */}
       <Link href="/" className="flex items-center gap-2.5 rounded-control transition-opacity duration-150 ease-ui hover:opacity-80">
         <Mark size="md" />
-        <h1 className="text-lg font-semibold tracking-tight">AI Finance Controller</h1>
+        <h1 className="text-xl font-semibold">AI Finance Controller</h1>
       </Link>
       <p className="mt-3 text-sm leading-relaxed text-ink-muted">
         Reconciles processor and bank records against your ledger, and explains every discrepancy

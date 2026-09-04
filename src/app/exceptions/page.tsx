@@ -63,7 +63,7 @@ export default async function ExceptionsPage() {
   return (
     <AppShell email={user.email}>
       <PageShell width="wide">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Exceptions</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">Exceptions</h1>
         <p className="prose-measure mt-2 text-sm leading-relaxed text-ink-muted">
           Everything the engine could not resolve, across every dataset. Open a finding to see both
           sides of the comparison and to change its status.

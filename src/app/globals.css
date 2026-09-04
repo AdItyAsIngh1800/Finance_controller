@@ -279,17 +279,27 @@ body::before {
 }
 
 /*
- * Headings take the display face.
+ * Page titles take the serif. Nothing else does by default.
  *
- * Applied by element rather than as a utility class, so all eight screens get
- * it without eight edits — and so a heading that should *not* take it has to
- * say so explicitly, which is the rarer case.
+ * This used to cover `h1, h2, h3`, which was safe for a geometric sans and is
+ * not safe for Cormorant Garamond: its small x-height and high stroke contrast
+ * mean that at the 14px used for card headings, and the 10px used for labels in
+ * the print report, the strokes thin out until a heading reads *lighter* than
+ * the paragraph beneath it. So the rule narrows to `h1` plus an explicit
+ * opt-in, and every other heading falls back to Inter.
+ *
+ * Nothing lost a serif it wanted: every `h2` in the app is already either an
+ * `.eyebrow` — which overrides to the body face below — or a 10px label.
+ *
+ * `letter-spacing: normal`, where the sans wanted -0.01em. Tightening is a
+ * correction for the loose sidebearings of a geometric sans; applied to a
+ * garalde it closes the counters and muddies the word shapes.
  */
 h1,
-h2,
-h3 {
+.display {
   font-family: var(--font-display), var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  letter-spacing: -0.01em;
+  letter-spacing: normal;
+  font-weight: 600;
 }
 
 /*

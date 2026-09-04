@@ -94,7 +94,7 @@ export default function FormatsPage() {
     <>
       <PublicHeader />
       <PageShell>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">What it reads</h1>
+        <h1 className="text-3xl font-semibold sm:text-4xl">What it reads</h1>
         <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
           Two file shapes and two document types, described exactly. Column names are matched
           case-insensitively and extra columns are ignored, so an export with more in it than this

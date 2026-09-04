@@ -66,7 +66,7 @@ export function RunReport({
   return (
     <article className="hidden print:block">
       <header className="border-b-2 border-ink pb-3">
-        <h1 className="text-xl font-semibold tracking-tight">Reconciliation summary</h1>
+        <h1 className="text-xl font-semibold">Reconciliation summary</h1>
         <p className="mt-1 text-sm text-ink-muted">
           {datasetName} · {domain} · run {runAt}
         </p>

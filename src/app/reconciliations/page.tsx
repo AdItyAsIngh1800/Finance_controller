@@ -48,7 +48,7 @@ export default async function ReconciliationsPage() {
   return (
     <AppShell email={user.email}>
       <PageShell width="wide">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Reconciliations</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">Reconciliations</h1>
         <p className="prose-measure mt-2 text-sm leading-relaxed text-ink-muted">
           Every run, newest first. Runs are append-only and snapshot the thresholds they used, so an
           old result stays explicable after the defaults are retuned.

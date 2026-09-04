@@ -40,7 +40,7 @@ export default function EvaluationPage() {
   return (
     <PageShell>
       <div className="flex items-start justify-between gap-4">
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">
+        <h1 className="text-2xl font-semibold sm:text-3xl">
           How do you know it&rsquo;s right?
         </h1>
         {/* Reachable without signing in, like the rest of this page. */}

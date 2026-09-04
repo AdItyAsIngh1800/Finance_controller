@@ -72,7 +72,7 @@ export default async function SettingsPage() {
   return (
     <AppShell email={user.email}>
       <PageShell>
-        <h1 className="text-xl font-semibold tracking-tight sm:text-2xl">Settings</h1>
+        <h1 className="text-2xl font-semibold sm:text-3xl">Settings</h1>
 
         <section className="mt-8">
           <SectionHeading>Account</SectionHeading>

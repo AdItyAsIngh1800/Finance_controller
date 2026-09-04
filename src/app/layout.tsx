@@ -1,14 +1,22 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Cormorant_Garamond, Inter } from 'next/font/google';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
 import './globals.css';
 
 /**
  * Root layout.
  *
- * Two faces, and only two, since 3 September 2026: Space Grotesk for headings
- * and Inter for everything else, replacing IBM Plex Sans and Plex Mono.
+ * Two faces, and only two: Cormorant Garamond for page titles and Inter for
+ * everything else. The serif arrived on 4 September, replacing Space Grotesk —
+ * a geometric sans was the wrong voice for a palette of aged paper, brass and
+ * oxblood, and a serif/sans pairing is what that material asks for.
+ *
+ * The serif is scoped tightly, to `h1` and an opt-in `.display` class. Cormorant
+ * has a small x-height and high stroke contrast, so at the 14px and 10px this
+ * interface uses for card and report headings its strokes thin out until the
+ * heading reads fainter than the body text under it. Those stay on Inter. See
+ * the heading rule in `globals.css`.
  *
  * The load-bearing property is not the monospace face itself but *column-
  * aligned digits* — a finance user scans a reconciliation table by running an
@@ -29,7 +37,7 @@ import './globals.css';
  * @see docs/DESIGN.md §2 — visual language, §7.1 — dark theme
  */
 
-const displayFont = Space_Grotesk({
+const displayFont = Cormorant_Garamond({
   variable: '--font-display',
   subsets: ['latin'],
   weight: ['500', '600', '700'],

@@ -71,7 +71,7 @@ export default function DocsPage() {
     <>
       <PublicHeader />
       <PageShell>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">How matching works</h1>
+        <h1 className="text-3xl font-semibold sm:text-4xl">How matching works</h1>
         <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
           The stage with no model in it. Everything below is ordinary code with exact answers, which
           is the entire reason it is not a model: comparing amounts and dates has a right answer,
