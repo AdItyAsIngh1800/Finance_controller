@@ -330,6 +330,28 @@ A second, larger pass, taken on external design review. Four exclusions lifted, 
 The signed-in surface moved from a top bar to a **sidebar** (S-9 to S-11) at the same time, and the run dashboard gained four summary cards including the reconciled *value*, which no screen previously showed.
 
 
+### 7.1.4 Rebranded 4 September 2026
+
+The neutral ledger grey was replaced by a supplied palette — Midnight Ink, forest, brass, oxblood, parchment — and the interface was rederived from it rather than tinted with it. The submission was already in, so this is portfolio work with no clock.
+
+**Every colour was measured before any of it was built**, and two could not do the job they were given.
+
+| Finding | Consequence |
+|---|---|
+| **Oxblood `#5A2528` is not a text colour on dark** — 1.54:1 on Midnight Ink, 1.33:1 on Deep Forest. It has almost the same luminance as the grounds it would sit on. | It became the *fill*. `--unaccounted-wash` is Oxblood and the label on it is a dusty rose derived by desaturating and lifting, which clears 5.20:1. Scaling Oxblood up to reach AA instead lands near `#ea6068`, a bright coral — the exact register this palette exists to avoid. |
+| **Muted Green `#63745E` fails as text** — 3.73:1 on Midnight Ink. | Lightened to `#8AA183` for text; the original stays for bars and chart fills, which are not text. |
+| **Parchment was the wrong low-severity colour.** At 10.18:1 it is the most luminous value in the palette, so the low-severity bar on the exceptions chart shouted louder than the high-severity ones. | `--explained` is `#B0A794` — dimmer than body text, still 6.79:1 on the card. The least urgent finding is now the quietest mark on the screen. |
+
+**The light theme was derived, not dropped.** Parchment is the ground and Antique Cream the card, so panels still lift above the desk as they do in dark. Brass and Muted Green are darkened until they clear **4.8:1** — 4.8 rather than 4.5 because §7.2 already records a badge landing on exactly 4.50 and flickering under sub-pixel rounding. Two honest limits: the two golds converge once darkened for AA, so light carries one brass and the Brass/Antique-Gold distinction is a dark-theme affordance only; and the brief mentioned an ocean blue that the supplied palette does not contain, so there is no blue anywhere.
+
+**The mark was kept and redrawn.** Two entries closing to a double rule is the bookkeeping notation for a final figure — it already meant something. What changed: the four strokes were evenly spaced and near-equal, which read as a hamburger menu, so the entries are now light and unequal with a clear gap before a heavier closing pair. It is a brass plate with the glyph cut out of it, in both themes, via `--brand-ground` and `--brand-mark`, which deliberately do not flip: a logo that inverts is two logos. Drawn the other way round the tile was Midnight Ink on a Midnight Ink page and simply disappeared.
+
+**The landing page now declares instead of introducing.** The headline is the motto at `text-6xl`, followed by one line — *reconciliation you can audit line by line, with no model anywhere near the matching* — and the descriptive paragraph moved below the figures, where it explains something a reader has a reason to want.
+
+Also in this pass: fields sit on the sunk plane so they read as slots rather than outlines; the primary action is brass, the palette's "important CTA"; `/exceptions`, `/reconciliations` and `/settings` gained the loading skeletons they shipped without; and the dataset list shows each dataset's latest run, so reaching a result is one navigation instead of three.
+
+---
+
 ### 7.1.3 Added 3 September 2026
 
 | Added | Why |
