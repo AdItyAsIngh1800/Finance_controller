@@ -22,46 +22,75 @@
  * disabled the interface stays light; that costs nothing here, because the app
  * is unusable without JavaScript anyway (auth, upload and every control need it).
  */
+/*
+ * The tonal ramps.
+ *
+ * Every colour in this interface is a step on one of four scales, and the
+ * semantic tokens below are aliases pointing at steps. That is the difference
+ * between a palette and a set of values: changing a surface becomes a change of
+ * *step*, and two adjacent planes are guaranteed to be related rather than
+ * merely both dark.
+ *
+ * The two anchors are the mark's own colours — Midnight Ink and brass — so the
+ * site is literally derived from the logo.
+ *
+ * The forest ramp is monotonic in luminance, which is not automatic: the first
+ * attempt interpolated toward a mid-tone and produced a 200 step lighter than
+ * its 300, so panels layered in the wrong order. Every step here was measured.
+ *
+ * Ramp steps are raw material and are NOT all safe as text. Only the values
+ * assigned to a text token below have been checked against the planes they land
+ * on; `forest-500` in particular is 1.58:1 on the card and exists for borders.
+ */
+:root {
+  --forest-100: #11130f;
+  --forest-200: #151e18;
+  --forest-300: #18231c;
+  --forest-400: #24372b;
+  --forest-500: #2f4638;
+
+  --brass-100: #393220;
+  --brass-200: #625331;
+  --brass-300: #b08a4a;
+  --brass-400: #c5a15b;
+  --brass-500: #d5bd8c;
+
+  --parch-100: #c9bb9d;
+  --parch-200: #d8ccb2;
+  --parch-300: #e9dfc9;
+  --parch-400: #f2ebda;
+
+  --ox-100: #391d1d;
+  --ox-200: #5a2528;
+  --ox-300: #c2a89c;
+
+  --sage-300: #4a5746;
+  --sage-400: #93aa8c;
+  --sage-wash: #1d2a20;
+}
+
 :root {
   color-scheme: light;
 
   /*
-   * Aged paper, not white.
-   *
-   * The palette is anchored on the dark theme below and this is derived from
-   * it, which is the reverse of how the two used to relate. Parchment is the
-   * ground and Antique Cream the card, so panels still lift *above* the desk
-   * exactly as they do in dark — inverting that relationship would sink the
-   * cards and read as holes.
-   *
-   * Every accent here is the dark theme's hue darkened until it clears 4.8:1 on
-   * both the page and the card. 4.8 rather than 4.5 because this project has
-   * already had a badge land on exactly 4.50 and flicker under sub-pixel
-   * rounding; the margin is deliberate.
+   * Aged paper. Surfaces are parchment steps, ink is the darkest forest step,
+   * and every accent is the dark theme's hue darkened until it clears 4.8:1 on
+   * both the page and the card. 4.8 rather than 4.5 because a badge in this
+   * project once landed on exactly 4.50 and flickered under sub-pixel rounding.
    */
-  --page: #d8ccb2;
-  --paper: #e9dfc9;
-  --paper-raised: #f2ebda;
-  --paper-sunk: #d0c3a6;
-  --ink: #11130f;
+  --page: var(--parch-200);
+  --paper: var(--parch-300);
+  --paper-raised: var(--parch-400);
+  --paper-sunk: var(--parch-100);
+  --ink: var(--forest-100);
   --ink-muted: #4a5647;
-  /* Decorative marks only — disclosure arrows, separators, the ⚙ before a call
-     trace, every one of which is aria-hidden. Below the text floor on purpose;
-     readable text takes `--ink-muted`. */
+  /* Decorative marks only, and below the text floor on purpose. */
   --ink-faint: #8a8570;
 
   --rule: #c4b79b;
   --rule-strong: #a89a7e;
 
-  /*
-   * Severity, re-hued on 4 September 2026.
-   *
-   * Oxblood carries high severity and is the one colour that needs no
-   * adjustment between themes: it clears 7.63:1 on this ground as text, and on
-   * the dark ground it is used as a fill instead, where cream on it clears
-   * 9.17:1. The same pigment, used two ways.
-   */
-  --unaccounted: #5a2528;
+  --unaccounted: var(--ox-200);
   --unaccounted-wash: #ead9c9;
 
   --undecided: #62502d;
@@ -70,30 +99,15 @@
   --explained: #4a5647;
   --explained-wash: #ded2b8;
 
-  --settled: #4a5746;
+  --settled: var(--sage-300);
   --settled-wash: #d9d7bc;
 
-  /*
-   * Brass. Darkened from #B08A4A, which scores only 2.41:1 on Antique Cream and
-   * cannot carry text on a light ground.
-   *
-   * Note that the dark theme's two golds — Brass and Antique Gold Highlight —
-   * both land here once darkened for AA: they differ by a value the light
-   * planes cannot express. Light therefore has one brass, and the
-   * brass/highlight distinction is a dark-theme affordance only.
-   */
   --accent: #66502b;
   --accent-strong: #62502d;
 
-  /*
-   * The mark's own colours, which do NOT flip with the theme.
-   *
-   * A logo that inverts is two logos. These stay Midnight Ink and brass in both
-   * themes so the tile reads the same on a business card, a favicon and either
-   * surface.
-   */
-  --brand-ground: #11130f;
-  --brand-mark: #c5a15b;
+  /* The mark does not flip. A logo that inverts is two logos. */
+  --brand-ground: var(--forest-100);
+  --brand-mark: var(--brass-400);
 
   --lift-sm: 0 1px 2px rgb(17 19 15 / 0.06), 0 1px 1px rgb(17 19 15 / 0.04);
   --lift-md: 0 1px 2px rgb(17 19 15 / 0.06), 0 4px 12px -2px rgb(17 19 15 / 0.09);
@@ -101,75 +115,51 @@
 }
 
 /*
- * Dark — the theme the palette is designed *from*, and the product's real
- * register: a ledger read by lamplight rather than a spreadsheet under strip
- * lighting.
+ * Dark, and the theme the ramps are designed from.
  *
- * Midnight Ink is almost black but carries a green undertone, so the forest
- * planes above it read as the same material rather than as grey panels on black.
+ * Every surface is a forest step, so the planes are related by construction
+ * rather than by eye. Measured against the card: cream 12.24:1, muted 6.79:1,
+ * brass 6.65:1, oxblood text 7.23:1, sage 6.46:1.
  *
- * Measured against the card plane: Antique Cream 12.24:1, muted 6.08:1, Antique
- * Gold 6.65:1, brass 5.08:1, settled 4.58:1 — every text pair clears AA on the
- * page, the card and its own wash.
+ * Two constraints the ramps impose, both found by measuring first:
  *
- * Two constraints this palette imposes, both found by measuring before building:
- *
- * 1. **Oxblood is never text here.** Against Midnight Ink it is 1.54:1 — it has
- *    nearly the same luminance as the ground. It is a fill, and Antique Cream on
- *    it clears 9.17:1. Severity is therefore a filled chip, not coloured text.
- * 2. **Brass must not sit on Rich Forest** (3.97:1). On that plane use Antique
- *    Cream or the gold highlight instead.
+ * 1. **Oxblood is never text here.** `--ox-200` is 1.54:1 on the page. It is the
+ *    *fill*, and `--ox-300` is the tint that sits on it at 5.42:1. Severity is a
+ *    filled chip, not coloured text.
+ * 2. **`--brass-300` must not carry text on `--forest-400`** (3.97:1). The
+ *    raised plane takes `--brass-400` or cream instead.
  */
 :root[data-theme='dark'] {
   color-scheme: dark;
 
-  --page: #11130f;
-  --paper: #18231c;
-  --paper-raised: #24372b;
-  --paper-sunk: #151e19;
-  --ink: #e9dfc9;
-  --ink-muted: #a69e8b;
+  --page: var(--forest-100);
+  --paper: var(--forest-300);
+  --paper-raised: var(--forest-400);
+  --paper-sunk: var(--forest-200);
+  --ink: var(--parch-300);
+  --ink-muted: #b0a794;
   --ink-faint: #6f6f60;
 
-  --rule: #2c3d31;
-  --rule-strong: #3f5245;
+  --rule: var(--forest-400);
+  --rule-strong: var(--forest-500);
 
-  /*
-   * Colour reads as text; wash is the fill behind it.
-   *
-   * Oxblood is the wash rather than the colour, which is the only arrangement
-   * that works: at 1.54:1 on this ground it cannot be text, but as a fill with
-   * a lighter sibling on it, it clears 5.20:1. So `--unaccounted` is a dusty
-   * rose derived from Oxblood by desaturating and lifting rather than by
-   * scaling it — scaling reaches AA around #ea6068, a bright coral that is
-   * exactly the "flashy" register this palette exists to avoid.
-   */
-  --unaccounted: #d99a94;
-  --unaccounted-wash: #5a2528;
+  --unaccounted: var(--ox-300);
+  --unaccounted-wash: var(--ox-200);
 
-  --undecided: #c5a15b;
-  --undecided-wash: #3a2f18;
+  --undecided: var(--brass-400);
+  --undecided-wash: var(--brass-100);
 
-  /*
-   * Low severity is the *quietest* colour, not the brightest.
-   *
-   * Parchment was the obvious choice for "explained" and was wrong: at 10.18:1
-   * it is the most luminous value in the palette, so on the exceptions chart
-   * the low-severity bar shouted louder than the high-severity ones — the least
-   * urgent finding drawing the eye first. This is dimmer than the body text
-   * while still clearing 6.79:1 on the card and 5.31:1 on its own wash.
-   */
   --explained: #b0a794;
-  --explained-wash: #24372b;
+  --explained-wash: var(--forest-400);
 
-  --settled: #8aa183;
-  --settled-wash: #1d2a20;
+  --settled: var(--sage-400);
+  --settled-wash: var(--sage-wash);
 
-  --accent: #b08a4a;
-  --accent-strong: #c5a15b;
+  --accent: var(--brass-300);
+  --accent-strong: var(--brass-400);
 
-  --brand-ground: #11130f;
-  --brand-mark: #c5a15b;
+  --brand-ground: var(--forest-100);
+  --brand-mark: var(--brass-400);
 
   /* Shadows carry almost nothing on a ground this dark, so they go deeper and
      the hairline does correspondingly more of the separating. */
