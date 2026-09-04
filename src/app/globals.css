@@ -150,7 +150,16 @@
   --undecided: #c5a15b;
   --undecided-wash: #3a2f18;
 
-  --explained: #d8ccb2;
+  /*
+   * Low severity is the *quietest* colour, not the brightest.
+   *
+   * Parchment was the obvious choice for "explained" and was wrong: at 10.18:1
+   * it is the most luminous value in the palette, so on the exceptions chart
+   * the low-severity bar shouted louder than the high-severity ones — the least
+   * urgent finding drawing the eye first. This is dimmer than the body text
+   * while still clearing 6.79:1 on the card and 5.31:1 on its own wash.
+   */
+  --explained: #b0a794;
   --explained-wash: #24372b;
 
   --settled: #8aa183;
