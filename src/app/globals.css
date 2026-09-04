@@ -313,6 +313,46 @@ h1,
 }
 
 /*
+ * Ledger paper, for the hero.
+ *
+ * Horizontal ruling on a 2rem rhythm and an oxblood margin rule down the left
+ * edge. Drawn with gradients rather than an image so it costs no request and
+ * scales to any viewport.
+ *
+ * **The rhythm is load-bearing.** The entries in `LedgerExtract` are each
+ * exactly 2rem tall so that they sit *in* the ruled cells. Drawn without that
+ * agreement the two are independent systems and it reads as lines behind text
+ * rather than as a ledger — which is how this was first written.
+ *
+ * There are deliberately no vertical column rules. They were tried, placed a
+ * fixed distance from the right edge, and landed in empty space nowhere near
+ * the amounts: a rule that does not bound a column is just a stray line.
+ *
+ * The alphas are very low on purpose. This sits *behind* the headline, and a
+ * background that competes with the text on it is worse than none: beyond being
+ * harder to read, axe cannot resolve a contrast ratio over a gradient and
+ * downgrades the heading to "needs review". Faint enough to be felt, not read.
+ *
+ * `mask-image` fades the paper out at the foot so it ends rather than butting
+ * into the card beneath it.
+ */
+.ledger-ground {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--unaccounted-wash) 80%, transparent) 0 2px,
+      transparent 2px
+    ),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0 calc(2rem - 1px),
+      color-mix(in srgb, var(--rule) 55%, transparent) calc(2rem - 1px) 2rem
+    );
+  -webkit-mask-image: linear-gradient(to bottom, #000 0 74%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0 74%, transparent 100%);
+}
+
+/*
  * The double rule.
  *
  * In double-entry bookkeeping a single rule marks a subtotal and a double rule

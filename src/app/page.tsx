@@ -18,7 +18,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { MatchAnimation } from '@/components/match-animation';
 import { PublicFooter, PublicHeader } from '@/components/public-chrome';
 import { buttonClasses, Card, PageShell, SectionHeading } from '@/components/ui';
 import { EXCEPTION_TYPES } from '@/core/taxonomy';
@@ -67,7 +66,10 @@ function Stage({
       >
         {icon}
       </span>
-      <h3 className="mt-4 text-base font-semibold tracking-tight">{name}</h3>
+      {/* `.display` is the opt-in serif. Bumped a step because Cormorant
+          renders optically smaller than Inter at the same pixel size, and
+          `tracking-tight` is dropped for the reason the heading rule explains. */}
+      <h3 className="display mt-4 text-lg">{name}</h3>
       <p className={`mt-1 text-xs font-medium ${emphasis ? 'text-paper/80' : 'text-ink-muted'}`}>
         {trust}
       </p>
@@ -96,6 +98,53 @@ function Stat({ value, label }: { readonly value: string; readonly label: string
         {value}
       </p>
       <p className="mt-1 text-xs leading-snug text-ink-muted">{label}</p>
+    </div>
+  );
+}
+
+/**
+ * A few lines of a ledger, closing on a double rule.
+ *
+ * Replaced the animated match demonstration on 4 September 2026. The animation
+ * showed what the product does; this shows what the product is *for*, and it
+ * does so without moving. On a page whose whole argument is that the matching is
+ * ordinary deterministic code, a moving graphic was the wrong register.
+ *
+ * **These figures are specimen values, not results.** They are an illustration
+ * of a ledger page and nothing computed them. The block is therefore
+ * `aria-hidden` and carries no label that could be read as a claim — the four
+ * genuinely measured figures live a few hundred pixels below, and a reader must
+ * never confuse the two. Publishing a decorative number that reads as a measured
+ * one is precisely the failure `/evaluation` exists to rule out.
+ */
+function LedgerExtract() {
+  const entries = [
+    { date: '02 Aug', ref: 'ORD-4471', amount: '1,250.00' },
+    { date: '02 Aug', ref: 'ORD-4472', amount: '840.00' },
+    { date: '03 Aug', ref: 'ORD-4489', amount: '2,115.50' },
+    { date: '03 Aug', ref: 'ORD-4490', amount: '396.25' },
+  ];
+  return (
+    <div aria-hidden="true" className="mt-10 max-w-sm select-none text-ink-muted sm:mt-14">
+      {/* Each row is exactly 2rem — the ruling rhythm in `.ledger-ground` — so
+          the entries sit in the ruled cells instead of drifting across them. */}
+      <dl className="text-sm">
+        {entries.map((entry) => (
+          <div key={entry.ref} className="flex h-8 items-center justify-between gap-6">
+            <dt className="flex items-center gap-3">
+              <span className="w-14 shrink-0 whitespace-nowrap text-ink-faint">{entry.date}</span>
+              <span className="font-mono">{entry.ref}</span>
+            </dt>
+            <dd className="font-mono">{entry.amount}</dd>
+          </div>
+        ))}
+        {/* The closing double rule — the same notation the mark draws, at size —
+            and the total on the row beneath it, still on the 2rem rhythm. */}
+        <div className="rule-closing h-8" />
+        <div className="flex h-8 items-center justify-end">
+          <span className="font-mono text-ink">4,601.75</span>
+        </div>
+      </dl>
     </div>
   );
 }
@@ -162,17 +211,19 @@ export default async function HomePage() {
           have guessed. The explaining now happens further down, after the
           figures have earned it.
         */}
-        <h1 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
-          Every discrepancy,
-          <br />
-          and why.
-        </h1>
-        <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
-          Reconciliation you can audit line by line — with{' '}
-          <span className="text-accent-strong">no model anywhere near the matching</span>.
-        </p>
+        <div className="ledger-ground relative -mx-4 mt-2 px-4 pb-10 pt-8 sm:-mx-6 sm:px-6 sm:pb-14 sm:pt-12">
+          <h1 className="text-4xl leading-[1.05] tracking-tight sm:text-6xl">
+            Every discrepancy,
+            <br />
+            and why.
+          </h1>
+          <p className="prose-measure mt-6 text-base leading-relaxed sm:text-lg">
+            Reconciliation you can audit line by line — with{' '}
+            <span className="text-accent-strong">no model anywhere near the matching</span>.
+          </p>
 
-        <MatchAnimation />
+          <LedgerExtract />
+        </div>
 
         {/*
           Figures before argument. A reviewer who reads nothing else should still
