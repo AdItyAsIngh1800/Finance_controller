@@ -9,10 +9,17 @@
  * constant. The page prerenders, so that run happens at build time — which
  * changes nothing about the figures, because the generators are seeded and pure
  * and every run produces byte-identical data.
+ *
+ * It carries `PublicHeader` and `PublicFooter` like every other public page.
+ * It previously rendered a bare title and a lone theme toggle instead, which
+ * left the mark, the nav and the sign-in link absent: a visitor arriving here
+ * from the landing page had no way back except the browser button, because the
+ * only link out sat at the foot of a long scroll. A page reachable from the
+ * public nav has to carry that nav itself.
  */
 
 import Link from 'next/link';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { PublicFooter, PublicHeader } from '@/components/public-chrome';
 import { Card, PageShell, SectionHeading, TableScroller } from '@/components/ui';
 import {
   computeScorecards,
@@ -38,119 +45,119 @@ export default function EvaluationPage() {
   );
 
   return (
-    <PageShell>
-      <div className="flex items-start justify-between gap-4">
-        <h1 className="text-2xl font-semibold sm:text-3xl">
+    <>
+      <PublicHeader />
+      <PageShell>
+        <h1 className="text-3xl font-semibold sm:text-4xl">
           How do you know it&rsquo;s right?
         </h1>
-        {/* Reachable without signing in, like the rest of this page. */}
-        <ThemeToggle />
-      </div>
-      <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-        The data generator plants discrepancies deliberately and records exactly what it planted,
-        so the engine&rsquo;s output is scored against a known answer rather than eyeballed. The
-        figures below come from actually running the engine, not from a stored number. The
-        generators are seeded, so the same run reproduces them exactly.
-      </p>
-
-      {/* The headline is not the match rate. A tool can score 100% by matching
-          everything to anything; what it cannot fake is never mismatching. */}
-      <Card className="mt-8 p-5 sm:p-7">
-        <p className="eyebrow">False matches</p>
-        {/* The double rule needs a run of width to read as the accounting
-            convention it is; on a single-digit figure it would otherwise draw
-            only under the glyph and look like a strikethrough. */}
-        <p className="rule-closing w-full max-w-[10rem] pb-1 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
-          {totalFalseMatches}
-        </p>
-        <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
-          A record pair the ground truth says should not match, which the engine matched anyway.
-          This is the metric that matters most: a false exception costs a reviewer thirty seconds,
-          whereas a false match silently hides the discrepancy this tool exists to catch. The two
-          errors are not symmetric, and the thresholds do not treat them as such. Recall may miss 5%.
-          This must be zero.
-        </p>
-      </Card>
-
-      {scorecards.map((card) => (
-        <Scorecard key={card.domain} card={card} />
-      ))}
-
-      <section className="mt-12">
-        <SectionHeading>Document extraction</SectionHeading>
         <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-          Measured {EXTRACTION_RESULTS.measuredOn} against{' '}
-          <span className="font-mono">{EXTRACTION_RESULTS.model}</span>, on statements rendered
-          from records whose correct values were already known.
+          The data generator plants discrepancies deliberately and records exactly what it planted,
+          so the engine&rsquo;s output is scored against a known answer rather than eyeballed. The
+          figures below come from actually running the engine, not from a stored number. The
+          generators are seeded, so the same run reproduces them exactly.
         </p>
-        <dl className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
-          <Figure label="Field accuracy, clean scan" value={EXTRACTION_RESULTS.cleanAccuracy} />
-          <Figure label="Field accuracy, degraded scan" value={EXTRACTION_RESULTS.degradedAccuracy} />
-          <Figure
-            label="Mean confidence, clean"
-            value={EXTRACTION_RESULTS.cleanConfidence.toFixed(2)}
-          />
-          <Figure
-            label="Mean confidence, degraded"
-            value={EXTRACTION_RESULTS.degradedConfidence.toFixed(2)}
-          />
-        </dl>
-        <p className="prose-measure mt-4 text-sm leading-relaxed">
-          <span className="font-medium">The second column is the one that matters.</span> On a
-          deliberately degraded scan the model read every figure wrong, and reported{' '}
-          {EXTRACTION_RESULTS.degradedConfidence.toFixed(2)} confidence, below the{' '}
-          {EXTRACTION_RESULTS.threshold} threshold, so the record was blocked from the ledger
-          instead of entering reconciliation as plausible-looking wrong numbers. A model that were
-          highly accurate with flat confidence would be less useful here, because only informative
-          confidence can be gated.
-        </p>
-      </section>
 
-      <section className="mt-12">
-        <SectionHeading>Answer grounding</SectionHeading>
-        <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
-          Measured {GROUNDING_RESULTS.measuredOn}. {GROUNDING_RESULTS.questionsAsked} adversarial
-          questions. Some the data supports, some it cannot, and two are phrased to bait arithmetic or
-          a forecast.
-        </p>
-        <dl className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
-          <Figure label="Ungrounded figures" value={String(GROUNDING_RESULTS.ungroundedFigures)} />
-          <Figure label="Unanswerable questions declined" value={GROUNDING_RESULTS.refusalsCorrect} />
-        </dl>
-        <p className="prose-measure mt-4 text-sm leading-relaxed">
-          Every monetary amount quoted in an answer is checked against a transcript of what the
-          lookup functions actually returned. A figure the model produced but no function supplied
-          is caught however plausible it reads. That is the only way to catch a failure whose whole
-          character is looking correct.
-        </p>
-      </section>
+        {/* The headline is not the match rate. A tool can score 100% by matching
+            everything to anything; what it cannot fake is never mismatching. */}
+        <Card className="mt-8 p-5 sm:p-7">
+          <p className="eyebrow">False matches</p>
+          {/* The double rule needs a run of width to read as the accounting
+              convention it is; on a single-digit figure it would otherwise draw
+              only under the glyph and look like a strikethrough. */}
+          <p className="rule-closing w-full max-w-[10rem] pb-1 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
+            {totalFalseMatches}
+          </p>
+          <p className="prose-measure mt-4 text-sm leading-relaxed text-ink-muted">
+            A record pair the ground truth says should not match, which the engine matched anyway.
+            This is the metric that matters most: a false exception costs a reviewer thirty seconds,
+            whereas a false match silently hides the discrepancy this tool exists to catch. The two
+            errors are not symmetric, and the thresholds do not treat them as such. Recall may miss 5%.
+            This must be zero.
+          </p>
+        </Card>
 
-      <section className="mt-12">
-        <SectionHeading>What this does not establish</SectionHeading>
-        <ul className="prose-measure mt-4 space-y-3">
-          {KNOWN_LIMITATIONS.map((limitation) => (
-            <li
-              key={limitation}
-              className="border-l-2 border-rule-strong pl-3 text-sm leading-relaxed"
-            >
-              {limitation}
-            </li>
-          ))}
-        </ul>
-      </section>
+        {scorecards.map((card) => (
+          <Scorecard key={card.domain} card={card} />
+        ))}
 
-      <p className="mt-12 border-t border-rule pt-4 text-xs leading-relaxed text-ink-muted">
-        Reproduce these figures with <span className="font-mono">npm run scorecard</span>,{' '}
-        <span className="font-mono">npm run extraction:report</span>, and{' '}
-        <span className="font-mono">npm run grounding:report</span>.{' '}
-        {/* `/` now branches: the overview for a signed-out visitor, the dataset
-            list for a signed-in one. This page is public and static, so it
-            cannot know which — the label has to be true of both. */}
-        <Link href="/" className="underline underline-offset-2">
-          Back to AI Finance Controller
-        </Link>
-      </p>
-    </PageShell>
+        <section className="mt-12">
+          <SectionHeading>Document extraction</SectionHeading>
+          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
+            Measured {EXTRACTION_RESULTS.measuredOn} against{' '}
+            <span className="font-mono">{EXTRACTION_RESULTS.model}</span>, on statements rendered
+            from records whose correct values were already known.
+          </p>
+          <dl className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
+            <Figure label="Field accuracy, clean scan" value={EXTRACTION_RESULTS.cleanAccuracy} />
+            <Figure label="Field accuracy, degraded scan" value={EXTRACTION_RESULTS.degradedAccuracy} />
+            <Figure
+              label="Mean confidence, clean"
+              value={EXTRACTION_RESULTS.cleanConfidence.toFixed(2)}
+            />
+            <Figure
+              label="Mean confidence, degraded"
+              value={EXTRACTION_RESULTS.degradedConfidence.toFixed(2)}
+            />
+          </dl>
+          <p className="prose-measure mt-4 text-sm leading-relaxed">
+            <span className="font-medium">The second column is the one that matters.</span> On a
+            deliberately degraded scan the model read every figure wrong, and reported{' '}
+            {EXTRACTION_RESULTS.degradedConfidence.toFixed(2)} confidence, below the{' '}
+            {EXTRACTION_RESULTS.threshold} threshold, so the record was blocked from the ledger
+            instead of entering reconciliation as plausible-looking wrong numbers. A model that were
+            highly accurate with flat confidence would be less useful here, because only informative
+            confidence can be gated.
+          </p>
+        </section>
+
+        <section className="mt-12">
+          <SectionHeading>Answer grounding</SectionHeading>
+          <p className="prose-measure mt-3 text-sm leading-relaxed text-ink-muted">
+            Measured {GROUNDING_RESULTS.measuredOn}. {GROUNDING_RESULTS.questionsAsked} adversarial
+            questions. Some the data supports, some it cannot, and two are phrased to bait arithmetic or
+            a forecast.
+          </p>
+          <dl className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">
+            <Figure label="Ungrounded figures" value={String(GROUNDING_RESULTS.ungroundedFigures)} />
+            <Figure label="Unanswerable questions declined" value={GROUNDING_RESULTS.refusalsCorrect} />
+          </dl>
+          <p className="prose-measure mt-4 text-sm leading-relaxed">
+            Every monetary amount quoted in an answer is checked against a transcript of what the
+            lookup functions actually returned. A figure the model produced but no function supplied
+            is caught however plausible it reads. That is the only way to catch a failure whose whole
+            character is looking correct.
+          </p>
+        </section>
+
+        <section className="mt-12">
+          <SectionHeading>What this does not establish</SectionHeading>
+          <ul className="prose-measure mt-4 space-y-3">
+            {KNOWN_LIMITATIONS.map((limitation) => (
+              <li
+                key={limitation}
+                className="border-l-2 border-rule-strong pl-3 text-sm leading-relaxed"
+              >
+                {limitation}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <p className="mt-12 border-t border-rule pt-4 text-xs leading-relaxed text-ink-muted">
+          Reproduce these figures with <span className="font-mono">npm run scorecard</span>,{' '}
+          <span className="font-mono">npm run extraction:report</span>, and{' '}
+          <span className="font-mono">npm run grounding:report</span>.{' '}
+          {/* `/` now branches: the overview for a signed-out visitor, the dataset
+              list for a signed-in one. This page is public and static, so it
+              cannot know which — the label has to be true of both. */}
+          <Link href="/" className="underline underline-offset-2">
+            Back to AI Finance Controller
+          </Link>
+        </p>
+      </PageShell>
+      <PublicFooter />
+    </>
   );
 }
 
