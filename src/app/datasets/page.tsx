@@ -101,15 +101,74 @@ async function deleteDataset(formData: FormData): Promise<void> {
   revalidatePath('/datasets');
 }
 
+/** The most recent run of one dataset, as the list needs it. */
+interface LatestRun {
+  readonly id: string;
+  readonly dataset_id: string;
+  readonly match_rate: number;
+  readonly exception_count: number;
+  readonly created_at: string;
+}
+
+/**
+ * The latest result for a dataset, or an invitation to produce one.
+ *
+ * The match rate links directly to its run. Deliberately not a second link to
+ * the dataset: two links a few pixels apart, one going to a summary and one to
+ * a detail, is how a reader ends up on the wrong screen.
+ */
+function LatestResult({ run, datasetId }: { readonly run?: LatestRun; readonly datasetId: string }) {
+  if (run === undefined) {
+    return (
+      <Link href={`/datasets/${datasetId}`} className="text-xs text-ink-muted underline underline-offset-2">
+        Not run yet
+      </Link>
+    );
+  }
+  return (
+    <Link
+      href={`/datasets/${datasetId}/runs/${run.id}`}
+      className="group inline-flex items-baseline gap-2 underline-offset-2 hover:underline"
+    >
+      <span className="font-mono text-sm text-accent-strong">
+        {(run.match_rate * 100).toFixed(1)}%
+      </span>
+      <span className="text-xs text-ink-muted">
+        {run.exception_count} {run.exception_count === 1 ? 'exception' : 'exceptions'}
+      </span>
+    </Link>
+  );
+}
+
 export default async function DatasetsPage() {
   const user = await getCurrentUser();
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('datasets')
-    .select('id, name, domain, currency, created_at')
-    .order('created_at', { ascending: false });
+  const [{ data, error }, { data: runData }] = await Promise.all([
+    supabase
+      .from('datasets')
+      .select('id, name, domain, currency, created_at')
+      .order('created_at', { ascending: false }),
+    // Newest first, then reduced to one per dataset below. Fetching every run
+    // and picking in memory is one round trip; a per-dataset query would be N.
+    supabase
+      .from('recon_runs')
+      .select('id, dataset_id, match_rate, exception_count, created_at')
+      .order('created_at', { ascending: false }),
+  ]);
 
   const datasets = (data ?? []) as DatasetRow[];
+
+  /*
+   * The latest run for each dataset, so the list can link straight to a result.
+   *
+   * Reaching a reconciliation used to take three navigations — list, dataset,
+   * run — even though the run is what a reviewer opened the app to see. With
+   * the figure and a direct link on the row, the common case is one.
+   */
+  const latestRun = new Map<string, LatestRun>();
+  for (const row of (runData ?? []) as LatestRun[]) {
+    if (!latestRun.has(row.dataset_id)) latestRun.set(row.dataset_id, row);
+  }
 
   return (
     <AppShell email={user?.email}>
@@ -192,6 +251,12 @@ export default async function DatasetsPage() {
                         action={deleteDataset}
                       />
                     </div>
+                    <div className="mt-3">
+                      <LatestResult
+                        datasetId={dataset.id}
+                        {...(latestRun.has(dataset.id) ? { run: latestRun.get(dataset.id) } : {})}
+                      />
+                    </div>
                     <dl className="mt-3 grid grid-cols-3 gap-2 text-xs">
                       <Meta label="Domain">{dataset.domain}</Meta>
                       <Meta label="Currency" mono>
@@ -221,6 +286,9 @@ export default async function DatasetsPage() {
                         Currency
                       </th>
                       <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
+                        Latest run
+                      </th>
+                      <th scope="col" className="px-4 py-2.5 font-medium text-ink-muted">
                         Created
                       </th>
                       <th scope="col" className="px-4 py-2.5 font-medium">
@@ -244,6 +312,14 @@ export default async function DatasetsPage() {
                         </td>
                         <td className="px-4 py-2.5 text-ink-muted">{dataset.domain}</td>
                         <td className="px-4 py-2.5 font-mono">{dataset.currency}</td>
+                        <td className="px-4 py-2.5">
+                          <LatestResult
+                            datasetId={dataset.id}
+                            {...(latestRun.has(dataset.id)
+                              ? { run: latestRun.get(dataset.id) }
+                              : {})}
+                          />
+                        </td>
                         <td className="px-4 py-2.5 font-mono text-ink-muted">
                           {dataset.created_at.slice(0, 10)}
                         </td>
