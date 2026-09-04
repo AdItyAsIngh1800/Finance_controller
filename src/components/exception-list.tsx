@@ -137,15 +137,23 @@ function exceptionsToCsv(rows: readonly ExceptionView[]): string {
  * @param props.onAskAbout - Sends a question about one finding to the Q&A
  *   panel. Supplied by `RunWorkspace`, which owns the state crossing between
  *   the two components.
+ * @param props.panelFilter - A narrowing applied by a picked-up summary panel,
+ *   owned by `RunWorkspace`. It *composes* with the selects below rather than
+ *   overwriting them: a panel and a select are two people narrowing the same
+ *   list, and having one silently reset the other is how a reviewer ends up
+ *   looking at rows they did not ask for. `'open'` is deliberately not one of
+ *   the select's values — it means "not resolved", which spans two of them.
  */
 export function ExceptionList({
   exceptions,
   initialExpanded = null,
   onAskAbout,
+  panelFilter = null,
 }: {
   readonly exceptions: readonly ExceptionView[];
   readonly initialExpanded?: string | null;
   readonly onAskAbout?: (question: string) => void;
+  readonly panelFilter?: 'open' | null;
 }) {
   const [type, setType] = useState<string>(ALL);
   const [severity, setSeverity] = useState<string>(ALL);
@@ -172,11 +180,22 @@ export function ExceptionList({
   const statusOf = (exception: ExceptionView): ExceptionStatus =>
     localStatus[exception.id] ?? exception.status;
 
+  /**
+   * Whether a picked-up summary panel admits this finding.
+   *
+   * `'open'` is "not resolved" rather than any single status, because that is
+   * the question the panel's figure answers — a count of work still to do,
+   * which spans `flagged` and `reviewing` alike.
+   */
+  const matchesPanel = (exception: ExceptionView): boolean =>
+    panelFilter === null || statusOf(exception) !== 'resolved';
+
   const visible = exceptions.filter(
     (exception) =>
       (type === ALL || exception.type === type) &&
       (severity === ALL || exception.severity === severity) &&
-      (status === ALL || statusOf(exception) === status),
+      (status === ALL || statusOf(exception) === status) &&
+      matchesPanel(exception),
   );
 
   /** Advances a finding to the next workflow state, wrapping at the end. */

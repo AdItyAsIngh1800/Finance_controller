@@ -44,24 +44,55 @@ export function PageShell({
 }
 
 /**
- * A raised panel.
+ * Which plane a {@link Card} rests on.
+ *
+ * Four values because `globals.css` defines exactly four surface steps, and a
+ * fifth plane would have to invent a colour rather than name one.
+ *
+ * These exist so a group of panels can differ in *depth* rather than in
+ * decoration. Four identical cards in a row is the arrangement that reads as
+ * generated; four panels sitting at genuinely different heights on the same
+ * desk reads as arranged. The variance has to mean something, though — see
+ * `SummaryPanels`, where `sunk` is reserved for the closing figure precisely
+ * because a closing figure is the one that does not move.
+ */
+export type CardPlane = 'raised' | 'floating' | 'sunk' | 'ink';
+
+/**
+ * Border, ground and elevation per plane.
+ *
+ * `sunk` deliberately carries no shadow. A shadow says "this sits above the
+ * surface", and the whole point of the sunk plane is that the panel is cut
+ * *into* it; the inset ring does that job instead.
+ */
+const CARD_PLANES: Readonly<Record<CardPlane, string>> = {
+  raised: 'border-rule bg-paper-raised shadow-lift-sm',
+  floating: 'border-rule bg-paper shadow-lift-md',
+  sunk: 'border-rule-strong bg-paper-sunk shadow-none',
+  ink: 'border-ink bg-ink text-paper shadow-lift-lg',
+};
+
+/**
+ * A panel.
  *
  * The border does the structural work and the shadow only separates the plane;
  * on a screen this dense a heavier shadow repeated down the page becomes noise.
+ *
+ * @param props.plane - Which surface the panel rests on. Defaults to `raised`,
+ *   which is the appearance every existing call site already had — the variants
+ *   were added without touching them.
  */
 export function Card({
+  plane = 'raised',
   className = '',
   children,
 }: {
+  readonly plane?: CardPlane;
   readonly className?: string;
   readonly children: ReactNode;
 }) {
   return (
-    <div
-      className={`rounded-card border border-rule bg-paper-raised shadow-lift-sm ${className}`}
-    >
-      {children}
-    </div>
+    <div className={`rounded-card border ${CARD_PLANES[plane]} ${className}`}>{children}</div>
   );
 }
 

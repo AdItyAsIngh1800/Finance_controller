@@ -17,7 +17,6 @@ import { PrintButton } from '@/components/print-button';
 import { RunCharts, type ConfidenceDatum } from '@/components/run-charts';
 import { RunReport } from '@/components/run-report';
 import { RunWorkspace } from '@/components/run-workspace';
-import { SummaryCards } from '@/components/summary-cards';
 import { ReconciliationBar } from '@/components/reconciliation-bar';
 import { formatMinor, sumMinor, toMinor } from '@/core/money';
 import { EXCEPTION_SEVERITY, MATCH_TIERS, SEVERITY_RANK, type ExceptionType, type MatchTier, type Severity } from '@/core/taxonomy';
@@ -378,53 +377,58 @@ export default async function RunPage({
         </div>
 
         {/*
-          The four figures a controller looks for first. The match rate appears
-          here *and* as the headline below: this row is for scanning, the block
-          below is for interrogating, and the same number serving both is
-          cheaper than teaching a reader that they differ.
-        */}
-        <div className="mt-4 print:hidden">
-          <SummaryCards
-            figures={[
-              {
-                label: 'Transactions processed',
-                value: summary.source_count.toLocaleString('en-IN'),
-                detail: `${summary.ledger_count.toLocaleString('en-IN')} ledger entries compared`,
-              },
-              {
-                label: 'Match rate',
-                value: `${(summary.match_rate * 100).toFixed(1)}%`,
-                detail: `${summary.matched_count.toLocaleString('en-IN')} of ${summary.source_count.toLocaleString('en-IN')} source records`,
-                tone: 'settled',
-              },
-              {
-                label: 'Exceptions to review',
-                value: openCount.toLocaleString('en-IN'),
-                detail:
-                  openCount === summary.exception_count
-                    ? 'None resolved yet'
-                    : `${summary.exception_count - openCount} resolved`,
-                ...(openCount > 0 ? ({ tone: 'unaccounted' } as const) : {}),
-              },
-              {
-                label: 'Value reconciled',
-                value: formatMinor(reconciledMinor),
-                detail: 'Sum of the matched source records',
-              },
-            ]}
-          />
-        </div>
+          The read-outs that qualify the headline.
 
-        {/* The closing figure, under a double rule — the accounting convention
-            for a final total rather than a subtotal. */}
-        <Card className="mt-6 grid gap-6 p-5 print:hidden sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
+          The match rate is deliberately *not* restated here any more. It used
+          to appear twice in one viewport — once at `text-3xl` in a row of four
+          equal cards, once at `text-6xl` under the double rule — with a comment
+          excusing the repetition as "scanning versus interrogating". Two
+          identical numbers a screen apart teach a reader to look for a
+          difference that does not exist. It is now stated once, as the inset
+          closing figure of the summary panels above.
+        */}
+        <div className="print:hidden">
+        <RunWorkspace
+          runId={runId}
+          exceptions={exceptions}
+          initialExpanded={initialExpanded}
+          panels={[
+            // Order is load-bearing: `SummaryPanels` assigns plane, size and
+            // offset by index, and slot 0 is the inset closing figure.
+            {
+              label: 'Match rate',
+              value: `${(summary.match_rate * 100).toFixed(1)}%`,
+              detail: `${summary.matched_count.toLocaleString('en-IN')} of ${summary.source_count.toLocaleString('en-IN')} source records`,
+              tone: 'settled',
+            },
+            {
+              label: 'Exceptions to review',
+              value: openCount.toLocaleString('en-IN'),
+              detail:
+                openCount === summary.exception_count
+                  ? 'None resolved yet'
+                  : `${summary.exception_count - openCount} resolved`,
+              // The one figure that names a subset of the queue, so the one
+              // panel that can be picked up without promising something the
+              // table cannot show.
+              filter: 'open',
+            },
+            {
+              label: 'Value reconciled',
+              value: formatMinor(reconciledMinor),
+              detail: 'Sum of the matched source records',
+            },
+            {
+              label: 'Transactions processed',
+              value: summary.source_count.toLocaleString('en-IN'),
+              detail: `${summary.ledger_count.toLocaleString('en-IN')} ledger entries compared`,
+            },
+          ]}
+        >
+        <Card className="mt-6 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-10">
           <div>
-            <p className="eyebrow">Match rate</p>
-            <p className="rule-closing pb-2 font-mono text-5xl font-medium tracking-tight sm:text-6xl">
-              {(summary.match_rate * 100).toFixed(1)}
-              <span className="text-2xl text-ink-muted sm:text-3xl">%</span>
-            </p>
-            <div className="mt-5">
+            <p className="eyebrow">Reconciled</p>
+            <div className="mt-3">
               <ReconciliationBar matched={summary.matched_count} total={summary.source_count} />
             </div>
             <p className="mt-3 text-xs text-ink-muted">
@@ -482,20 +486,15 @@ export default async function RunPage({
         </Card>
 
         {/*
-          Everything above and inside here is the screen instrument, and none of
-          it belongs on paper: the cards and the queue restate what the report
-          already says, and the charts bake their colours into SVG attributes at
-          mount, so the print palette cannot reach them and they arrive as muddy
-          mid-tones on a monochrome printer.
+          The charts close the children passed to `RunWorkspace`. Everything in
+          this block is screen instrument and none of it belongs on paper: it
+          restates what `RunReport` already says, and the charts bake their
+          colours into SVG attributes at mount, so the print palette cannot
+          reach them and they arrive as muddy mid-tones on a monochrome printer.
+          Hence the single `print:hidden` on the wrapper above.
         */}
-        <div className="print:hidden">
           <RunCharts byType={chartByType} trend={chartTrend} confidence={chartConfidence} />
-
-          <RunWorkspace
-            runId={runId}
-            exceptions={exceptions}
-            initialExpanded={initialExpanded}
-          />
+        </RunWorkspace>
         </div>
 
         {/* Hidden on screen, and the only thing that prints. */}

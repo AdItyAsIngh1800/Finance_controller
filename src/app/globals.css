@@ -211,6 +211,28 @@
   /* Motion. Short and eased-out: the interface should feel responsive to a
      pointer without ever making a user wait on an animation to read a number. */
   --ease-ui: cubic-bezier(0.2, 0, 0, 1);
+
+  /*
+   * The settle.
+   *
+   * A spring, for the one thing in this interface that is picked up and put
+   * down: a summary panel rising into its active filter state. Generated from
+   * Motion's own spring solver at a perceptual duration of 0.35s and a bounce
+   * of 0.12 — barely past its target, because a summary figure that visibly
+   * wobbles is a figure a controller waits on before reading.
+   *
+   * The 450ms below is the *full* curve including the settle. Anything timed
+   * to run alongside it should use 350ms, per Motion's guidance: the tail is
+   * the spring coming to rest and should not hold a sibling up.
+   *
+   * `--ease-ui` remains the default for every other transition. This one is
+   * reserved, in the same way Antique Gold is reserved: spend it on the
+   * interaction that is meant to feel physical, and nowhere else.
+   */
+  --ease-spring: linear(
+    0, 0.0873, 0.2644, 0.453, 0.6176, 0.7468, 0.8409, 0.9057, 0.9479, 0.974,
+    0.9891, 0.9973, 1.0012, 1.0027, 1
+  );
 }
 
 body {
