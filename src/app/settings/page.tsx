@@ -32,17 +32,28 @@ function Row({
   readonly value: string;
   readonly detail: string;
 }) {
+  /*
+   * `dt` and `dd` are direct children of this wrapper, and the wrapper is a
+   * direct child of the `dl`. That nesting is load-bearing: a `dl` may contain a
+   * `div` wrapping one term-and-description group, but the `dt`/`dd` have to sit
+   * *in* that div. They were previously one level deeper, inside a flex box,
+   * which broke the association — axe reports `definition-list` and `dlitem`,
+   * and a screen reader stops pairing each label with its value.
+   *
+   * So the wrapper does the layout itself as a grid, and the explanatory line is
+   * a second `dd`: one term is allowed several descriptions, whereas the `p` it
+   * used to be was not permitted inside a `dl` at all.
+   */
   return (
-    <div className="border-b border-rule py-3 last:border-0">
-      <div className="flex items-baseline justify-between gap-4">
-        <dt className="shrink-0 text-sm">{label}</dt>
-        {/* `min-w-0 break-all` rather than `shrink-0`: the values here are
-            mostly short (`±3 days`, `≥ 0.85`) and would never wrap, but the
-            signed-in address is arbitrary-length and pushed the page 6px wider
-            than a 320px viewport. The label is the fixed side instead. */}
-        <dd className="min-w-0 break-all text-right font-mono text-sm">{value}</dd>
-      </div>
-      <p className="prose-measure mt-1 text-xs leading-relaxed text-ink-muted">{detail}</p>
+    <div className="grid grid-cols-[1fr_auto] gap-x-4 border-b border-rule py-3 last:border-0">
+      <dt className="text-sm">{label}</dt>
+      {/* `min-w-0 break-all` rather than `shrink-0`: most values are short
+          (`±3 days`, `≥ 0.85`) and never wrap, but the signed-in address is
+          arbitrary-length and pushed the page past a 320px viewport. */}
+      <dd className="min-w-0 break-all text-right font-mono text-sm">{value}</dd>
+      <dd className="prose-measure col-span-2 mt-1 text-xs leading-relaxed text-ink-muted">
+        {detail}
+      </dd>
     </div>
   );
 }
