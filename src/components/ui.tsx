@@ -202,7 +202,13 @@ const BUTTON_BASE =
 
 /** Per-variant colour. */
 const BUTTON_VARIANTS: Readonly<Record<ButtonVariant, string>> = {
-  primary: 'bg-ink text-paper shadow-lift-sm hover:bg-ink/90 hover:shadow-lift-md',
+  /*
+   * Brass, because the primary action is what the palette calls an important
+   * CTA. `text-page` rather than a fixed dark: the accent darkens in the light
+   * theme, so a hard-coded Midnight Ink label would be dark-on-dark there.
+   * Against the page token it measures 7.67:1 in dark and 5.68:1 in light.
+   */
+  primary: 'bg-accent-strong text-page shadow-lift-sm hover:opacity-90 hover:shadow-lift-md',
   secondary: 'border border-rule bg-paper-raised text-ink shadow-lift-sm hover:border-rule-strong hover:bg-paper-sunk',
   quiet: 'text-ink-muted hover:bg-paper-sunk hover:text-ink',
   danger: 'border border-unaccounted text-unaccounted hover:bg-unaccounted-wash',
@@ -258,12 +264,25 @@ export function Button({
   return <button type={type} className={buttonClasses(variant, size, className)} {...rest} />;
 }
 
-/** Geometry and focus treatment shared by every text-entry control. */
+/**
+ * Geometry and focus treatment shared by every text-entry control.
+ *
+ * A field is a *sunk* plane, not a raised one. It used to sit on
+ * `--paper-raised` with a hairline, which on the old near-white palette read as
+ * an outline drawn on the card; on Midnight Ink it read as another panel. Sunk
+ * inverts the elevation so the control looks like a slot cut into the card —
+ * somewhere to put something — which is what makes a form scannable before any
+ * label is read.
+ *
+ * Focus lifts the border to brass rather than growing a ring: the global
+ * `:focus-visible` outline in `globals.css` already provides the accessible
+ * indicator, and two competing focus treatments on one control is noise.
+ */
 const FIELD_BASE =
-  'w-full rounded-control border border-rule bg-paper-raised px-3 py-2 text-sm text-ink ' +
-  'shadow-lift-sm transition-[border-color,box-shadow] duration-150 ease-ui ' +
-  'placeholder:text-ink-faint hover:border-rule-strong ' +
-  'disabled:cursor-not-allowed disabled:bg-paper-sunk disabled:opacity-60';
+  'w-full rounded-control border border-rule bg-paper-sunk px-3 py-2.5 text-sm text-ink ' +
+  'transition-[border-color,background-color] duration-150 ease-ui ' +
+  'placeholder:text-ink-faint hover:border-rule-strong focus:border-accent ' +
+  'disabled:cursor-not-allowed disabled:opacity-60';
 
 /**
  * A labelled text input.

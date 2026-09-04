@@ -119,7 +119,14 @@ function SignInForm() {
         it finds.
       </p>
 
-      <Card className="mt-7 p-5 sm:p-6">
+      {/* A brass rule across the top of the card.
+          Asking someone for credentials is the one moment the interface should
+          feel deliberate rather than incidental, and a bounded panel with a
+          weighted edge reads as an object to act on — where an unbordered form
+          floating on the page reads as an afterthought. */}
+      <Card className="mt-7 overflow-hidden p-0">
+        <div aria-hidden="true" className="h-0.5 w-full bg-accent" />
+        <div className="p-5 sm:p-6">
         <Button
           variant="secondary"
           onClick={() => void signInWithGoogle()}
@@ -201,6 +208,7 @@ function SignInForm() {
             {mode === 'signUp' ? 'Sign in instead' : 'Create one'}
           </button>
         </p>
+        </div>
       </Card>
 
       {notice !== null && (
