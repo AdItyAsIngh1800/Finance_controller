@@ -1,0 +1,3 @@
+record_id,order_ref,txn_date,gross,commission,gateway_fee,fees_total,refunds,chargebacks,net,description
+P-7001,ORD-2001,2026-08-25,750.00,,,,,,750.00,Order 2001 payout with no ledger record
+P-7002,ORD-2003,2026-08-26,4200.00,,,,,,4200.00,Order 2003 payout with no ledger record

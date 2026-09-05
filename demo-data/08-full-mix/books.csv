@@ -1,0 +1,14 @@
+record_id,order_ref,txn_date,net,description
+M-B-01,ORD-9001,2026-08-01,4875.00,Clean settlement
+M-B-02,ORD-9002,2026-08-02,12187.50,Clean settlement
+M-B-03,PAYOUT-99215,2026-08-16,6600.00,Booked under the internal payout id
+M-B-04,ORD-7789,2026-08-10,15005.00,Booked with a typo'd reference and a small rounding gap
+M-B-05,ORD-7790,2026-08-10,8000.00,Booked on the sale date, processor settled late
+M-B-06,ORD-5000,2026-08-16,6000.00,Full invoice for order 5000
+M-B-07,ORD-4001,2026-08-21,2000.00,Booked once
+M-B-08,ORD-4001,2026-08-21,2000.00,Booked again by mistake
+M-B-09,ORD-6001,2026-08-10,4875.00,Expected - refund never recorded
+M-B-10,ORD-6003,2026-08-12,3000.00,Expected - fee never recorded
+M-B-11,ORD-3001,2026-08-22,9750.00,Booked per processor's stated net
+M-B-12,ORD-2002,2026-08-25,1250.00,Booked but never settled
+M-B-13,ORD-2004,2026-08-26,3100.00,Booked but never settled

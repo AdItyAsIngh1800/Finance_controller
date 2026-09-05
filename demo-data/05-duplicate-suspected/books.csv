@@ -1,0 +1,4 @@
+record_id,order_ref,txn_date,net,description
+B-5001,ORD-4001,2026-08-21,2000.00,Order 4001 booked once
+B-5002,ORD-4001,2026-08-21,2000.00,Order 4001 booked again by mistake
+B-5003,ORD-4002,2026-08-22,1500.00,Order 4002 booked once

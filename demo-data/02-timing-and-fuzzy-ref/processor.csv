@@ -1,0 +1,3 @@
+record_id,order_ref,txn_date,gross,commission,gateway_fee,fees_total,refunds,chargebacks,net,description
+P-2001,ORD-7790,2026-08-20,8000.00,,,,,,8000.00,Order 7790 payout settled late
+P-2002,ORD-7788,2026-08-10,15000.00,,,,,,15000.00,Order 7788 payout - ledger has a reference typo

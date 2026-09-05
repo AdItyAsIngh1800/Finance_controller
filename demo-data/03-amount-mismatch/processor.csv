@@ -1,0 +1,5 @@
+record_id,order_ref,txn_date,gross,commission,gateway_fee,fees_total,refunds,chargebacks,net,description
+P-3001,ORD-6001,2026-08-11,5000.00,100.00,25.00,125.00,412.00,0.00,4463.00,Order 6001 payout net of a refund
+P-3002,ORD-6002,2026-08-12,8000.00,160.00,40.00,200.00,0.00,350.00,7450.00,Order 6002 payout net of a chargeback
+P-3003,ORD-6003,2026-08-13,3000.00,90.00,30.00,120.00,0.00,0.00,2880.00,Order 6003 payout with an undisclosed fee
+P-3004,ORD-6004,2026-08-14,1500.00,,,,,,1500.00,Order 6004 payout - plain data-entry gap

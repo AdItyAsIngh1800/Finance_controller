@@ -1,0 +1,3 @@
+record_id,order_ref,txn_date,gross,commission,gateway_fee,fees_total,refunds,chargebacks,net,description
+P-6001,ORD-3001,2026-08-23,10000.00,250.00,50.00,300.00,0.00,0.00,9750.00,Order 3001 payout - stated net does not foot
+P-6002,ORD-3002,2026-08-24,5000.00,125.00,25.00,150.00,0.00,0.00,4800.00,Order 3002 payout - stated net does not foot

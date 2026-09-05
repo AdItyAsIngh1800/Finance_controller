@@ -1,0 +1,6 @@
+record_id,order_ref,txn_date,net,description
+B-1001,ORD-9001,2026-08-01,4875.00,Order 9001 expected settlement
+B-1002,ORD-9002,2026-08-02,12187.50,Order 9002 expected settlement
+B-1003,ORD-9003,2026-08-03,3120.00,Order 9003 expected settlement
+B-1004,ORD-9004,2026-08-04,853.70,Order 9004 expected settlement
+B-1005,ORD-9005,2026-08-05,19500.00,Order 9005 expected settlement

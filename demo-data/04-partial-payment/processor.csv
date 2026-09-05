@@ -1,0 +1,6 @@
+record_id,order_ref,txn_date,gross,commission,gateway_fee,fees_total,refunds,chargebacks,net,description
+P-4001,ORD-5000-1,2026-08-15,3500.00,,,,,,3500.00,Instalment 1 of order 5000
+P-4002,ORD-5000-2,2026-08-16,2500.00,,,,,,2500.00,Instalment 2 of order 5000
+P-4003,ORD-5010-1,2026-08-17,3000.00,,,,,,3000.00,Instalment 1 of order 5010
+P-4004,ORD-5010-2,2026-08-17,3000.00,,,,,,3000.00,Instalment 2 of order 5010
+P-4005,ORD-5010-3,2026-08-18,3000.00,,,,,,3000.00,Instalment 3 of order 5010

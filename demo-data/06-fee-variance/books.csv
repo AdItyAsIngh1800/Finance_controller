@@ -1,0 +1,3 @@
+record_id,order_ref,txn_date,net,description
+B-6001,ORD-3001,2026-08-22,9750.00,Order 3001 booked per processor's stated net
+B-6002,ORD-3002,2026-08-23,4800.00,Order 3002 booked per processor's stated net
