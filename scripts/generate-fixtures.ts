@@ -2,7 +2,8 @@
  * Fixture generation CLI.
  *
  * Writes both domains' datasets to `fixtures/`, as domain-native CSVs plus the
- * ground-truth manifest that scoring depends on.
+ * ground-truth manifest that scoring depends on, and the hand-written
+ * edge-case corpus to `fixtures/edge-cases/`.
  *
  * Fixtures are gitignored rather than committed, so this script is the only
  * source of the data every accuracy claim rests on. That makes its determinism
@@ -19,6 +20,7 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { generateBankDataset } from '../src/core/generate/bank';
 import { recordsToCsv } from '../src/core/generate/csv';
+import { EDGE_CASES } from '../src/core/generate/edge-cases';
 import type { GeneratedDataset } from '../src/core/generate/manifest';
 import { generateSettlementDataset } from '../src/core/generate/settlement';
 
@@ -55,9 +57,42 @@ function writeDataset(dataset: GeneratedDataset): string {
   );
 }
 
+/**
+ * Writes the edge-case corpus to `fixtures/edge-cases/`.
+ *
+ * One directory per case, so a file can be dragged into the upload screen on
+ * its own, plus an `index.json` stating what each pair contains and what it
+ * must produce — without which the directory is twenty-odd unlabelled CSVs.
+ *
+ * @returns A one-line summary for the console.
+ */
+function writeEdgeCases(): string {
+  const root = join(FIXTURES_ROOT, 'edge-cases');
+  mkdirSync(root, { recursive: true });
+
+  for (const edgeCase of EDGE_CASES) {
+    const directory = join(root, edgeCase.name);
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(join(directory, 'source.csv'), edgeCase.sourceCsv, 'utf8');
+    writeFileSync(join(directory, 'ledger.csv'), edgeCase.ledgerCsv, 'utf8');
+  }
+
+  const index = EDGE_CASES.map(({ name, domain, category, what, expect }) => ({
+    name,
+    domain,
+    category,
+    what,
+    expect,
+  }));
+  writeFileSync(join(root, 'index.json'), `${JSON.stringify(index, null, 2)}\n`, 'utf8');
+
+  return `edge-cases  ${String(EDGE_CASES.length).padStart(4)} cases · index.json`;
+}
+
 const summaries = [
   writeDataset(generateSettlementDataset()),
   writeDataset(generateBankDataset()),
+  writeEdgeCases(),
 ];
 
 process.stdout.write(`Fixtures written to ${FIXTURES_ROOT}/\n${summaries.join('\n')}\n`);
