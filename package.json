@@ -2,6 +2,7 @@
   "name": "ai-finance-controller",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "description": "Reconciles processor/bank records against an internal ledger, with a deterministic matching engine and AI confined to document extraction and grounded explanation.",
   "scripts": {
     "dev": "next dev",
