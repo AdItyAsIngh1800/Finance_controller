@@ -1,10 +1,12 @@
-# AI Finance Controller
+# Reckon
 
 [![CI](https://github.com/AdItyAsIngh1800/Finance_controller/actions/workflows/ci.yml/badge.svg)](https://github.com/AdItyAsIngh1800/Finance_controller/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.json)
 
-**Buildathon Track 04 · Submission due 4 September 2026**
+**Reconciliation that explains itself.**
+
+**Buildathon Track 04 · Submitted 5 September 2026**
 
 Reconciles what a payment processor or bank *says* happened against what an internal ledger says *should* have happened — and, for every discrepancy, states why.
 

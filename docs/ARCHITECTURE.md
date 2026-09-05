@@ -1,4 +1,4 @@
-# Architecture — AI Finance Controller
+# Architecture — Reckon
 
 **Last updated:** 29 August 2026
 **Companion documents:** `DATA_MODEL.md` (schema), `TECH_STACK.md` (choices), `EVALUATION.md` (proof)
@@ -19,7 +19,7 @@ The system does three jobs. Two of them use AI. One deliberately does not, and t
 
 ### Why Stage 2 has no AI
 
-The instinct in an "AI Finance Controller" is to put a model in the middle. This system does the opposite, for four reasons:
+The instinct in a tool like Reckon is to put a model in the middle. This system does the opposite, for four reasons:
 
 1. **The problem has exact answers.** `41235 == 41235` is not a judgment call. A model asked to make that comparison can only introduce error.
 2. **Determinism is a feature.** Identical input yields byte-identical output (`REQUIREMENTS.md` NFR-1.4). A reconciliation that changes its answer between runs cannot be signed off.

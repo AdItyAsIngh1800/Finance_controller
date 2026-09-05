@@ -1,9 +1,9 @@
-# Product Requirements Document — AI Finance Controller
+# Product Requirements Document — Reckon
 
 **Status:** Draft v1
 **Author:** Aditya Singh
 **Last updated:** 29 August 2026
-**Buildathon track:** 04 — AI Finance Controller
+**Buildathon track:** 04 — Reckon
 **Submission deadline:** 4 September 2026
 
 ---

@@ -1,4 +1,4 @@
-# Roadmap — AI Finance Controller
+# Roadmap — Reckon
 
 **Last updated:** 2 September 2026
 **Deadline:** 4 September 2026 · **Build mode:** solo · **Scope posture:** nothing cut

@@ -1,4 +1,4 @@
-# Tech Stack — AI Finance Controller
+# Tech Stack — Reckon
 
 **Last updated:** 29 August 2026
 **Constraint that shaped every choice below:** six days, solo, must be deployed and demoable.

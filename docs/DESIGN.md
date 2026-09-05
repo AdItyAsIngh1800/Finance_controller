@@ -1,4 +1,4 @@
-# Design — AI Finance Controller
+# Design — Reckon
 
 **Last updated:** 1 September 2026
 **Purpose:** Screen inventory, flows, and interaction states, specified before Day 4 so the UI is built rather than improvised.

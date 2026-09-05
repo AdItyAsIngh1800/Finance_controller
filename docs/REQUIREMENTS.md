@@ -1,4 +1,4 @@
-# Requirements — AI Finance Controller
+# Requirements — Reckon
 
 **Last updated:** 29 August 2026
 **Companion documents:** `PRD.md` (why), `ARCHITECTURE.md` (how), `EVALUATION.md` (proof)

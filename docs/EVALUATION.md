@@ -1,4 +1,4 @@
-# Evaluation — AI Finance Controller
+# Evaluation — Reckon
 
 **Last updated:** 29 August 2026
 **Status:** Methodology defined; measured results populated at Phase 3 and Phase 9.

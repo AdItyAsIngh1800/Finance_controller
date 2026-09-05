@@ -1,4 +1,4 @@
-# Data Model — AI Finance Controller
+# Data Model — Reckon
 
 **Last updated:** 29 August 2026
 **Status:** Frozen for build. Changes here ripple into the engine, the UI, and the agent — treat amendments as breaking.

@@ -1,4 +1,4 @@
-# Design System: AI Finance Controller
+# Design System: Reckon
 
 **Purpose:** a generation brief for Google Stitch (and usable verbatim in v0).
 It encodes the design system this project already runs, in Stitch's semantic
