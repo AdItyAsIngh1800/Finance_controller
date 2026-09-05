@@ -1,0 +1,12 @@
+record_id,txn_date,reference,debit,credit,balance,narration,description
+L-01,2026-08-02,UTR100201,,45000.00,,,Clean receipt
+L-02,2026-08-03,UTR100202,,128000.00,,,Clean receipt
+L-03,2026-08-16,VCH-77120,,66000.00,,,Booked under the internal voucher id
+L-04,2026-08-10,UTR100412,,18005.00,,,Booked with a typo'd reference and a small rounding gap
+L-05,2026-08-10,UTR100520,,9000.00,,,Booked on the transaction date; bank credited late
+L-06,2026-08-16,UTR5000,,37000.00,,,Full invoice UTR5000
+L-07,2026-08-21,UTR100740,,12000.00,,,Booked once
+L-08,2026-08-21,UTR100740,,12000.00,,,Booked again by mistake
+L-09,2026-08-11,UTR100850,,24000.00,,,Expected amount before the bank's overage
+L-10,2026-08-13,UTR100860,,8700.00,,,Expected amount before the bank's shortfall
+L-11,2026-08-26,UTR200220,,6200.00,,,Booked but never credited

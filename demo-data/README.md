@@ -83,3 +83,20 @@ Expect: the upload is **rejected outright** with six named row+column errors,
 even though two rows in the same file are perfectly valid — a ledger missing
 rows reconciles into spurious noise, so the whole file is refused rather than
 silently dropping the bad rows.
+
+## 10-bank-full-mix
+The bank-domain counterpart to `08-full-mix` (domain: **BANK**). Drop
+`statement.csv` into "What the source says" and `ledger.csv` into "What your
+books say". 11 records per side, exercising all four match tiers and every
+exception type the bank domain can produce in one run (`FEE_VARIANCE` is
+structurally impossible here — bank records carry no gross/fees/net
+breakdown to check).
+
+Expect: 7/11 matched (2 `EXACT_REF` clean, 1 `EXACT_REF` flagged
+`TIMING_DIFFERENCE`, 1 `EXACT_AMOUNT_DATE`, 1 `FUZZY_REF`, 1 `PARTIAL_SET` of
+2 instalments), 7 exceptions: 1 `TIMING_DIFFERENCE` (low), 1
+`PARTIAL_PAYMENT` (low, advisory), 1 `DUPLICATE_SUSPECTED` (medium, ledger
+booked the same UTR twice), 2 `AMOUNT_MISMATCH` (high, generic message — no
+fee breakdown to attribute the gap to), 1 `UNMATCHED_SOURCE` + 1
+`UNMATCHED_LEDGER` (high). Verified by running both files through
+`reconcile()` directly.
