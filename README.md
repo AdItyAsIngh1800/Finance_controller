@@ -1,5 +1,9 @@
 # AI Finance Controller
 
+[![CI](https://github.com/AdItyAsIngh1800/Finance_controller/actions/workflows/ci.yml/badge.svg)](https://github.com/AdItyAsIngh1800/Finance_controller/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6.svg)](tsconfig.json)
+
 **Buildathon Track 04 · Submission due 4 September 2026**
 
 Reconciles what a payment processor or bank *says* happened against what an internal ledger says *should* have happened — and, for every discrepancy, states why.
@@ -197,6 +201,12 @@ planted" — the reports print the underlying counts.
 7. **Ask "what will next month's payout be?"** — it declines. *This is the grounding working.*
 8. **Open `/evaluation`** — precision, recall, zero false matches, and the limitations stated in-product.
 
+Prefer your own files over the seeded dataset? [`demo-data/`](demo-data/) has 9
+hand-built CSV pairs — one per matching tier and exception type, plus a
+full-mix and a hostile-input case — each uploadable directly through the
+ingestion form. See [`demo-data/README.md`](demo-data/README.md) for what each
+pair is designed to trigger.
+
 ---
 
 ## Documentation
@@ -225,3 +235,9 @@ Stated so the boundary is a decision rather than an oversight:
 - **No forecasting.** Deliberate — projecting future cash is the easiest thing to fake convincingly, and this project's whole thesis is refusing to fake things.
 - **No write-back.** It never modifies accounting systems.
 - **Single currency per dataset.** Cross-currency matching is a correctness trap, not a feature gap.
+
+---
+
+## License
+
+[MIT](LICENSE) © 2026 Aditya Singh
